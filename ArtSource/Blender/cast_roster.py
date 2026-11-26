@@ -1,6 +1,8 @@
-"""Project folder names shared by the Blender import and accessory bakers."""
-folders = {"Flor":"Ember_Phrolova", "BlackMiku":"Ember_BlackMiku", "Laevatain":"Ember_Laevatain",
-           "Mornye":"Aegis_Mornye", "Rover":"Aegis_Rover", "Lily":"Aegis_Lily",
-           "Michele":"Aegis_Michele", "Nora":"Ember_Nora", "Cantarella":"Cantarella"}
-playable = tuple(name for name in folders if name != "Cantarella")
+"""Character folders used by the Unity importer and Blender accessory bakers."""
+import json
+from pathlib import Path
 
+source = Path(__file__).resolve().parents[2] / "Assets" / "Editor" / "CastRoster.json"
+members = json.loads(source.read_text(encoding="utf-8"))["members"]
+folders = {member["name"]: member["folder"] for member in members}
+playable = tuple(member["name"] for member in members if member["playOrder"] >= 0)

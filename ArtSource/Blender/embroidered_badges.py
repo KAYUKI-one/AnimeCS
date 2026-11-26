@@ -3,7 +3,7 @@ from pathlib import Path
 from random import Random
 from PIL import Image, ImageDraw
 
-target = Path(__file__).resolve().parents[2] / "Assets/AnimeCS/Art/Wearables/TeamMarks"
+target = Path(__file__).resolve().parents[2] / "Assets/Content/Art/Wearables/TeamMarks"
 target.mkdir(exist_ok=True)
 for attack in (True,False):
     size = 384

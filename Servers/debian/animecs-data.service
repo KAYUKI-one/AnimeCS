@@ -1,0 +1,18 @@
+[Unit]
+Description=AnimeCS player data
+After=network.target
+
+[Service]
+DynamicUser=yes
+StateDirectory=animecs-data
+WorkingDirectory=/var/lib/animecs-data
+Environment=ANIMECS_DATA_DIR=/var/lib/animecs-data
+EnvironmentFile=-/etc/animecs/data.env
+ExecStart=/opt/animecs/Data/AnimeCS.Data
+Restart=on-failure
+NoNewPrivileges=yes
+ProtectSystem=strict
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

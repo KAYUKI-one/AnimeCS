@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: CourtAsphalt
+  m_Shader: {fileID: 4800000, guid: 9bb23e9a2e5017a4d9a50f83e5dda27a, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: d43e2d1fb9cf41847ab9f02a8d0d12ee, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: c3e05598bd480d24aa5defef403ae419, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ORM:
+        m_Texture: {fileID: 2800000, guid: 47a533715c9a5a040bb2712f1ce72d15, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Cull: 2
+    - _Layered: 0
+    - _MetalFactor: 0
+    - _PaintMode: 1
+    - _RoughFactor: 1.15
+    - _Softness: 0.5
+    - _ZWrite: 1
+    m_Colors:
+    - _Pigment: {r: 0.43, g: 0.54, b: 0.68, a: 0.38}
+    - _BaseTint: {r: 1, g: 1, b: 1, a: 1}
+    - _ColorU: {r: 1, g: 0, b: 0, a: 0}
+    - _ColorV: {r: 0, g: 1, b: 0, a: 0}
+    - _LayerTint: {r: 1, g: 1, b: 1, a: 1}
+    - _MaskU: {r: 1, g: 0, b: 0, a: 0}
+    - _MaskV: {r: 0, g: 1, b: 0, a: 0}
+    - _NormalU: {r: 1, g: 0, b: 0, a: 0}
+    - _NormalV: {r: 0, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

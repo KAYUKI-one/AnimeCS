@@ -1,0 +1,81 @@
+{
+  "members": [
+    {
+      "name": "Flor",
+      "folder": "Ember_Phrolova",
+      "playOrder": 3,
+      "displayName": "弗洛洛",
+      "faction": "Attack",
+      "headwearHeight": 0.045,
+      "animationDonor": false
+    },
+    {
+      "name": "BlackMiku",
+      "folder": "Ember_BlackMiku",
+      "playOrder": 4,
+      "displayName": "黑色 Miku",
+      "faction": "Attack",
+      "headwearHeight": 0.048,
+      "animationDonor": false
+    },
+    {
+      "name": "Laevatain",
+      "folder": "Ember_Laevatain",
+      "playOrder": 5,
+      "displayName": "莱万汀",
+      "faction": "Attack",
+      "headwearHeight": 0.064,
+      "animationDonor": false
+    },
+    {
+      "name": "Mornye",
+      "folder": "Aegis_Mornye",
+      "playOrder": 2,
+      "displayName": "莫宁",
+      "faction": "Defend",
+      "headwearHeight": 0.064,
+      "animationDonor": false
+    },
+    {
+      "name": "Rover",
+      "folder": "Aegis_Rover",
+      "playOrder": 0,
+      "displayName": "男漂泊者",
+      "faction": "Defend",
+      "headwearHeight": 0.064,
+      "animationDonor": true
+    },
+    {
+      "name": "Lily",
+      "folder": "Aegis_Lily",
+      "playOrder": 1,
+      "displayName": "莉莉 · 护士服",
+      "faction": "Defend",
+      "headwearHeight": 0.082,
+      "animationDonor": false
+    },
+    {
+      "name": "Michele",
+      "folder": "Aegis_Michele",
+      "playOrder": 6,
+      "displayName": "米雪儿",
+      "faction": "Defend",
+      "headwearHeight": 0.064,
+      "animationDonor": false
+    },
+    {
+      "name": "Nora",
+      "folder": "Ember_Nora",
+      "playOrder": 7,
+      "displayName": "诺诺",
+      "faction": "Attack",
+      "headwearHeight": 0.064,
+      "animationDonor": false
+    },
+    {
+      "name": "Cantarella",
+      "folder": "Cantarella",
+      "playOrder": -1
+    }
+  ]
+}

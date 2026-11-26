@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-folder=Path(__file__).resolve().parents[2]/"Assets/AnimeCS/Art/Weapons/Ember47"
+folder=Path(__file__).resolve().parents[2]/"Assets/Content/Art/Weapons/Ember47"
 base=np.asarray(Image.open(folder/"Ember47_T00.png").convert("RGB"),dtype=np.float32)/255
 r,g,b=base.transpose(2,0,1)
 # The original UV atlas photographs both wood and a polished steel rifle under a studio light.

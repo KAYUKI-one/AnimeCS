@@ -1,0 +1,18 @@
+[Unit]
+Description=AnimeCS content distribution
+After=network.target
+
+[Service]
+DynamicUser=yes
+StateDirectory=animecs-hotupdate
+WorkingDirectory=/var/lib/animecs-hotupdate
+Environment=ANIMECS_UPDATE_DIR=/var/lib/animecs-hotupdate
+EnvironmentFile=-/etc/animecs/hotupdate.env
+ExecStart=/opt/animecs/HotUpdate/AnimeCS.HotUpdate
+Restart=on-failure
+NoNewPrivileges=yes
+ProtectSystem=strict
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

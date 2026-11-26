@@ -2,9 +2,19 @@
 
 Unity 6000.5.5f1 的 PC 键鼠本地 5v5 原型。完整首测目标见[游戏策划案](Design/README.md)。
 
+## 工程与服务端
+
+游戏资源放在 `Assets/Content`，场景在 `Assets/Scenes`，编辑器工具和测试分别在 `Assets/Editor`、`Assets/Tests`。`Assets/Scripts/Core` 管理比赛规则、内容定义和档案模型，`Presentation` 管理界面和画面，`Infrastructure` 连接输入、导航、物理世界、UDP 和本地存储。键位在 `Assets/Content/Input/Player.inputactions` 中配置。离线试玩从启动场景直接进入大厅。
+
+Unity 和 Blender 的角色导入工具共用一份清单，记录模型目录、可玩角色顺序、阵营和穿戴校准值。添加演示角色时在此登记。[角色导入清单](Assets/Editor/CastRoster.json)
+
+PC 画面使用 URP Forward+ 与 GPU Resident Drawer。弹痕由 Entities 保存，矩阵变化时通过 Burst 收集，再分批提交给 GPU。烟幕的粒子初始数据只上传一次，着色器负责其后续运动，物理层按同一组烟团的位置判定遮挡。专用战斗服中的烟幕只创建遮挡数据。[弹痕批绘制](Assets/Scripts/Presentation/Graphics/SurfaceMarkBatch.cs) · [烟幕遮挡](Assets/Scripts/Infrastructure/Physics/SmokeField.cs)
+
+Debian 13 x86-64 构建包含战斗服、玩家数据服和热更新服。编译命令、服务配置、协议与本地冒烟测试见[服务端部署说明](Servers/README.md)。
+
 ## 在编辑器中开赛
 
-打开 [LocalMatch.unity](Assets/AnimeCS/Scenes/LocalMatch.unity)，点击 **Play → 开始游戏**。单排大厅只显示自己。角色站在转播站布景内，拖动空白处可旋转查看。「装备」右侧可拖动观察持枪角色。点选主武器、副武器、刀或服饰槽，再从背包选择物品和涂装，点击「应用搭配」或保存到预设。「模式选择」中，Bot 爆破可选炙热沙城 II 或云上转播站，并可指定开局阵营。练枪地图提供五个自动复位靶，B 可随时免费领取两方全部装备、切换固定靶或移动靶。试玩默认进入炙热沙城 II，另外九个席位由本地 Bot 驱动。
+打开 [LocalMatch.unity](Assets/Scenes/Gameplay/LocalMatch.unity)，点击 **Play → 开始游戏**。单排大厅只显示自己。角色站在转播站布景内，拖动空白处可旋转查看。「装备」右侧可拖动观察持枪角色。点选主武器、副武器、刀或服饰槽，再从背包选择物品和涂装，点击「应用搭配」或保存到预设。「模式选择」中，Bot 爆破可选炙热沙城 II 或云上转播站，并可指定开局阵营。练枪地图提供五个自动复位靶，B 可随时免费领取两方全部装备、切换固定靶或移动靶。试玩默认进入炙热沙城 II，另外九个席位由本地 Bot 驱动。
 
 大厅的「设置 → 画面」可调整 75%–200% 内部渲染精度、MSAA 和主光源阴影分辨率，点击「应用画质」保存到本机。「高精度」采用 125% / 4× / 4096，「超采样」采用 150% / 8× / 8192，选项按显卡支持范围显示。
 
@@ -22,11 +32,11 @@ WASD 移动，Shift 静步，左 Ctrl / C 下蹲，空格跳跃。滚轮循环�
 
 | 想调整的内容 | 修改位置 |
 | --- | --- |
-| 主菜单与局内 HUD | 在 UI Builder 打开 [Lobby.uxml](Assets/AnimeCS/UI/Lobby.uxml) 或 [Match.uxml](Assets/AnimeCS/UI/Match.uxml)。界面位置、字体、颜色在 [Competitive.uss](Assets/AnimeCS/UI/Competitive.uss)。复制这些资源并在 [Competitive.asset](Assets/AnimeCS/UI/Competitive.asset) 指向副本即可保留两种方案。布局中的具名控件供运行时绑定。场景的 Local Match 组件可切换整个预设。 |
+| 主菜单与局内 HUD | 在 UI Builder 打开 [Lobby.uxml](Assets/Content/UI/Lobby.uxml) 或 [Match.uxml](Assets/Content/UI/Match.uxml)。界面位置、字体、颜色在 [Competitive.uss](Assets/Content/UI/Competitive.uss)。复制这些资源并在 [Competitive.asset](Assets/Content/UI/Competitive.asset) 指向副本即可保留两种方案。布局中的具名控件供运行时绑定。场景的 Local Match 组件可切换整个预设。 |
 | 雷达 | 地图条目的雷达平面图、中心和覆盖宽深决定世界坐标如何映射到左上角；首图底图取自地图实际碰撞几何。队友点、朝向和当前肉眼可见的敌人由比赛更新。 |
-| 地面与空中操作 | [MatchRules.asset](Assets/AnimeCS/Content/MatchRules.asset) 包含起步、反向制动、松键减速、空中投影限速、跳跃重力、站蹲切换和受击速度恢复。角色外观共用同一套碰撞和判定规则。 |
-| 大厅 | 将任意大厅布景模型或预制体拖入 [Competitive.asset](Assets/AnimeCS/UI/Competitive.asset) 的 Lobby Set 字段。该预设也保存默认展示枪和镜头视野。组队服务可调用 `LocalGame.SetLobbyTeammates` 提交最多四名真实队友的 ID、服装、枪和涂装。比赛沿用队伍 ID，也可用 `LocalGame.SetSeatDisplayId` 更新。 |
-| 角色动作 | 八名角色使用 Humanoid 骨架，共用 [Locomotion.controller](Assets/AnimeCS/Art/Characters/Locomotion.controller)。慢走、跑步、蹲行支持方向混合，起跳和下落读取竖直速度，空中转身读取方向变化。第一人称独立渲染手臂和持物。低头可以看见随世界透视和地面遮挡的双脚。角色条目可换动画控制器。第三人称由席位的视角驱动脊柱、颈和头部，再将双手对齐到武器。静止时上身可先转动 48°，随后带动下身转向。武器定义可以选检视模板，直刀、环柄刀和折刀各用一套曲线。 |
+| 地面与空中操作 | [MatchRules.asset](Assets/Content/Data/MatchRules.asset) 包含起步、反向制动、松键减速、空中投影限速、跳跃重力、站蹲切换和受击速度恢复。角色外观共用同一套碰撞和判定规则。 |
+| 大厅 | 将任意大厅布景模型或预制体拖入 [Competitive.asset](Assets/Content/UI/Competitive.asset) 的 Lobby Set 字段。该预设也保存默认展示枪和镜头视野。组队服务可调用 `LocalGame.SetLobbyTeammates` 提交最多四名真实队友的 ID、服装、枪和涂装。比赛沿用队伍 ID，也可用 `LocalGame.SetSeatDisplayId` 更新。 |
+| 角色动作 | 八名角色使用 Humanoid 骨架，共用 [Locomotion.controller](Assets/Content/Art/Characters/Locomotion.controller)。慢走、跑步、蹲行支持方向混合，起跳和下落读取竖直速度，空中转身读取方向变化。第一人称独立渲染手臂和持物。低头可以看见随世界透视和地面遮挡的双脚。角色条目可换动画控制器。第三人称由席位的视角驱动脊柱、颈和头部，再将双手对齐到武器。静止时上身可先转动 48°，随后带动下身转向。武器定义可以选检视模板，直刀、环柄刀和折刀各用一套曲线。 |
 | 开火与受击 | 玩家即时命中从画面中心的相机位置计算。第三人称的火光和曳光从手中武器的枪口发出，第一人称手臂与武器用独立相机层渲染。角色站立和完全下蹲的公共眼线分别为 1.62 米和 1.16 米，服装和头饰不参与命中。消音武器使用独立枪声并隐藏曳光。只在场景表面留下弹孔。交火预设可切换两类声音、材质、尺寸、存留数量、曳光时长和受击动作幅度。 |
 
 ## 导入和管理资源
@@ -56,11 +66,11 @@ WASD 移动，Shift 静步，左 Ctrl / C 下蹲，空格跳跃。滚轮循环�
 
 | 接入点 | 已有职责 |
 | --- | --- |
-| [ISeatDriver、ISeatPort、IMatchWorld](Assets/AnimeCS/Runtime/Match/SeatContracts.cs) | 玩家与 Bot 使用相同的逐 tick 意图和席位视图。新输入来源可用 LocalGame.SetSeatDriver 接入。物理命中、位置和合法目击由裁判侧的场景适配器提供。 |
-| [LocalMatch](Assets/AnimeCS/Runtime/Match/LocalMatch.cs) 与 [MatchRules](Assets/AnimeCS/Runtime/Match/MatchRules.cs) | 以 50 Hz 推进比赛，统一处理计时、优先级、比分、预算和装备。每局生成独立的收支与保留物记录，赛后可从 LocalGame.PostMatchReports 取得。 |
-| [席位网络接入](Assets/AnimeCS/Runtime/Match/SeatDatagrams.cs) | Windows 玩家可用 `-seat-host 127.0.0.1:27840` 开启一个调试席位，`SeatDatagramClient` 发送操作并接收自己的权威快照。输入按轮次和序号校验，位置按厘米压缩，快照以 25 Hz 传送。 |
-| [ContentCatalog](Assets/AnimeCS/Runtime/Content/ContentCatalog.cs) | 把稳定 ID 解析为强类型资源。切换启动地图、默认角色、默认服装或初始手枪可使用资源管理器的「目录设置」。 |
-| [WardrobeProfile](Assets/AnimeCS/Runtime/Profile/WardrobeProfile.cs) | 管理持有权、当前穿戴、两个预设。衣柜界面可调用 LocalGame.ReadWardrobe 和 SaveWardrobe，下次开赛会锁定新搭配。 |
-| [ObjectiveBot](Assets/AnimeCS/Runtime/Play/SeatDrivers.cs) | 基础 Bot 根据地图途经点和自身合法目击行动。完整团队报点、协作调档与挑战难度单场学习是后续玩法工作。 |
+| [ISeatDriver、ISeatPort、IMatchWorld](Assets/Scripts/Core/Match/SeatContracts.cs) | 玩家与 Bot 使用相同的逐 tick 意图和席位视图。新输入来源可用 LocalGame.SetSeatDriver 接入。物理命中、位置和合法目击由裁判侧的场景适配器提供。 |
+| [LocalMatch](Assets/Scripts/Core/Match/LocalMatch.cs) 与 [MatchRules](Assets/Scripts/Core/Match/MatchRules.cs) | 以 50 Hz 推进比赛，统一处理计时、优先级、比分、预算和装备。每局生成独立的收支与保留物记录，赛后可从 LocalGame.PostMatchReports 取得。 |
+| [席位网络接入](Assets/Scripts/Infrastructure/Networking/SeatDatagrams.cs) | Windows 玩家可用 `-seat-host 127.0.0.1:27840` 开启一个调试席位，`SeatDatagramClient` 发送操作并接收自己的权威快照。输入按轮次和序号校验，位置按厘米压缩，快照以 25 Hz 传送。 |
+| [ContentCatalog](Assets/Scripts/Core/Content/ContentCatalog.cs) | 把稳定 ID 解析为强类型资源。切换启动地图、默认角色、默认服装或初始手枪可使用资源管理器的「目录设置」。 |
+| [WardrobeProfile](Assets/Scripts/Core/Profile/WardrobeProfile.cs) | 管理持有权、当前穿戴、两个预设。衣柜界面可调用 LocalGame.ReadWardrobe 和 SaveWardrobe，下次开赛会锁定新搭配。 |
+| [ObjectiveBot](Assets/Scripts/Infrastructure/Navigation/ObjectiveBot.cs) | 基础 Bot 根据地图途经点和自身合法目击行动。完整团队报点、协作调档与挑战难度单场学习是后续玩法工作。 |
 
 在 **Window → General → Test Runner** 中运行 **AnimeCS.EditorTests** 和 **AnimeCS.PlayTests**。当前原型用于检查规则、导入链路和地图、动作与穿戴表现。逐条首测试玩标准见[本地边界与试玩验收](Design/05-验证/本地边界与试玩验收.md)。

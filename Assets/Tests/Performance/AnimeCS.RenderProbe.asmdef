@@ -1,0 +1,5 @@
+{
+    "name": "AnimeCS.RenderProbe",
+    "references": ["AnimeCS.Runtime"],
+    "defineConstraints": ["ANIMECS_RENDER_PROBE"]
+}

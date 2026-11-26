@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dd2e122c3fd9a84e9bfe516eeb0291f, type: 3}
+  m_Name: Competitive
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Play.MatchPresentation
+  lobby: {fileID: 9197481963319205126, guid: 1a0ea75dcb245ef459f702f43d08bff3, type: 3}
+  hud: {fileID: 9197481963319205126, guid: 5c5fa19e41a218847816bc56b7c03289, type: 3}
+  theme: {fileID: 7433441132597879392, guid: 25e562332235fa54a8c3f0f3292bfcdb, type: 3}
+  lobbySet: {fileID: 919132149155446097, guid: 8ad25121c2d64414f9e550b35c8be65c, type: 3}
+  lobbyWeapon: {fileID: 11400000, guid: efaf2cc50cabe634e9adcae18ee47c1e, type: 2}
+  lobbyFieldOfView: 29
+  daylightSky: {fileID: 2100000, guid: ba56070f1c8d59a4084be9cbe7b333f1, type: 2}
+  daylightGrade: {fileID: 11400000, guid: 51f63328211cad94e876ae26a53ffd41, type: 2}
+  lobbyShaders: {fileID: 20000000, guid: 4a60cd51ae35e5e479d3ad54cf3a0ff9, type: 2}
+  matchShaders: {fileID: 20000000, guid: 277b2ae077d1386489ebb136a34820e0, type: 2}
+  skyLight: {r: 0.84, g: 0.87, b: 0.9, a: 1}
+  horizonLight: {r: 0.69, g: 0.71, b: 0.73, a: 1}
+  groundLight: {r: 0.44, g: 0.41, b: 0.37, a: 1}
+  sunIntensity: 1.75
+  handlingMotion: 1
+  hitConfirm: 1
+  longGunViewOffset: {x: 0.023, y: -0.034, z: 0}
+  cameraKickDegrees: 0.58
+  tracers: 1
+  surfaceMarks: 1
+  hitReaction: 1
+  tracerMaterial: {fileID: 2100000, guid: 7f50fac5b42be97439106550504e5793, type: 2}
+  impactMaterial: {fileID: 2100000, guid: 3e9d85aec8284f24c899b531c28a884d, type: 2}
+  muzzleMaterial: {fileID: 2100000, guid: 17933e266d95e1542baf9d6cddc8b145, type: 2}
+  shotSound: {fileID: 8300000, guid: 0dff97b876cb64e42a64044ee5a01906, type: 3}
+  suppressedSound: {fileID: 8300000, guid: 4bb4e4629b2f68a40bf10b5b2643c4f6, type: 3}
+  pistolSound: {fileID: 8300000, guid: 0ed637e376b3b8d418e146388bd8a50c, type: 3}
+  marksmanSound: {fileID: 8300000, guid: 358419c1d51942e4f884e6bc3011d5c2, type: 3}
+  alternateRifleSound: {fileID: 8300000, guid: c0ce719dbc4630248ad6a25721c5ffa4, type: 3}
+  deviceBurstSound: {fileID: 8300000, guid: ff3b76e8c6ee8d84aab615f09038343d, type: 3}
+  bootSteps:
+  - {fileID: 8300000, guid: 606362c1e9d6a1a41a29571b7a3036a9, type: 3}
+  - {fileID: 8300000, guid: ba49cc4c4fb74f84a8fa89abf5db0f7f, type: 3}
+  - {fileID: 8300000, guid: 407d1a14c5b3b5c41b003fda5344b54e, type: 3}
+  - {fileID: 8300000, guid: fbe5b6bc361c36c4eb9c07487adf708d, type: 3}
+  - {fileID: 8300000, guid: 8a1b9f56a591a7a43a48126a5ef04ec0, type: 3}
+  deviceBlast: {fileID: 2100000, guid: b2cadeedc44e65d4fbb9e366a86f7a30, type: 2}
+  recoveryKit: {fileID: 919132149155446097, guid: 55aac3de26ee5554da168124fa5622c0, type: 3}
+  tracerSeconds: 0.072
+  tracerWidth: 0.027
+  markSize: 0.12
+  maxMarks: 64
+  flinchSeconds: 0.22
+  flinchDegrees: 9
+  shotLiftDegrees: 4.2
+  shotReturnSeconds: 0.16
