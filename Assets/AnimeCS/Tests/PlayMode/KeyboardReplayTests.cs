@@ -22,6 +22,26 @@ namespace AnimeCS.Tests
             foreach(int fps in new[]{30,60,144}) Replay(game.InputActions,fps);
         }
 
+        [UnityTest] public IEnumerator ShortUtilitySlotTapReachesTheNextTickOnce()
+        {
+            yield return SceneManager.LoadSceneAsync("Assets/AnimeCS/Scenes/LocalMatch.unity");
+            var game = Object.FindAnyObjectByType<LocalGame>();
+            var device = InputSystem.AddDevice<Keyboard>();
+            try
+            {
+                using var keyboard = new KeyboardSeat(game.InputActions);
+                var view = new SeatView { Health = 100, Match = new PublicMatchView { Round = 1, Phase = RoundPhase.Contest } };
+                keyboard.Sample(true);
+                InputSystem.QueueStateEvent(device, new KeyboardState(Key.Digit4));
+                InputSystem.QueueStateEvent(device, new KeyboardState());
+                InputSystem.Update();
+                keyboard.Sample(true);
+                Assert.That(keyboard.Decide(view).Select, Is.EqualTo(HeldSlot.Utility));
+                Assert.That(keyboard.Decide(view).Select, Is.EqualTo(HeldSlot.Current));
+            }
+            finally { InputSystem.RemoveDevice(device); }
+        }
+
         [UnityTest] public IEnumerator ShortWeaponAndPauseTapsReachTheLocalPlayer()
         {
             yield return SceneManager.LoadSceneAsync("Assets/AnimeCS/Scenes/LocalMatch.unity");

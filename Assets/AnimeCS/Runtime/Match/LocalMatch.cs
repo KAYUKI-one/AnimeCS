@@ -34,12 +34,20 @@ namespace AnimeCS.Match
             private readonly int _seat;
             internal Port(LocalMatch match, int seat) { _match = match; _seat = seat; }
             public SeatView Read() => _match.ReadSeat(_seat);
-            public SeatView WatchTeam()
+            private int _watch = -1;
+            public SeatView WatchTeam(int direction = 0)
             {
-                if (_match._seats[_seat].Health > 0) return Read();
+                if (_match._seats[_seat].Health > 0){_watch=-1;return Read();}
                 int first = _seat / TeamSize * TeamSize;
-                for (int i = first; i < first + TeamSize; i++)
-                    if (_match._seats[i].Health > 0) return _match.ReadSeat(i);
+                if(direction==0 && _watch>=first && _watch<first+TeamSize && _match._seats[_watch].Health>0)return _match.ReadSeat(_watch);
+                int step=direction<0?-1:1;
+                int start=_watch>=first && _watch<first+TeamSize?_watch-first:_seat-first;
+                for(int i=1;i<=TeamSize;i++)
+                {
+                    int next=first+(start+step*i+TeamSize)%TeamSize;
+                    if(_match._seats[next].Health>0){_watch=next;return _match.ReadSeat(next);}
+                }
+                _watch=-1;
                 return new SeatView { Match = _match.Public, Seat = -1, ObjectiveHolder = -1 };
             }
             public bool Submit(int tick, SeatIntent intent) => _match.Submit(_seat, tick, intent);
@@ -317,7 +325,7 @@ namespace AnimeCS.Match
                 LastConfirmationTick=s.LastConfirmationTick, LastHitTick = s.LastHitTick, LastHitZone = s.LastHitZone, LastShotTick = s.LastShotTick,
                 PrimaryId = bag.Primary?.Definition.Id, SidearmId = bag.Sidearm?.Definition.Id, KnifeId = bag.Knife?.Definition.Id,
                 WeaponId = gun?.Definition.Id, SkinId = gun?.SkinId, Magazine = gun?.Magazine ?? 0, Reserve = gun?.Reserve ?? 0,
-                OutfitId = bag.OutfitId, Worn=bag.Worn, UtilityId = bag.Utility != null ? bag.Utility.Id : null,
+                OutfitId = bag.OutfitId, Worn=bag.Worn, Utilities=bag.Utilities, UtilityId = bag.Utility != null ? bag.Utility.Id : null,
                 Draft = _phase == RoundPhase.Buy ? bag.Draft : default,
                 ObjectiveHolder = attack && s.Health > 0 ? _carrier : -1, HasObjective = _carrier == i,
                 DroppedObjective = attack && s.Health > 0 ? _dropped : null,

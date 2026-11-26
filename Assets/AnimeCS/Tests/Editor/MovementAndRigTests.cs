@@ -5,6 +5,7 @@ using AnimeCS.Match;
 using AnimeCS.Play;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -13,25 +14,34 @@ namespace AnimeCS.Tests
 {
     public sealed class MovementAndRigTests
     {
-        [Test] public void SkirtedOutfitsHaveTheirOwnHumanoidIdlesAndWorkingBodyCorrectives()
+        [Test] public void PlayableOutfitsShareLayeredLocomotionAndKeepTheirDrapeCorrectives()
         {
-            foreach (string id in new[]{"lily","flor"})
+            const string path = "Assets/AnimeCS/Art/Characters/Locomotion.controller";
+            var shared = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
+            Assert.That(shared, Is.Not.Null);
+            Assert.That(shared.layers[0].avatarMask, Is.Null, "The base layer must animate the legs.");
+            var upper = shared.layers.Single(layer => layer.name == "Upper Body");
+            Assert.That(upper.stateMachine.states, Is.Not.Empty);
+            Assert.That(upper.avatarMask, Is.Not.Null);
+            foreach (var part in new[] { AvatarMaskBodyPart.LeftLeg, AvatarMaskBodyPart.RightLeg,
+                AvatarMaskBodyPart.LeftFootIK, AvatarMaskBodyPart.RightFootIK })
+                Assert.That(upper.avatarMask.GetHumanoidBodyPartActive(part), Is.False, part.ToString());
+            foreach (var part in new[] { AvatarMaskBodyPart.Body, AvatarMaskBodyPart.LeftArm, AvatarMaskBodyPart.RightArm })
+                Assert.That(upper.avatarMask.GetHumanoidBodyPartActive(part), Is.True, part.ToString());
+
+            var catalog = ContentLibrary.Catalog;
+            Assert.That(catalog.SeatOutfits.Count, Is.EqualTo(8));
+            foreach (var outfit in catalog.SeatOutfits)
             {
-                var outfit=ContentLibrary.Catalog.Find<OutfitDefinition>("outfit."+id);
-                var stance=outfit.PoseController as AnimatorOverrideController;
-                Assert.That(stance,Is.Not.Null,id);
-                Assert.That(stance.runtimeAnimatorController,Is.EqualTo(outfit.Character.Controller));
-                foreach(string name in new[]{"Idle","DuckIdle"})
-                {
-                    var clip=stance[name];
-                    Assert.That(clip && clip.isHumanMotion && clip.isLooping,Is.True,id+" "+name);
-                    Assert.That(AssetDatabase.GetAssetPath(clip),Does.EndWith("Idle.fbx"));
-                }
+                Assert.That(outfit.Character.Controller, Is.SameAs(shared), outfit.Id);
+                Assert.That(outfit.PoseController, Is.SameAs(shared), outfit.Id);
+                if (outfit.Character.Id is "character.rover" or "character.michele" or "character.nora") continue;
                 var instance=Object.Instantiate(outfit.Character.Model);
                 try
                 {
-                    var rig=new CharacterRig(instance,outfit.Character,stance);
-                    var renderer=instance.GetComponentInChildren<SkinnedMeshRenderer>();
+                    var rig=new CharacterRig(instance,outfit.Character,shared);
+                    var renderer=instance.GetComponentsInChildren<SkinnedMeshRenderer>()
+                        .Single(candidate => candidate.sharedMesh.GetBlendShapeIndex("DrapeStand") >= 0);
                     var region=outfit.Regions(false).First(r=>r.source==renderer.sharedMesh);
                     int idle=renderer.sharedMesh.GetBlendShapeIndex("DrapeStand"),duck=renderer.sharedMesh.GetBlendShapeIndex("DrapeCrouch");
                     Assert.That(idle,Is.GreaterThanOrEqualTo(0));Assert.That(duck,Is.GreaterThanOrEqualTo(0));
@@ -42,6 +52,123 @@ namespace AnimeCS.Tests
                 }
                 finally {Object.DestroyImmediate(instance);}
             }
+        }
+
+        [Test] public void StationaryTwistStartsTurningAtFortyEightDegreesAndMovementBlendsIn()
+        {
+            const float speed = 6f;
+            var pose = new LocomotionPose();
+            var seat = new SeatView { Match = new PublicMatchView { Round = 1 }, Motion = MotionContact.Standing };
+            pose.Sample(seat, speed, 0f);
+
+            seat.Match.Tick++;
+            seat.Yaw = 47f;
+            pose.Sample(seat, speed, 0f);
+            Assert.That(pose.BodyYaw, Is.EqualTo(0f).Within(.001f));
+            Assert.That(pose.Twist, Is.EqualTo(47f).Within(.001f));
+            Assert.That(pose.Direction, Is.EqualTo(Vector2.zero));
+
+            seat.Match.Tick++;
+            seat.Yaw = 48f;
+            pose.Sample(seat, speed, 0f);
+            Assert.That(pose.BodyYaw, Is.GreaterThan(0f).And.LessThan(48f));
+            Assert.That(pose.Twist, Is.GreaterThan(0f).And.LessThan(48f));
+            Assert.That(pose.Direction.x, Is.GreaterThan(0f));
+            for (int i = 0; i < 60; i++)
+            {
+                seat.Match.Tick++;
+                pose.Sample(seat, speed, 0f);
+            }
+            Assert.That(pose.BodyYaw, Is.EqualTo(48f).Within(.001f));
+            Assert.That(pose.Twist, Is.EqualTo(0f).Within(.001f));
+            Assert.That(pose.Direction.sqrMagnitude, Is.LessThan(.0001f));
+
+            seat.Motion.Velocity = Vector2.right * speed;
+            seat.Match.Tick++;
+            pose.Sample(seat, speed, 0f);
+            float initialBlend = pose.Direction.magnitude;
+            Assert.That(initialBlend, Is.GreaterThan(0f).And.LessThan(.5f));
+            for (int i = 0; i < 30; i++)
+            {
+                seat.Match.Tick++;
+                pose.Sample(seat, speed, 0f);
+            }
+            Assert.That(pose.Direction.magnitude, Is.EqualTo(1f).Within(.01f));
+        }
+
+        [Test] public void EveryPlayableOutfitBakesSkinnedFirstPersonTrousersAndShoesOnly()
+        {
+            var outfits = ContentLibrary.Catalog.SeatOutfits;
+            Assert.That(outfits.Count, Is.EqualTo(8));
+            foreach (var outfit in outfits)
+            {
+                bool hasBottom = false, hasShoes = false;
+                foreach (var region in outfit.Regions(false))
+                {
+                    bool IsLower(int slot) => slot == (int)WearSlot.Bottom || slot == (int)WearSlot.Shoes;
+                    bool containsLower = region.slots.Any(IsLower);
+                    if (!containsLower)
+                    {
+                        Assert.That(region.firstPersonLower, Is.Null, outfit.Id);
+                        continue;
+                    }
+
+                    var mesh = region.firstPersonLower;
+                    Assert.That(mesh, Is.Not.Null, outfit.Id);
+                    Assert.That(mesh.bindposes, Is.EqualTo(region.partitioned.bindposes), outfit.Id);
+                    Assert.That(region.lowerMaterialSlots.Length, Is.EqualTo(mesh.subMeshCount), outfit.Id);
+                    for (int i = 0; i < mesh.subMeshCount; i++)
+                    {
+                        int sourceSlot = region.lowerMaterialSlots[i];
+                        Assert.That(sourceSlot, Is.InRange(0, region.slots.Length - 1), outfit.Id);
+                        int slot = region.slots[sourceSlot];
+                        Assert.That(IsLower(slot), Is.True, outfit.Id + " lower mesh contains a non-leg material slot");
+                        Assert.That(mesh.GetIndexCount(i), Is.Positive, outfit.Id);
+                        hasBottom |= slot == (int)WearSlot.Bottom;
+                        hasShoes |= slot == (int)WearSlot.Shoes;
+                    }
+                }
+                Assert.That(hasBottom && hasShoes, Is.True, outfit.Id + " must draw both lower clothing and shoes");
+            }
+        }
+
+        [TestCase("michele", Side.Defend, .00005f, .05666f, .07153f, 1.49250f)]
+        [TestCase("nora", Side.Attack, -.00116f, .05129f, .08780f, 1.44736f)]
+        public void NewCastHasMeasuredEyesAndKeepsItsLowerBodyWhenHeadMeshIsMasked(
+            string id, Side side, float eyeX, float eyeY, float eyeZ, float standingEyes)
+        {
+            var catalog = ContentLibrary.Catalog;
+            var outfit = catalog.Find<OutfitDefinition>("outfit." + id);
+            Assert.That(outfit, Is.Not.Null, id);
+            Assert.That(outfit.Character, Is.SameAs(catalog.Find<CharacterDefinition>("character." + id)));
+            Assert.That(outfit.Character.Faction, Is.EqualTo(side));
+            Assert.That(Vector3.Distance(outfit.Character.FaceAnchor, new Vector3(eyeX, eyeY, eyeZ)), Is.LessThan(.001f));
+            Assert.That(outfit.Character.StandingEyes, Is.EqualTo(standingEyes).Within(.002f));
+            Assert.That(outfit.Included, Is.True);
+            Assert.That(outfit.Arms.GetComponentInChildren<MeshFilter>().sharedMesh.vertexCount, Is.Positive);
+            Assert.That(outfit.ViewArms(true).GetComponentInChildren<MeshFilter>().sharedMesh.vertexCount, Is.Positive);
+            Assert.That(outfit.ViewRig.GetComponentInChildren<SkinnedMeshRenderer>().sharedMesh.vertexCount, Is.Positive);
+            Assert.That(outfit.Regions(true), Is.Not.Empty, id + " sleeve regions");
+            Assert.That(outfit.Regions(true).Any(region => region.slots.Contains((int)WearSlot.Gloves)), Is.True, id);
+
+            var body = Object.Instantiate(outfit.Character.Model);
+            try
+            {
+                var region = outfit.Regions(false).Single(item => item.firstPersonLower);
+                var skin = body.GetComponentsInChildren<SkinnedMeshRenderer>().Single(renderer => renderer.sharedMesh == region.source);
+                var headgear = new GameObject("Head accessory");
+                headgear.transform.SetParent(body.transform, false);
+                var headRenderer = headgear.AddComponent<MeshRenderer>();
+                var perspective = new FirstPersonBody(body, outfit, new System.Collections.Generic.List<Renderer>());
+                perspective.SetLocal(true);
+                Assert.That(skin.enabled, Is.True, "The lower body remains renderable.");
+                Assert.That(skin.sharedMesh, Is.SameAs(region.firstPersonLower));
+                Assert.That(headRenderer.enabled, Is.False, "Upper-only renderers must leave the first-person view.");
+                perspective.SetLocal(false);
+                Assert.That(skin.sharedMesh, Is.SameAs(region.source));
+                Assert.That(headRenderer.enabled, Is.True);
+            }
+            finally { Object.DestroyImmediate(body); }
         }
 
         [TestCase(-1)]
@@ -219,7 +346,7 @@ namespace AnimeCS.Tests
         [Test] public void AllPlayableAvatarsRetargetCrouchWithoutMovingThePlantedFoot()
         {
             var catalog = ContentLibrary.Catalog;
-            Assert.That(catalog.SeatOutfits.Count,Is.EqualTo(6));
+            Assert.That(catalog.SeatOutfits.Count,Is.EqualTo(8));
             var clips = catalog.Character.Controller.animationClips.Distinct().ToDictionary(c => c.name);
             Assert.That(clips.Count,Is.EqualTo(19));
             foreach (var outfit in catalog.SeatOutfits)

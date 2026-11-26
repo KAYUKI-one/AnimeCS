@@ -23,14 +23,21 @@ namespace AnimeCS.Match
         private readonly ContentCatalog _catalog;
         private readonly WardrobeLoadout _appearance;
         private WeaponInstance _primary, _sidearm, _pendingPrimary, _pendingSidearm;
-        private UtilityDefinition _pendingUtility;
+        private readonly UtilityBelt _utilities=new();
         private bool _pendingArmor, _pendingHelmet, _pendingKit;
         private HeldSlot _previous, _held;
         public WeaponInstance Primary => _pendingPrimary ?? _primary;
         public WeaponInstance Sidearm => _pendingSidearm ?? _sidearm;
         public WeaponInstance Knife { get; private set; }
         public HeldSlot Held => _held;
-        public UtilityDefinition Utility;
+        public UtilityDefinition Utility=>_utilities.Selected;
+        public UtilityCounts Utilities=>_utilities.Counts();
+        public UtilityDefinition TakeUtility()
+        {
+            var item=_utilities.Take();if(_held==HeldSlot.Utility && !Utility)_held=Fallback();
+            return item;
+        }
+        public bool AddUtility(UtilityDefinition item)=>_utilities.Add(item,false);
         public bool Armor, Helmet, Kit, CarriesObjective;
         public int Wallet;
         private string _outfitId;
@@ -53,10 +60,10 @@ namespace AnimeCS.Match
         public PurchaseDraft Draft => new PurchaseDraft
         {
             Primary = _pendingPrimary?.Definition.Id, Sidearm = _pendingSidearm?.Definition.Id,
-            Utility = _pendingUtility ? _pendingUtility.Id : null, Armor = _pendingArmor, Helmet = _pendingHelmet, Kit = _pendingKit
+            Utility = _utilities.LastOrder ? _utilities.LastOrder.Id : null, Utilities=_utilities.Counts(true), Armor = _pendingArmor, Helmet = _pendingHelmet, Kit = _pendingKit
         };
         public int Available(MatchRules rules) => Wallet - (_pendingPrimary?.Definition.Price ?? 0)
-            - (_pendingSidearm?.Definition.Price ?? 0) - (_pendingUtility ? _pendingUtility.Price : 0)
+            - (_pendingSidearm?.Definition.Price ?? 0) - _utilities.Cost
             - (_pendingArmor ? rules.armorPrice : 0) - (_pendingHelmet ? rules.helmetPrice : 0) - (_pendingKit ? rules.kitPrice : 0);
 
         public SeatInventory(ContentCatalog catalog, WardrobeLoadout appearance)
@@ -65,12 +72,13 @@ namespace AnimeCS.Match
         private bool Has(HeldSlot slot) => slot switch
         {
             HeldSlot.Primary => Primary != null, HeldSlot.Sidearm => Sidearm != null,
-            HeldSlot.Knife => Knife != null, HeldSlot.Objective => CarriesObjective, _ => false
+            HeldSlot.Knife => Knife != null, HeldSlot.Objective => CarriesObjective, HeldSlot.Utility => Utility, _ => false
         };
 
         public bool Select(HeldSlot next, bool previous = false)
         {
             if (previous) next = Has(_previous) ? _previous : Fallback();
+            if(next==HeldSlot.Utility && next==_held && !previous)return _utilities.Step(1,true);
             if (!Has(next) || next == _held) return false;
             _previous = _held; _held = next;
             return true;
@@ -79,15 +87,19 @@ namespace AnimeCS.Match
         private HeldSlot Fallback() => Primary != null ? HeldSlot.Primary : Sidearm != null ? HeldSlot.Sidearm :
             Knife != null ? HeldSlot.Knife : CarriesObjective ? HeldSlot.Objective : HeldSlot.Current;
 
+        private static readonly HeldSlot[] Wheel={HeldSlot.Primary,HeldSlot.Sidearm,HeldSlot.Knife,HeldSlot.Utility,HeldSlot.Objective};
         public bool Cycle(int direction)
         {
             if (direction == 0) return false;
-            const int count = (int)HeldSlot.Objective;
-            int current = (int)_held - 1;
-            for (int i = 1; i <= count; i++)
+            direction=System.Math.Sign(direction);
+            if(_held==HeldSlot.Utility && _utilities.Step(direction,false))return true;
+            int current=System.Array.IndexOf(Wheel,_held);
+            for(int i=1;i<=Wheel.Length;i++)
             {
-                var slot = (HeldSlot)(1 + (current + System.Math.Sign(direction) * i + count) % count);
-                if (Has(slot)) return Select(slot);
+                var slot=Wheel[(current+direction*i+Wheel.Length*2)%Wheel.Length];
+                if(!Has(slot))continue;
+                if(slot==HeldSlot.Utility)_utilities.Enter(direction);
+                return Select(slot);
             }
             return false;
         }
@@ -121,7 +133,7 @@ namespace AnimeCS.Match
             if (clearEquipment)
             {
                 _primary = _sidearm = null;
-                Armor = Helmet = Kit = false; Utility = null;
+                Armor = Helmet = Kit = false; _utilities.Clear();
             }
             if (side != Side.Defend) Kit = false;
             var knife=_catalog.Find<WeaponDefinition>(_appearance.knifeId);
@@ -142,7 +154,7 @@ namespace AnimeCS.Match
             if (intent.Buy==BuySlot.Utility)
             {
                 var utility=_catalog.Find<UtilityDefinition>(intent.ItemId);
-                if (utility && !utility.Archived) Utility=utility;
+                _utilities.Add(utility,false);
                 return false;
             }
             var gun=_catalog.Find<WeaponDefinition>(intent.ItemId);
@@ -173,10 +185,9 @@ namespace AnimeCS.Match
             }
             if (intent.Buy == BuySlot.Utility)
             {
-                if (intent.CancelPurchase) { _pendingUtility = null; return; }
                 var value = _catalog.Find<UtilityDefinition>(intent.ItemId);
-                if (value && value != Utility && value.Price <= available + (_pendingUtility ? _pendingUtility.Price : 0))
-                    _pendingUtility = value;
+                if(intent.CancelPurchase){_utilities.Cancel(value);if(!Has(_held))_held=Fallback();return;}
+                if(value && value.Price<=available)_utilities.Add(value,true);
                 return;
             }
             if (intent.Buy != BuySlot.Primary && intent.Buy != BuySlot.Sidearm) return;
@@ -200,7 +211,7 @@ namespace AnimeCS.Match
             Wallet = Available(rules);
             if (_pendingPrimary != null) _primary = _pendingPrimary;
             if (_pendingSidearm != null) _sidearm = _pendingSidearm;
-            if (_pendingUtility) Utility = _pendingUtility;
+            _utilities.Commit();
             Armor |= _pendingArmor; Helmet |= _pendingHelmet; Kit |= _pendingKit;
             ClearOrder();
         }
@@ -209,7 +220,7 @@ namespace AnimeCS.Match
         private void ClearOrder()
         {
             _pendingPrimary = _pendingSidearm = null;
-            _pendingUtility = null;
+            _utilities.ClearOrders();
             _pendingArmor = _pendingHelmet = _pendingKit = false;
         }
     }

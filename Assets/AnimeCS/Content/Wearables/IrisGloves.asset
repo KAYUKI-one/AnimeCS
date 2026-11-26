@@ -42,3 +42,9 @@ MonoBehaviour:
   - character: {fileID: 11400000, guid: 10b1cac9d18c6e34f9ab869b8b238792, type: 2}
     model: {fileID: 919132149155446097, guid: d9c457cb8ff2d5a4fa2da43aaf95e2fd, type: 3}
     viewModel: {fileID: 919132149155446097, guid: d9c457cb8ff2d5a4fa2da43aaf95e2fd, type: 3}
+  - character: {fileID: 11400000, guid: a5c69e93dc0eee643afc136759b30814, type: 2}
+    model: {fileID: 919132149155446097, guid: 83553daead78c3043ac4ae70b74cb91d, type: 3}
+    viewModel: {fileID: 919132149155446097, guid: 83553daead78c3043ac4ae70b74cb91d, type: 3}
+  - character: {fileID: 11400000, guid: cd48c2083c87bbf459401172573bde7d, type: 2}
+    model: {fileID: 919132149155446097, guid: 6986e65ed02b95147a43891f6bf65ca9, type: 3}
+    viewModel: {fileID: 919132149155446097, guid: 6986e65ed02b95147a43891f6bf65ca9, type: 3}

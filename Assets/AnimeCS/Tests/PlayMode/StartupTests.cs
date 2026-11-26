@@ -62,10 +62,10 @@ namespace AnimeCS.Tests
             Assert.That(rail.worldBound.width/root.worldBound.width,Is.LessThan(.13f));
             Press("faction-attack"); yield return null;
             Assert.That(page.Q("backpack-items").Query<Button>(className:"item-tile").ToList()
-                .Select(button => button.name), Is.EquivalentTo(new[] { "outfit.flor", "outfit.blackmiku", "outfit.laevatain" }));
+                .Select(button => button.name), Is.EquivalentTo(new[] { "outfit.flor", "outfit.blackmiku", "outfit.laevatain", "outfit.nora" }));
             Press("faction-defend"); yield return null;
             Assert.That(page.Q("backpack-items").Query<Button>(className:"item-tile").ToList()
-                .Select(button => button.name), Is.EquivalentTo(new[] { "outfit.mornye", "outfit.rover", "outfit.lily" }));
+                .Select(button => button.name), Is.EquivalentTo(new[] { "outfit.mornye", "outfit.rover", "outfit.lily", "outfit.michele" }));
             Press("faction-attack"); yield return null;
             Press("equip-slot-1"); yield return null;
             Assert.That(page.Q("backpack-items").Q<Button>("weapon.ember47"),Is.Not.Null);

@@ -65,6 +65,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d21eaa081a594804288a8ca7d7b73c04, type: 2}
   - {fileID: 11400000, guid: 10b1cac9d18c6e34f9ab869b8b238792, type: 2}
   - {fileID: 11400000, guid: 14f0272e8d9ec854f88f43fcef0c9309, type: 2}
+  - {fileID: 11400000, guid: a5c69e93dc0eee643afc136759b30814, type: 2}
+  - {fileID: 11400000, guid: a3c21a1a85e690a45996b0c555968f1f, type: 2}
+  - {fileID: 11400000, guid: cd48c2083c87bbf459401172573bde7d, type: 2}
+  - {fileID: 11400000, guid: 3326ff49709b34c43abf82dd9e916797, type: 2}
   _map: {fileID: 11400000, guid: ca26f863b78fdf149a86c4000df065ca, type: 2}
   _character: {fileID: 11400000, guid: dd19b401d68736749b2a2131983df047, type: 2}
   _outfit: {fileID: 11400000, guid: 3b2ab2c2cded36a4d984b7a14ba0d07a, type: 2}
@@ -75,6 +79,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a837939bd456ab44f820016d35f822d1, type: 2}
   - {fileID: 11400000, guid: d21eaa081a594804288a8ca7d7b73c04, type: 2}
   - {fileID: 11400000, guid: 14f0272e8d9ec854f88f43fcef0c9309, type: 2}
+  - {fileID: 11400000, guid: a3c21a1a85e690a45996b0c555968f1f, type: 2}
+  - {fileID: 11400000, guid: 3326ff49709b34c43abf82dd9e916797, type: 2}
   _attackPistol: {fileID: 11400000, guid: c6229a5749d5fd04c859e42d06731efe, type: 2}
   _defendPistol: {fileID: 11400000, guid: be921e0e9a2c0804d9d06465da19608e, type: 2}
   _knife: {fileID: 11400000, guid: 432b8029701eba44884fe87cd5bcb8ec, type: 2}

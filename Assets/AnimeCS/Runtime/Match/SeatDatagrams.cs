@@ -85,7 +85,7 @@ namespace AnimeCS.Match
                 if(_peer==null || !_peer.Equals(sender) || !SeatWire.ValidInput(p) ||
                     SeatWire.Token(p)!=_token || SeatWire.I32(p,13)!=view.Match.Round)continue;
                 int ack=SeatWire.I32(p,17);
-                if(ack<0 || _sentTick[ack%64]!=ack || p[42]>(byte)HeldSlot.Objective || p[43]>(byte)BuySlot.Helmet || p[44]>1 || Math.Abs((int)(sbyte)p[41])>1)continue;
+                if(ack<0 || _sentTick[ack%64]!=ack || p[42]>(byte)HeldSlot.Utility || p[43]>(byte)BuySlot.Helmet || p[44]>1 || Math.Abs((int)(sbyte)p[41])>1)continue;
                 if(!Input.Receive(SeatWire.I32(p,21),ack,SeatWire.Intent(p)))continue;
                 float elapsed=(float)((now-_sent[ack%64])/(double)Stopwatch.Frequency);
                 _rtt=Mathf.Lerp(_rtt,Mathf.Clamp(elapsed,0,.4f),.25f); _lastContact=now;

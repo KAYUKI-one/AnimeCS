@@ -60,6 +60,7 @@ namespace AnimeCS.Editor
                 Regions(outfit.Character.Model,outfit.name,false,data.FindProperty("_bodyRegions"));
                 Regions(outfit.ViewRig,outfit.name,true,data.FindProperty("_viewRegions"));
                 data.ApplyModifiedPropertiesWithoutUndo();
+                LocalBodyBake.Bind(outfit);
             }
         }
 

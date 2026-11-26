@@ -3,8 +3,9 @@ import bpy,sys,json
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).parent))
 from cast_roster import folders
-root,out=map(Path,sys.argv[sys.argv.index("--")+1:])
-for label,fragment,iris in [("BlackMiku","礼服miku","Pupils"),("Laevatain","莱万汀","目"),("Mornye","莫宁","Eye_")]:
+args=sys.argv[sys.argv.index("--")+1:]; root,out=map(Path,args[:2])
+for label,fragment,iris in [("BlackMiku","礼服miku","Pupils"),("Laevatain","莱万汀","目"),("Mornye","莫宁","Eye_"),("Michele","米雪儿","目"),("Nora","诺诺","eyes")]:
+    if args[2:] and label not in args[2:]: continue
     package=next(d for d in root.iterdir() if fragment in d.name)
     paths=list(package.rglob("*.pmx"))
     file=next(f for f in paths if "veil" in f.stem) if label=="BlackMiku" else paths[0]

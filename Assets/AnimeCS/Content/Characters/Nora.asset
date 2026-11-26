@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 010b2f5c0dd47ac4b91313bb11cebfbf, type: 3}
+  m_Name: Nora
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.CharacterDefinition
+  _id: character.nora
+  _displayName: "\u8BFA\u8BFA"
+  _thumbnail: {fileID: 0}
+  _glyph: {fileID: 0}
+  _archived: 0
+  _model: {fileID: 919132149155446097, guid: 9d0703a2711076749bf99d7da3a84d09, type: 3}
+  _portrait: {fileID: 2800000, guid: 14d98f1ca8a72a74b8a2ec79e40e344d, type: 3}
+  _icon: {fileID: 2800000, guid: d8c6f7682fe805543af9758df1a273b5, type: 3}
+  _attackInsignia: {fileID: 4223337302157625338, guid: 1623b12e5626c584ea7acef0c627dffe, type: 3}
+  _defendInsignia: {fileID: 90673721401449462, guid: 6c8ec3eb96002e54bbda7f9843aa56d6, type: 3}
+  _controller: {fileID: 9100000, guid: dda641f82b1570747be311378167f262, type: 2}
+  _weaponSocket: 
+  _faction: 0
+  _headwearOffset: {x: 0, y: 0.064, z: 0}
+  _faceAnchor: {x: -0.0011577134, y: 0.051291842, z: 0.08779622}
+  _standingEyes: 1.4473648
+  _combatHeadScale: 1.025

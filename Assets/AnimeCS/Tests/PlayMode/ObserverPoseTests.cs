@@ -5,9 +5,12 @@ using AnimeCS.Match;
 using AnimeCS.Play;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UIElements;
+using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
 
 namespace AnimeCS.Tests
 {
@@ -79,6 +82,7 @@ namespace AnimeCS.Tests
             wall.transform.position=origin+new Vector3(0,1.4f,2);
             wall.transform.localScale=new Vector3(2.4f,3,.3f);
             wall.SetActive(false);
+            var mouse = InputSystem.AddDevice<Mouse>();
             IEnumerator Advance(int ticks)
             {
                 int until=game.MatchState.Tick+ticks;
@@ -169,9 +173,28 @@ namespace AnimeCS.Tests
                 damage[2]=500; apply.Invoke(match,null); yield return Advance(4);
                 Assert.That(other.resolvedStyle.display,Is.EqualTo(DisplayStyle.None),"Eliminated teammate");
                 Assert.That(otherChevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.None), "Eliminated teammate");
+                InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+                yield return Advance(4);
+                Assert.That(game.Player.WatchTeam().Seat, Is.EqualTo(3));
+                Assert.That(Vector3.Distance(Camera.main.transform.position, actors[3].Eye), Is.LessThan(.08f));
+                Assert.That(Quaternion.Angle(Camera.main.transform.rotation,
+                    Quaternion.Euler(-actors[3].Pitch, actors[3].Yaw, 0f)), Is.LessThan(.5f));
+                InputSystem.QueueStateEvent(mouse, new MouseState());
+                yield return Advance(2);
+                InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
+                yield return Advance(4);
+                Assert.That(game.Player.WatchTeam().Seat, Is.EqualTo(1));
+                Assert.That(Vector3.Distance(Camera.main.transform.position, actors[1].Eye), Is.LessThan(.08f));
+                InputSystem.QueueStateEvent(mouse, new MouseState());
+                yield return Advance(2);
+                InputSystem.QueueDeltaStateEvent(mouse.scroll, new Vector2(0f, -120f));
+                yield return Advance(4);
+                Assert.That(game.Player.WatchTeam().Seat, Is.EqualTo(3));
+                Assert.That(Vector3.Distance(Camera.main.transform.position, actors[3].Eye), Is.LessThan(.08f));
             }
             finally
             {
+                InputSystem.RemoveDevice(mouse);
                 game.ReturnToLobby(); game.FriendlyCues = originalFriendlyCues; rulesField.SetValue(game,original);
                 Object.Destroy(floor); Object.Destroy(wall); Object.Destroy(rules);
             }

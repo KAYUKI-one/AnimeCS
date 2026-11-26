@@ -5,6 +5,8 @@ namespace AnimeCS.Play
 {
     internal sealed class ScopeOverlay : VisualElement
     {
+        private readonly VisualElement _reticle=new();
+        private bool _visible;
         private float _settled = 1f;
         internal ScopeOverlay()
         {
@@ -13,14 +15,17 @@ namespace AnimeCS.Play
             AddToClassList("fill");
             style.display = DisplayStyle.None;
             generateVisualContent += Draw;
+            _reticle.pickingMode=PickingMode.Ignore; _reticle.AddToClassList("fill");
+            _reticle.generateVisualContent+=DrawReticle; Add(_reticle);
         }
 
         internal void Present(bool visible, float stability)
         {
-            style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            if(_visible!=visible){_visible=visible; style.display=visible?DisplayStyle.Flex:DisplayStyle.None;}
+            if(!visible)return;
             if (Mathf.Abs(_settled-stability) < .001f) return;
             _settled = stability;
-            MarkDirtyRepaint();
+            _reticle.style.opacity=Mathf.Lerp(.52f,1f,stability);
         }
 
         private void Draw(MeshGenerationContext context)
@@ -38,8 +43,14 @@ namespace AnimeCS.Play
             p.strokeColor = new Color(.045f,.05f,.047f,1f);
             p.lineWidth = 3f;
             p.BeginPath(); p.Arc(center,radius,0,360); p.Stroke();
-            p.strokeColor = new Color(.035f,.037f,.032f,Mathf.Lerp(.48f,1f,_settled));
-            p.lineWidth = Mathf.Lerp(2.7f,1.25f,_settled);
+        }
+        private void DrawReticle(MeshGenerationContext context)
+        {
+            var box=_reticle.contentRect; var center=box.center;
+            float radius=Mathf.Min(box.width,box.height)*.465f;
+            var p=context.painter2D;
+            p.strokeColor=new Color(.035f,.037f,.032f,1);
+            p.lineWidth=1.4f;
             p.BeginPath();
             p.MoveTo(center-Vector2.right*radius); p.LineTo(center+Vector2.right*radius);
             p.MoveTo(center-Vector2.up*radius); p.LineTo(center+Vector2.up*radius);

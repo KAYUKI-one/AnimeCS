@@ -1,6 +1,7 @@
 using System.Linq;
 using AnimeCS.Content;
 using AnimeCS.Play;
+using AnimeCS.Match;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -17,6 +18,9 @@ namespace AnimeCS.Editor
         private bool _view,_duck;
         private float _pitch,_yaw;
         private CharacterRig _rig;
+        private AppearancePresenter.ReloadInsert _movingPart;
+        private int _action;
+        private float _progress;
         private float _angle=62, _distance=1.45f;
         private PreviewRenderUtility _preview;
         private PlayableGraph _graph;
@@ -52,7 +56,14 @@ namespace AnimeCS.Editor
                 var yaw=new Slider("上身左右转向",-55,55){value=_yaw,showInputField=true};root.Add(yaw);
                 pitch.RegisterValueChangedCallback(e=>{_pitch=e.newValue;Repaint();});yaw.RegisterValueChangedCallback(e=>{_yaw=e.newValue;Repaint();});
             }
+            var action=new DropdownField("动作预览",new System.Collections.Generic.List<string>{"持握","检视","换弹","击发"},_action);
+            root.Add(action);
+            var progress=new Slider("动作进度",0,1){value=_progress,showInputField=true};
+            progress.SetEnabled(_action!=0);root.Add(progress);
+            action.RegisterValueChangedCallback(e=>{_action=action.index;progress.SetEnabled(_action!=0);Repaint();});
+            progress.RegisterValueChangedCallback(e=>{_progress=e.newValue;Repaint();});
             var data=new SerializedObject(_weapon);
+            root.Add(new PropertyField(data.FindProperty("_inspect"),"检视动作模板"));
             foreach (var field in new[]{("_grip","右手接触点"),("_support","左手接触点"),
                 ("_shoulderPad","靠肩点"),("_uprightSupport","左手环握前端"),
                 (_view?"_viewOffset":"_worldOffset","模型偏移"),(_view?"_viewAngles":"_worldAngles","模型旋转")})
@@ -101,6 +112,7 @@ namespace AnimeCS.Editor
             }
             var parent=(_hands?.Valid!=true && rig.WeaponSocket && !_view) ? rig.WeaponSocket : _actor;
             _mount=AppearancePresenter.MountGun(parent,_view ? new Vector3(.23f,-.22f,.43f) : Vector3.zero,_weapon,null,_view).transform;
+            _movingPart=new AppearancePresenter.ReloadInsert(_mount);
         }
 
         private void DrawPreview()
@@ -118,7 +130,17 @@ namespace AnimeCS.Editor
             _rig?.RestoreHitPose();if (_graph.IsValid()) _graph.Evaluate(0);
             if(!_view)_rig?.Look(_actor,_yaw,_pitch);
             var aim=_view ? Quaternion.identity : Quaternion.Euler(-Mathf.Clamp(_pitch,-66,69),_yaw,0);
-            _hands?.Pose(_actor,_mount,_weapon,aim,_view);
+            var sample=new SeatView{EquipTick=-10000,InspectTick=-10000,LastShotTick=-10000};
+            float seconds=_action==1?WeaponActionPose.InspectSeconds(_weapon.Inspect):_action==2?_weapon.ReloadSeconds:.24f;
+            float frame=_progress*seconds*MatchRules.TickRate;
+            sample.Match.Tick=Mathf.FloorToInt(frame);
+            if(_action==1)sample.InspectTick=0;
+            if(_action==2 && _weapon.Class!=WeaponClass.Knife)sample.ReloadEnd=MatchRules.Ticks(_weapon.ReloadSeconds);
+            if(_action==3)sample.LastShotTick=0;
+            var pose=WeaponActionPose.Sample(sample,_weapon,frame-sample.Match.Tick,_view,1);
+            _movingPart.Apply(_mount,pose.InsertOffset,pose.Hinge);
+            float swing=_action==3 && _weapon.Class==WeaponClass.Knife?Mathf.Sin(Mathf.PI*_progress):0;
+            _hands?.Pose(_actor,_mount,_weapon,aim,_view,swing,pose,_movingPart.Bounds);
             var camera=_preview.camera;
             camera.nearClipPlane=.025f;camera.farClipPlane=18;
             camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.18f,.22f,.24f);

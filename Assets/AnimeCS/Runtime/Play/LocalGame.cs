@@ -29,8 +29,8 @@ namespace AnimeCS.Play
         private readonly AppearancePresenter[] _avatars = new AppearancePresenter[LocalMatch.Seats];
         private readonly ISeatPort[] _ports = new ISeatPort[LocalMatch.Seats];
         private readonly ISeatDriver[] _drivers = new ISeatDriver[LocalMatch.Seats];
-        private readonly Dictionary<WeaponInstance, GameObject> _drops = new Dictionary<WeaponInstance, GameObject>();
-        private readonly List<WeaponInstance> _retired = new List<WeaponInstance>();
+        private readonly Dictionary<GroundPickup, GameObject> _drops = new();
+        private readonly List<GroundPickup> _retired = new();
         private ArenaWorld _world;
         private KeyboardSeat _keyboard;
         private MatchHud _hud;
@@ -57,7 +57,7 @@ namespace AnimeCS.Play
         public MapDefinition SelectedMap => _requestedMap ? _requestedMap : _catalog.Map;
         public MatchMode Mode => SelectedMap.Practice ? MatchMode.AimPractice : _remote!=null ? MatchMode.Online : MatchMode.BotMatch;
         internal MapDefinition LastBombMap => _lastBombMap;
-        private GameObject _objective, _heldObjective;
+        private GameObject _objective;
         private readonly List<GameObject> _kitModels = new List<GameObject>();
         private bool _focused = true;
         private LocalProfileStore _profiles;
@@ -246,7 +246,7 @@ namespace AnimeCS.Play
             }
             _loadedMap=default;_world.Dispose();_catalog.SelectMap(map);
             yield return LoadMap(map);
-            _world=new ArenaWorld(_actors,map,transform,_presentation);_lobby.RefreshMap();
+            _world=new ArenaWorld(_actors,map,transform,_presentation,_objectiveModel);_lobby.RefreshMap();
             _changingMap=false;
             if(_requestedMap && _requestedMap!=map) { yield return ChangeMap(_requestedMap); yield break; }
             if(_queuedStart){_queuedStart=false;Restart();}
@@ -298,9 +298,9 @@ namespace AnimeCS.Play
                 var actor = new GameObject("Seat " + (i + 1)); actor.transform.SetParent(transform, false);
                 _actors[i] = actor.AddComponent<ArenaPawn>();
                 _actors[i].Tuning = _rules.movement ?? SeatMovement.Defaults;
-                _avatars[i] = new AppearancePresenter(_catalog, _actors[i], _camera.transform,_presentation);
+                _avatars[i] = new AppearancePresenter(_catalog, _actors[i], _camera.transform,_presentation,_objectiveModel);
             }
-            _world = new ArenaWorld(_actors, _catalog.Map, transform,_presentation);
+            _world = new ArenaWorld(_actors, _catalog.Map, transform,_presentation,_objectiveModel);
             _profiles = new LocalProfileStore(Path.Combine(Application.persistentDataPath, "wardrobe-v1.json"));
             if (_objectiveModel != null)
             {
@@ -340,7 +340,9 @@ namespace AnimeCS.Play
             _viewCamera.cullingMask = 1 << layer; _viewCamera.useOcclusionCulling = false;
             var overlay = go.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             overlay.renderType = UnityEngine.Rendering.Universal.CameraRenderType.Overlay;
-            overlay.renderShadows = false; overlay.renderPostProcessing = _presentation.daylightGrade;
+            overlay.renderShadows = false; overlay.renderPostProcessing = false;
+            overlay.requiresDepthOption=UnityEngine.Rendering.Universal.CameraOverrideOption.Off;
+            overlay.requiresColorOption=UnityEngine.Rendering.Universal.CameraOverrideOption.Off;
             var basis = _camera.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             if (basis && basis.cameraStack != null) basis.cameraStack.Add(_viewCamera);
             _viewCamera.enabled = false;
@@ -372,7 +374,6 @@ namespace AnimeCS.Play
         {
             _match?.SetPaused(true); InLobby=true; _time=0; ApplyAspect();MapLight(false);
             if (_objective) _objective.SetActive(false);
-            if (_heldObjective) _heldObjective.SetActive(false);
             foreach (var obj in _kitModels) obj.SetActive(false);
             _audio.Stop(); _camera.cullingMask=_cameraMask;
             if (_viewCamera) _viewCamera.enabled=false;
@@ -416,12 +417,20 @@ namespace AnimeCS.Play
             _keyboard.Shopping = _hud.ShopOpen && self.CanBuy && !_match.IsPaused;
             if (_keyboard.Shopping) _hud.NavigateShop(step, confirm, cancel, self.Match.Phase == RoundPhase.Buy);
             bool playing = !_match.IsPaused && self.Match.Phase != RoundPhase.Finished;
+            var mouse=Mouse.current;
+            if(playing && self.Health<=0 && !_keyboard.Shopping && mouse!=null)
+            {
+                float wheel=mouse.scroll.ReadValue().y;
+                int direction=mouse.leftButton.wasPressedThisFrame || wheel<0 ? 1 :
+                    mouse.rightButton.wasPressedThisFrame || wheel>0 ? -1 : 0;
+                if(direction!=0)_ports[0].WatchTeam(direction);
+            }
             bool look=playing && _focused && (!_keyboard.Shopping || _keyboard.ShopLook);
             _keyboard.Sample(playing && self.Health > 0 && _focused,look,self.Magnification);
             if(_drivers[0]==_keyboard && self.CanStartShot && _keyboard.PredictPress)
             {
                 var gun=_catalog.Find<WeaponDefinition>(self.WeaponId);
-                _avatars[0].PredictTrigger(self.Match.Round,self.Match.Tick+1);_audio.Predict(self,gun && gun.Suppressed);
+                _avatars[0].PredictTrigger(self.Match.Round,self.Match.Tick+1);_audio.Predict(self,gun && gun.Suppressed,gun?gun.Class:WeaponClass.Rifle);
             }
             if (_match.IsPaused || _match.Public.Phase == RoundPhase.Finished) return;
             const double fixedStep = 1d / MatchRules.TickRate;
@@ -452,9 +461,14 @@ namespace AnimeCS.Play
             float alpha = Mathf.Clamp01((float)(_time * MatchRules.TickRate));
             _camera.cullingMask = publicOnly ? 0 : _viewCamera ? _cameraMask & ~_viewCamera.cullingMask : _cameraMask;
             float power = publicOnly ? 1f : Mathf.Max(1f,watched.Magnification);
-            _camera.fieldOfView = 2f*Mathf.Atan(Mathf.Tan(_matchFov*Mathf.Deg2Rad*.5f)/power)*Mathf.Rad2Deg;
-            if (_viewCamera) { _viewCamera.enabled=!publicOnly && watched.ScopeLevel==0; _viewCamera.fieldOfView=_camera.fieldOfView; }
-            if (_baseData) _baseData.renderPostProcessing=_presentation.daylightGrade && (!_viewCamera || !_viewCamera.isActiveAndEnabled);
+            float worldFov=2f*Mathf.Atan(Mathf.Tan(_matchFov*Mathf.Deg2Rad*.5f)/power)*Mathf.Rad2Deg;
+            if(!Mathf.Approximately(_camera.fieldOfView,worldFov))_camera.fieldOfView=worldFov;
+            if(_viewCamera)
+            {
+                bool drawHands=!publicOnly && watched.ScopeLevel==0;
+                if(_viewCamera.enabled!=drawHands)_viewCamera.enabled=drawHands;
+                if(drawHands && !Mathf.Approximately(_viewCamera.fieldOfView,_matchFov))_viewCamera.fieldOfView=_matchFov;
+            }
             if (!publicOnly)
             {
                 var actor = _actors[watched.Seat];
@@ -474,11 +488,11 @@ namespace AnimeCS.Play
             DrawDroppedGuns(_match.Public.Tick+alpha);
             if (_objective != null)
             {
-                var point = _match.WorldObjective;
+                var point = _match.ObjectiveAt(_match.Public.Tick+alpha);
                 _objective.SetActive(point.HasValue && !publicOnly);
                 if (point.HasValue) _objective.transform.position = point.Value;
             }
-            DrawEquipment(watched, publicOnly);
+            DrawEquipment(publicOnly);
             _hud.Present(self, watched, _ports);
             UpdatePointer();
             _audio.Present(watched,_world);
@@ -500,25 +514,14 @@ namespace AnimeCS.Play
             UpdatePointer();
         }
 
-        private void DrawEquipment(in SeatView watch, bool publicOnly)
+        private void DrawEquipment(bool publicOnly)
         {
-            bool held = !publicOnly && watch.Held == HeldSlot.Objective;
-            if (held && !_heldObjective && _objectiveModel)
-            {
-                _heldObjective = AppearancePresenter.NewRoot("手持目标包", _camera.transform);
-                AppearancePresenter.AddVisual(_objectiveModel, _heldObjective.transform, Vector3.zero);
-                _heldObjective.transform.localPosition = new Vector3(.16f, -.25f, .48f);
-                _heldObjective.transform.localRotation = Quaternion.Euler(-12, -15, 0);
-                AppearancePresenter.UseViewLayer(_heldObjective);
-            }
-            if (_heldObjective) _heldObjective.SetActive(held);
             for (int i = 0; i < _match.GroundKits.Count; i++)
             {
                 if (_kitModels.Count == i)
                 {
                     var kit = AppearancePresenter.NewRoot("拆除套件", transform);
-                    AppearancePresenter.AddVisual(_objectiveModel, kit.transform, Vector3.zero);
-                    kit.transform.localScale = new Vector3(.65f,.6f,.7f);
+                    AppearancePresenter.AddVisual(_presentation.recoveryKit,kit.transform,Vector3.zero);
                     _kitModels.Add(kit);
                 }
                 _kitModels[i].transform.position = _match.GroundKits[i];
@@ -533,14 +536,14 @@ namespace AnimeCS.Play
             foreach (var item in _drops) _retired.Add(item.Key);
             foreach (var pickup in _match.GroundWeapons)
             {
-                _retired.Remove(pickup.Weapon);
+                _retired.Remove(pickup);
                 var position=pickup.At(frame);
-                if (_drops.TryGetValue(pickup.Weapon,out var existing)) { if(existing.transform.position!=position) existing.transform.position=position; continue; }
-                var root = AppearancePresenter.NewRoot("Dropped " + pickup.Weapon.Definition.DisplayName, transform);
+                if (_drops.TryGetValue(pickup,out var existing)) { if(existing.transform.position!=position) existing.transform.position=position; continue; }
+                var root = AppearancePresenter.NewRoot("Dropped " + pickup.Item.DisplayName, transform);
                 root.transform.SetPositionAndRotation(position, pickup.Rest.rotation);
-                var model = AppearancePresenter.AddVisual(pickup.Weapon.Definition.WorldModel, root.transform, Vector3.zero);
-                AppearancePresenter.ApplySkin(model, pickup.Weapon.Definition, _catalog.Find<WeaponSkinDefinition>(pickup.Weapon.SkinId));
-                root.SetActive(true); _drops.Add(pickup.Weapon, root);
+                var model = AppearancePresenter.AddVisual(pickup.Model, root.transform, Vector3.zero);
+                if(pickup.Weapon!=null) AppearancePresenter.ApplySkin(model, pickup.Weapon.Definition, _catalog.Find<WeaponSkinDefinition>(pickup.Weapon.SkinId));
+                root.SetActive(true); _drops.Add(pickup, root);
             }
             foreach (var key in _retired) { AppearancePresenter.Retire(_drops[key]); _drops.Remove(key); }
         }

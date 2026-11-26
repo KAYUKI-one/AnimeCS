@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace AnimeCS.Content
 {
+    public enum InspectStyle { Automatic, LongGun, Sidearm, Precision, StraightBlade, RingBlade, FoldingBlade }
+
     public sealed class WeaponDefinition : ContentDefinition
     {
         [SerializeField, InspectorName("持枪模型 · 第三人称 / 地面")] private GameObject _worldModel;
@@ -44,6 +46,12 @@ namespace AnimeCS.Content
         public WeaponSkinDefinition DefaultSkin => _defaultSkin;
         public Vector3 Offset(bool firstPerson) => firstPerson ? _viewOffset : _worldOffset;
         public Quaternion Rotation(bool firstPerson) => Quaternion.Euler(firstPerson ? _viewAngles : _worldAngles);
+        [SerializeField, InspectorName("检视动作模板")] private InspectStyle _inspect;
+        public InspectStyle Inspect => _inspect!=InspectStyle.Automatic ? _inspect : _class switch
+        {
+            WeaponClass.Knife=>InspectStyle.StraightBlade, WeaponClass.Pistol=>InspectStyle.Sidearm,
+            WeaponClass.LightSniper or WeaponClass.HeavySniper=>InspectStyle.Precision,_=>InspectStyle.LongGun
+        };
         public WeaponClass Class => _class;
         public int Price => _price;
         public int Magazine => _magazine;

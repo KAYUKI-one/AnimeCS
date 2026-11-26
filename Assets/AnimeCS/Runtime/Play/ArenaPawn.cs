@@ -12,6 +12,7 @@ namespace AnimeCS.Play
         private SphereCollider _headHitbox;
         internal SphereCollider HeadHitbox => _headHitbox;
         private Vector3 _spawn, _safe, _previousEye, _previousPosition;
+        internal Vector3 Momentum { get; private set; }
         private float _vertical, _crouch, _tuck;
         private bool _grounded;
         private readonly RaycastHit[] _headroomHits = new RaycastHit[12];
@@ -47,7 +48,7 @@ namespace AnimeCS.Play
         internal void Spawn(Vector3 position, float yaw)
         {
             _body.enabled = false;
-            _spawn = _safe = position; Yaw = yaw; Pitch = _vertical = 0;
+            Momentum=Vector3.zero; _spawn = _safe = position; Yaw = yaw; Pitch = _vertical = 0;
             _crouch = _tuck = 0; _grounded = true; SetHeight(SeatMovement.StandingHeight);
             transform.SetPositionAndRotation(position, Quaternion.Euler(0, yaw, 0));
             _previousPosition = position; _previousEye = Eye; Visuals.localPosition = Vector3.zero;
@@ -131,6 +132,7 @@ namespace AnimeCS.Play
             if (transform.position.y < Mathf.Min(_safe.y, _spawn.y) - 6f) Spawn(_safe, yaw);
             Vector3 actual = (transform.position - before) / dt;
             var flat = (flags & CollisionFlags.Sides) == 0 ? velocity : Vector2.ClampMagnitude(new Vector2(actual.x, actual.z),velocity.magnitude);
+            Momentum=new Vector3(flat.x,_grounded?0:_vertical,flat.y);
             return new MotionContact { Velocity = flat, VerticalSpeed = _vertical, Grounded = _grounded, Crouch = _crouch };
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using AnimeCS.Match;
+using AnimeCS.Content;
 using UnityEngine;
 
 namespace AnimeCS.Play
@@ -19,6 +20,8 @@ namespace AnimeCS.Play
     {
         private readonly AudioSource _source;
         private readonly AudioClip[] _clips;
+        private readonly MatchPresentation _preset;
+        private int _stepIndex,_shotIndex;
         private readonly AudioClip _quiet;
         private readonly bool[] _generated = new bool[7];
         private int _seat = -1, _lastEvent = -1;
@@ -28,23 +31,23 @@ namespace AnimeCS.Play
         private readonly bool _confirm;
         public float Volume { get => _source.volume; set => _source.volume=value; }
         private int _predictedRound=-1,_predictedTick=-1,_predictedSeat=-1;
-        public void Predict(in SeatView view,bool suppressed)
+        public void Predict(in SeatView view,bool suppressed,WeaponClass category=WeaponClass.Rifle)
         {
             int next=view.Match.Tick+1;
             if(_predictedRound==view.Match.Round && _predictedTick==next && _predictedSeat==view.Seat)return;
             _predictedRound=view.Match.Round; _predictedTick=next; _predictedSeat=view.Seat;
-            Play(new SoundClue{Kind=SoundKind.Gun,Own=true,Suppressed=suppressed},view.Yaw);
+            Play(new SoundClue{Kind=SoundKind.Gun,Own=true,Suppressed=suppressed,WeaponClass=category},view.Yaw);
         }
         public void Stop() { _source.Stop(); _lastEvent=-1; _seat=-1;_predictedTick=-1; }
 
         public SeatAudio(AudioSource source, MatchAudioClips bank, MatchPresentation preset)
         {
-            _confirm=preset && preset.hitConfirm;
+            _preset=preset; _confirm=preset && preset.hitConfirm;
             var ping=new float[850];
             for(int i=0;i<ping.Length;i++){float t=i/22050f;ping[i]=Mathf.Exp(-95*t)*(.17f*Mathf.Sin(7200*t)+.12f*Mathf.Sin(10300*t));}
             _ping=AudioClip.Create("Hit confirmation",ping.Length,1,22050,false);_ping.SetData(ping,0);
             _source = source; source.playOnAwake = false; source.spatialBlend = 0;
-            _clips = new[] { bank.step, preset && preset.shotSound ? preset.shotSound : bank.shot, bank.utility, bank.echoTail, bank.objective, bank.devicePulse, bank.deviceBurst };
+            _clips = new[] { bank.step, preset && preset.shotSound ? preset.shotSound : bank.shot, bank.utility, bank.echoTail, bank.objective, bank.devicePulse, preset && preset.deviceBurstSound ? preset.deviceBurstSound : bank.deviceBurst };
             _quiet = preset ? preset.suppressedSound : null;
             float[] frequencies = { 105, 72, 340, 1540, 780, 1210, 68 };
             for (int i = 0; i < _clips.Length; i++)
@@ -98,7 +101,19 @@ namespace AnimeCS.Play
         private void Play(SoundClue clue,float yaw)
         {
             _source.panStereo = clue.Own ? 0 : Mathf.Sin((clue.Bearing * 45f - yaw) * Mathf.Deg2Rad) * 0.7f;
-            _source.PlayOneShot(clue.Kind == SoundKind.Gun && clue.Suppressed && _quiet ? _quiet : _clips[(int)clue.Kind], 0.5f);
+            var clip=_clips[(int)clue.Kind];
+            if(clue.Kind==SoundKind.Step && _preset && _preset.bootSteps is {Length:>0})
+            {
+                var steps=_preset.bootSteps; clip=steps[_stepIndex++%steps.Length] ?? clip;
+            }
+            else if(clue.Kind==SoundKind.Gun && _preset)
+            {
+                if(clue.Suppressed && _quiet)clip=_quiet;
+                else if(clue.WeaponClass==WeaponClass.Pistol && _preset.pistolSound)clip=_preset.pistolSound;
+                else if(clue.WeaponClass is WeaponClass.HeavySniper or WeaponClass.LightSniper && _preset.marksmanSound)clip=_preset.marksmanSound;
+                else if(_preset.alternateRifleSound && (++_shotIndex&1)==0)clip=_preset.alternateRifleSound;
+            }
+            _source.PlayOneShot(clip,clue.Kind==SoundKind.Step?.44f:clue.Kind==SoundKind.DeviceBurst?.76f:.51f);
         }
         public void Dispose()
         {

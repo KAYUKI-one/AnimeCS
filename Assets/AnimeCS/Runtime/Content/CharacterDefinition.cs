@@ -22,6 +22,8 @@ namespace AnimeCS.Content
         public Vector3 HeadwearOffset=>_headwearOffset;
         [SerializeField, InspectorName("眼间点（头骨本地坐标，可选）")] private Vector3 _faceAnchor;
         [SerializeField, Min(0), InspectorName("待机时眼间点离地高度（米，可选）")] private float _standingEyes;
+        [SerializeField, Range(1f,1.06f), InspectorName("对局头部视觉比例")] private float _combatHeadScale=1.025f;
+        public float CombatHeadScale => Mathf.Clamp(_combatHeadScale,1f,1.06f);
         public Vector3 FaceAnchor=>_faceAnchor;
         public float StandingEyes=>_standingEyes;
         public GameObject Insignia(Side side) => side == Side.Attack ? _attackInsignia : _defendInsignia;

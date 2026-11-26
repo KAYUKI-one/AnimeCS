@@ -6,21 +6,26 @@ namespace AnimeCS.Match
 {
     public interface IDropWorld
     {
-        bool TryRestingPose(int seat, WeaponDefinition weapon, bool thrown, IReadOnlyList<GroundPickup> occupied, out Pose rest);
+        bool TryRestingPose(int seat, ContentDefinition weapon, bool thrown, IReadOnlyList<GroundPickup> occupied, out Pose rest);
         bool WithinReach(int seat, Vector3 point);
-        void DropPath(int seat, WeaponDefinition gun, Pose rest, out Vector3 launch, out Vector3 apex);
+        void DropPath(int seat, ContentDefinition gun, Pose rest, out Vector3 launch, out Vector3 apex);
     }
 
-    public readonly struct GroundPickup
+    public sealed class GroundPickup
     {
         public readonly Pose Rest;
         public Vector3 Position => Rest.position;
         public readonly WeaponInstance Weapon;
+        public readonly UtilityDefinition Utility;
+        public ContentDefinition Item => Weapon != null ? Weapon.Definition : Utility;
+        public GameObject Model => Weapon != null ? Weapon.Definition.WorldModel : Utility ? Utility.Model : null;
         public readonly int Tick;
         public readonly Vector3 Launch, Apex;
         public const float TravelSeconds = .28f;
         public GroundPickup(Pose rest, WeaponInstance weapon, int tick, Vector3 launch, Vector3 apex)
-        { Rest = rest; Weapon = weapon; Tick = tick; Launch = launch; Apex = apex; }
+            : this(rest, weapon, null, tick, launch, apex) { }
+        internal GroundPickup(Pose rest, WeaponInstance weapon, UtilityDefinition utility, int tick, Vector3 launch, Vector3 apex)
+        { Rest=rest; Weapon=weapon; Utility=utility; Tick=tick; Launch=launch; Apex=apex; }
         public Vector3 At(float frame)
         {
             float t = Mathf.Clamp01((frame-Tick)*SeatMovement.StepTime/TravelSeconds);
@@ -37,12 +42,15 @@ namespace AnimeCS.Match
         private int _carrier, _operator, _interactionStart;
         private Site _site, _attemptSite;
         private Vector3? _dropped;
+        private GroundPickup _packFlight;
         private Vector3 _device;
         private int _packDropper, _packUnlock, _nextPulse;
         private readonly List<Vector3> _kits = new List<Vector3>();
         public IReadOnlyList<Vector3> GroundKits => _kits;
         public IReadOnlyList<GroundPickup> GroundWeapons => _ground;
-        public Vector3? WorldObjective => _reason == WinReason.Defused || _reason == WinReason.DeviceExpired ? null : _site != Site.None ? _device : _dropped;
+        public Vector3? WorldObjective=>ObjectiveAt(_tick);
+        public Vector3? ObjectiveAt(float frame) => _reason is WinReason.Defused or WinReason.DeviceExpired ? null :
+            _site!=Site.None?_device:_dropped.HasValue && _packFlight!=null?_packFlight.At(frame):_dropped;
         private int InteractionTicks => MatchRules.Ticks(_phase != RoundPhase.Planted ? _rules.plantSeconds :
             _operator >= 0 && _seats[_operator].Bag.Kit ? _rules.kitDefuseSeconds : _rules.defuseSeconds);
 
@@ -97,6 +105,7 @@ namespace AnimeCS.Match
                 if (_carrier == i) DropPack(i);
                 DropGun(i, s.Bag.Take(HeldSlot.Primary), false);
                 DropGun(i, s.Bag.Take(HeldSlot.Sidearm), false);
+                while(s.Bag.Utility) { var item=s.Bag.TakeUtility(); if(!item)break; DropItem(i,null,item,false); }
                 if (s.Bag.Kit) { _kits.Add(Rest(i, null, false).position); s.Bag.Kit = false; }
                 _world.SetAlive(i, false);
             }
@@ -126,13 +135,7 @@ namespace AnimeCS.Match
         private void HandleWeapon(int i, bool frozen)
         {
             var s = _seats[i]; var input = _inputs[i]; var bag = s.Bag;
-            if (!frozen && input.ThrowUtility && bag.Utility != null && _signals != null)
-            {
-                s.Scope = default;
-                _signals.Throw(i, bag.Utility); bag.Utility = null;
-                s.NextShot = _tick + MatchRules.Ticks(0.45f); s.ReloadAt = 0;
-                return;
-            }
+            bool primaryPressed=input.Fire && (input.FirePressed || !s.FiredLastTick);
             if (bag.Select(input.Select, input.SwitchWeapon) || bag.Cycle(input.Cycle)) StartDraw(s);
             if (input.DropObjective || input.DropHeld && bag.Held == HeldSlot.Objective)
             {
@@ -143,6 +146,21 @@ namespace AnimeCS.Match
             {
                 bag.Commit(_rules);
                 if (DropGun(i, bag.Active, true)) { bag.Take(bag.Held); StartDraw(s); }
+                return;
+            }
+            if (input.DropHeld && bag.Held==HeldSlot.Utility)
+            {
+                if (DropItem(i,null,bag.Utility,true)) { bag.Commit(_rules); bag.TakeUtility(); StartDraw(s); }
+                return;
+            }
+            if (input.ThrowUtility || bag.Held==HeldSlot.Utility)
+            {
+                s.FiredLastTick=input.Fire;
+                if (!frozen && _signals!=null && bag.Utility && (input.ThrowUtility || primaryPressed && _tick>=s.NextShot))
+                {
+                    var item=bag.TakeUtility();
+                    if(item){_signals.Throw(i,item);StartDraw(s);}
+                }
                 return;
             }
             var gun = bag.Active;
@@ -184,7 +202,7 @@ namespace AnimeCS.Match
             if (_tick - s.NextShot > MatchRules.Ticks(0.3f)) s.Burst = 0;
             gun.Magazine--; s.InspectTick = -100000;
             s.LastShotTick = _tick;
-            _signals?.Emit(i, SoundKind.Gun, gun.Definition.SoundRadius, gun.Definition.Suppressed);
+            _signals?.EmitGun(i,gun.Definition);
             s.NextShot = _tick + Mathf.CeilToInt(60f * MatchRules.TickRate / gun.Definition.ShotsPerMinute);
             bool steady = gun.Definition.IsSteady(s.Motion.Velocity.magnitude, s.Motion.Grounded);
             float speedRatio=s.Motion.Velocity.magnitude/gun.Definition.RunSpeed;
@@ -261,29 +279,39 @@ namespace AnimeCS.Match
         private bool Reach(int seat, Vector3 p, float radius) => Near(seat, p, radius) &&
             (!(_world is IDropWorld geometry) || geometry.WithinReach(seat, p));
 
-        private bool TryRest(int seat, WeaponDefinition gun, bool thrown, out Pose rest)
+        private bool TryRest(int seat, ContentDefinition gun, bool thrown, out Pose rest)
         {
             if (_world is IDropWorld geometry) return geometry.TryRestingPose(seat,gun,thrown,_ground,out rest);
             rest=new Pose(_world.LastGround(seat),Quaternion.identity); return true;
         }
 
-        private Pose Rest(int seat, WeaponDefinition gun, bool thrown) => TryRest(seat,gun,thrown,out var rest)
+        private Pose Rest(int seat, ContentDefinition gun, bool thrown) => TryRest(seat,gun,thrown,out var rest)
             ? rest : new Pose(_world.LastGround(seat),Quaternion.identity);
 
         private void DropPack(int i)
         {
             _carrier = -1;
             _seats[i].Bag.RemoveObjective();
-            _dropped = Rest(i, null, _seats[i].Health > 0).position;
+            bool thrown=_seats[i].Health>0;
+            var rest=Rest(i,null,thrown);_dropped=rest.position;_packFlight=null;
+            if(thrown && _world is IDropWorld geometry)
+            {
+                geometry.DropPath(i,null,rest,out var launch,out var apex);
+                _packFlight=new GroundPickup(rest,null,_tick,launch,apex);
+            }
             _packDropper = i; _packUnlock = _tick + MatchRules.Ticks(.7f);
         }
 
         private bool DropGun(int seat, WeaponInstance gun, bool thrown)
+            => DropItem(seat,gun,null,thrown);
+
+        private bool DropItem(int seat, WeaponInstance gun, UtilityDefinition utility, bool thrown)
         {
-            if (gun == null || !TryRest(seat,gun.Definition,thrown,out var rest)) return false;
-            var launch = rest.position; var apex = rest.position;
-            if (thrown && _world is IDropWorld geometry) geometry.DropPath(seat, gun.Definition, rest, out launch, out apex);
-            _ground.Add(new GroundPickup(rest, gun, _tick, launch, apex));
+            ContentDefinition item=gun!=null?gun.Definition:utility;
+            if (!item || !TryRest(seat,item,thrown,out var rest)) return false;
+            var launch=rest.position; var apex=launch;
+            if(thrown && _world is IDropWorld geometry) geometry.DropPath(seat,item,rest,out launch,out apex);
+            _ground.Add(new GroundPickup(rest,gun,utility,_tick,launch,apex));
             return true;
         }
 
@@ -296,7 +324,7 @@ namespace AnimeCS.Match
                 _heldInteract[i] = input.Interact;
                 if (_seats[i].Health == 0 || input.DropHeld || input.DropObjective || _operator == i) continue;
                 if (_dropped.HasValue && _phase != RoundPhase.Settlement && SideOf(i) == Side.Attack &&
-                    (i != _packDropper || _tick >= _packUnlock && pressed) && Reach(i, _dropped.Value, pressed ? 2f : .72f))
+                    (i != _packDropper || _tick >= _packUnlock && pressed) && Reach(i, _packFlight?.At(_tick) ?? _dropped.Value, pressed ? 2f : .72f))
                 {
                     _carrier = i; _seats[i].Bag.CarriesObjective = true; _dropped = null;
                     continue;
@@ -315,13 +343,16 @@ namespace AnimeCS.Match
             int nearest = -1; float best = 2f * 2f;
             for (int i = 0; i < _ground.Count; i++)
             {
+                if(_ground[i].Utility && !bag.Utilities.CanAdd(_ground[i].Utility.Effect))continue;
                 var position = _ground[i].At(_tick);
                 float range = (position - _world.Position(seat)).sqrMagnitude;
                 if (range > best || !Reach(seat, position, 2f)) continue;
                 nearest = i; best = range;
             }
             if (nearest < 0) return;
-            var gun = _ground[nearest].Weapon;
+            var pickup=_ground[nearest];
+            if(pickup.Utility) { if(bag.AddUtility(pickup.Utility))_ground.RemoveAt(nearest); return; }
+            var gun = pickup.Weapon;
             _ground.RemoveAt(nearest);
             bool primary = gun.Definition.Class != WeaponClass.Pistol;
             bag.Commit(_rules);

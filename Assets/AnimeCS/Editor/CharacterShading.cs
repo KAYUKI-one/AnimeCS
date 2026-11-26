@@ -14,11 +14,11 @@ namespace AnimeCS.Editor
             if (!name.Contains("_")) return;
             string[] parts=name.Split('_'); string cast=parts[0], atlas=parts[1];
             bool face=cast switch {
-                "Rover"=>atlas=="T02","Lily"=>atlas=="T01",_=>atlas=="T00" };
+                "Rover"=>atlas=="T02","Lily" or "Nora"=>atlas=="T01","Michele"=>atlas=="T02",_=>atlas=="T00" };
             bool hair=cast switch {
                 "Rover"=>atlas=="T04", "Lily" or "Flor"=>atlas=="T05"||atlas=="T06",
                 "Laevatain"=>atlas=="T05","Mornye"=>atlas=="T02"||atlas=="T03",
-                "BlackMiku"=>atlas=="T02"||atlas=="T23",_=>false };
+                "BlackMiku"=>atlas=="T02"||atlas=="T23","Michele"=>atlas=="T01","Nora"=>atlas=="T00",_=>false };
             bool metal=cast=="BlackMiku" && (atlas=="T11"||atlas=="BABABA"||atlas=="T26");
             bool satin=cast=="BlackMiku" && (atlas=="T04"||atlas=="T05"||atlas=="T16"||atlas=="T17");
             bool translucent=(cast=="Lily"&&atlas=="T07") || (cast=="BlackMiku"&&atlas=="T28") || (cast=="Mornye"&&atlas=="T08");

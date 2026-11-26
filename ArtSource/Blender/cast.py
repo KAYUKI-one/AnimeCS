@@ -15,7 +15,7 @@ from motion import author_actions, pose, garment_stances
 from drape import mark_surfaces, bake_clearance
 from cast_roster import folders as cast_folders, playable
 
-names = {"Rover": "男漂泊", "Cantarella": "坎特", "Lily": "护士服", "Flor": "修模绑骨后）_by_鸣潮_4ce938", "BlackMiku":"黑色礼服miku", "Laevatain":"莱万汀", "Mornye":"莫宁"}
+names = {"Rover": "男漂泊", "Cantarella": "坎特", "Lily": "护士服", "Flor": "修模绑骨后）_by_鸣潮_4ce938", "BlackMiku":"黑色礼服miku", "Laevatain":"莱万汀", "Mornye":"莫宁", "Michele":"米雪儿", "Nora":"诺诺"}
 source, destination, *selected = sys.argv[sys.argv.index("--") + 1:]
 source, destination = Path(source), Path(destination)
 body_only="--body-only" in selected
@@ -199,6 +199,27 @@ def convert(label, file):
     body.matrix_world = Matrix.Identity(4)
     body.data.transform(xform @ mesh.matrix_world)
     body.name = label + "Body"
+    if label == "BlackMiku":
+        # Tailor the original dress over its fitted bodice. Keep both lining and opaque skirt faces.
+        skirt = {v for p in body.data.polygons if body.data.materials[p.material_index].name in {"裙G","裙3","裙2","裙1","裙+","裙++"} for v in p.vertices}
+        for index in skirt:
+            p = body.data.vertices[index].co
+            hem = smooth(.015, .58, 1.05-p.z)
+            p.x *= 1-.32*hem
+            p.y *= 1-.43*hem
+            p.z += .52*max(0,1.02-p.z)
+        # The hat and blindfold retain the character silhouette. Remove the separate trailing veil.
+        trim(body,lambda f: body.data.materials[f.material_index].name=="头纱")
+    if label == "Flor":
+        # Keep the own bodice and lining joined; trim the paired outer/inner tails to the same hem.
+        dress_materials={"Up_Dress","Up_Dressin","Down_Dressin","Up_Belt","Down_Belt","Down_Sliver","Down_Bag"}
+        panels={v for p in body.data.polygons if body.data.materials[p.material_index].name in dress_materials for v in p.vertices}
+        for index in panels:
+            p=body.data.vertices[index].co
+            hem=smooth(.01,.53,.98-p.z)
+            p.x*=1-.20*hem
+            p.y*=1-.33*hem
+            p.z+=.48*max(0,.98-p.z)
     groups = [target(g.name) if g.name in old.data.bones else None for g in body.vertex_groups]
     fabric = [label in garment_stances and g.name in old.data.bones and panel_bone(g.name) for g in body.vertex_groups]
     veil = {v for p in body.data.polygons if label=="BlackMiku" and body.data.materials[p.material_index].name=="头纱" for v in p.vertices}
@@ -239,7 +260,7 @@ def convert(label, file):
     if label in garment_stances:
         for a in list(bpy.data.actions): bpy.data.actions.remove(a)
         author_actions(rig,label)
-        export(folder/(label+"Idle.fbx"),[rig],True)
+        # Stance samples below serve only to bake cloth clearance into the mesh.
         for a in list(bpy.data.actions): bpy.data.actions.remove(a)
         rig.animation_data_clear()
         for b in rig.pose.bones: b.matrix_basis=Matrix.Identity(4)

@@ -8,7 +8,7 @@ namespace AnimeCS.Play
     internal struct WeaponActionPose
     {
         internal Vector3 Offset, Angles, InsertOffset;
-        internal float Release, Handle, Dip;
+        internal float Release, Handle, Dip, Hinge;
         internal const float DrawSeconds = .35f;
         internal const float SwapPoint = .31f;
 
@@ -18,32 +18,60 @@ namespace AnimeCS.Play
         private static float Ease(float from, float to, float time) =>
             Mathf.SmoothStep(0, 1, Mathf.InverseLerp(from, to, time));
 
+        internal static float InspectSeconds(InspectStyle style) =>
+            style is InspectStyle.StraightBlade or InspectStyle.RingBlade or InspectStyle.FoldingBlade?2.15f:2.65f;
+
+        private static void Inspect(ref WeaponActionPose pose,InspectStyle style,float seconds)
+        {
+            bool blade=style is InspectStyle.StraightBlade or InspectStyle.RingBlade or InspectStyle.FoldingBlade;
+            float t=seconds/InspectSeconds(style);
+            if(t<0 || t>=1)return;
+            float show=Ease(0,.24f,t)*(1-Ease(.78f,1,t));
+            float second=Ease(.40f,.62f,t);
+            Vector3 first,reverse;
+            switch(style)
+            {
+                case InspectStyle.StraightBlade: first=new(-17,27,-48);reverse=new(-6,-18,30);break;
+                case InspectStyle.RingBlade: first=new(-21,39,-94);reverse=new(-3,-24,53);break;
+                case InspectStyle.FoldingBlade:
+                    float flick=Ease(.14f,.26f,t)*(1-Ease(.28f,.44f,t));
+                    pose.Hinge=114f*flick;
+                    first=new(19,31,-62);reverse=new(-15,-27,41);break;
+                case InspectStyle.Sidearm: first=new(-19,-36,-33);reverse=new(-8,-20,14);break;
+                case InspectStyle.Precision: first=new(-7,-32,-22);reverse=new(-3,-24,-8);break;
+                default: first=new(-12,-46,-29);reverse=new(-5,-35,3);break;
+            }
+            pose.Offset=new Vector3(blade?-.038f:-.075f,blade?.046f:.058f,.033f)*show;
+            pose.Angles=Vector3.Lerp(first,reverse,second)*show;
+        }
+
         internal static WeaponActionPose Sample(in SeatView seat, WeaponDefinition weapon, float alpha, bool view, float scale)
         {
             var pose = new WeaponActionPose();
-            if (!weapon) return pose;
             float frame = seat.Match.Tick + alpha;
-            if (seat.ReloadEnd > seat.ReloadStart && frame < seat.ReloadEnd)
+            if (weapon && seat.ReloadEnd > seat.ReloadStart && frame < seat.ReloadEnd)
             {
                 float t = Mathf.InverseLerp(seat.ReloadStart, seat.ReloadEnd, frame);
-                float tilt = Ease(0,.20f,t) * (1 - Ease(.72f,1,t));
-                pose.Release = Ease(.09f,.30f,t) * (1 - Ease(.68f,.90f,t));
-                pose.Handle = Ease(.34f,.48f,t) * (1 - Ease(.53f,.71f,t));
-                float travel = Ease(.22f,.44f,t) * (1 - Ease(.56f,.76f,t));
-                pose.InsertOffset = new Vector3(-.033f, weapon.Class==WeaponClass.Pistol ? -.126f : -.166f, -.016f) * travel;
-                pose.Offset = new Vector3(.025f,.032f,.035f) * tilt;
-                pose.Angles = new Vector3(-11,-12,-28) * tilt;
+                bool compact=weapon.Class==WeaponClass.Pistol;
+                float tilt = Ease(0,.18f,t) * (1 - Ease(.78f,1,t));
+                pose.Release = Ease(.04f,.21f,t) * (1 - Ease(.78f,.96f,t));
+                pose.Handle = Ease(.34f,.53f,t) * (1 - Ease(.59f,.74f,t));
+                float travel = Ease(.20f,.43f,t) * (1 - Ease(.57f,.75f,t));
+                float seatTap=Ease(.70f,.75f,t)*(1-Ease(.75f,.83f,t));
+                pose.InsertOffset = new Vector3(-.048f,compact?-.132f:-.177f,-.037f)*travel + Vector3.up*.011f*seatTap;
+                pose.Offset = new Vector3(.018f,.031f,.035f)*tilt+Vector3.up*.013f*seatTap;
+                pose.Angles = new Vector3(-10,-14,compact?-32:-25)*tilt+new Vector3(-3,0,4)*seatTap;
             }
-            else
+            else if (weapon)
             {
-                bool knife = weapon.Class == WeaponClass.Knife;
-                float t = (frame - seat.InspectTick) * SeatMovement.StepTime / (knife ? 1.65f : 2.25f);
-                if (t >= 0 && t < 1)
+                Inspect(ref pose,weapon.Inspect,(frame-seat.InspectTick)*SeatMovement.StepTime);
+                float age=(frame-seat.LastShotTick)*SeatMovement.StepTime;
+                if(weapon.Class!=WeaponClass.Knife && seat.LastShotTick>=seat.EquipTick && age>=0 && age<.24f)
                 {
-                    float show = Ease(0,.22f,t) * (1 - Ease(.79f,1,t));
-                    float turn = Ease(.35f,.62f,t);
-                    pose.Offset = new Vector3(knife ? -.055f : -.075f,.058f,.045f) * show;
-                    pose.Angles = new Vector3(-12 + 9*turn, -29 + 15*turn, (knife ? -50 : -36) + 52*turn) * show;
+                    float kick=Mathf.Exp(-age*28f)*Mathf.Cos(age*40f);
+                    float side=(seat.LastShotTick%3-1)*.75f;
+                    pose.Offset+=new Vector3(side*.004f,.006f,-.036f)*kick;
+                    pose.Angles+=new Vector3(-3.3f,side,1.65f*side)*kick;
                 }
             }
             float draw = DrawProgress(seat,alpha);

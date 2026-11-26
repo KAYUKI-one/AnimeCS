@@ -6,7 +6,7 @@ namespace AnimeCS.Play
 {
     internal static class WearablePresenter
     {
-        internal static void Apply(ContentCatalog catalog,WornItems worn,OutfitDefinition outfit,bool view,GameObject body,CharacterRig rig)
+        internal static void Apply(ContentCatalog catalog,WornItems worn,OutfitDefinition outfit,bool view,GameObject body,CharacterRig rig,System.Collections.Generic.List<Renderer> lowerWearables=null)
         {
             if (!outfit || !body || worn.Equals(default(WornItems))) return;
             var choices=new WearableDefinition[5];
@@ -21,6 +21,7 @@ namespace AnimeCS.Play
                 if(anchor)
                 {
                     var garment=AppearancePresenter.AddVisual(model,anchor,slot==WearSlot.Headwear?outfit.Character.HeadwearOffset:Vector3.zero);rig.BindClothing(garment);
+                    if(lowerWearables!=null && (slot==WearSlot.Bottom || slot==WearSlot.Shoes))lowerWearables.AddRange(garment.GetComponentsInChildren<Renderer>(true));
                     foreach(var anim in garment.GetComponentsInChildren<Animator>(true))anim.enabled=false;
                     foreach(var skin in garment.GetComponentsInChildren<SkinnedMeshRenderer>(true)){skin.updateWhenOffscreen=true;if(view)skin.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;}
                 }

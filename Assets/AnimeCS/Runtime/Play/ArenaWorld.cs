@@ -17,11 +17,15 @@ namespace AnimeCS.Play
         private readonly Dictionary<Collider, int> _bodies = new Dictionary<Collider, int>();
         private readonly ArenaSignals _signals;
         private readonly ShotFeedback _shots;
+        private readonly Transform _root;
+        private readonly Bounds _packBounds;
+        private readonly Material _blast;
         private readonly RaycastHit[] _rayHits = new RaycastHit[64];
         private static readonly float[] SightHeights = { 1.26f, 1.65f, 0.83f };
-        public ArenaWorld(ArenaPawn[] actors, MapDefinition map, Transform root, MatchPresentation style = null)
+        public ArenaWorld(ArenaPawn[] actors, MapDefinition map, Transform root, MatchPresentation style = null,GameObject objectiveModel=null)
         {
             _history = new HitboxHistory(MatchRules.TickRate,actors.Length,actors[0].HeadHitbox.radius,((CapsuleCollider)actors[0].Body).radius);
+            _packBounds=ModelBounds(objectiveModel);_root=root; _blast=style?style.deviceBlast:null;
             _actors = actors; _muzzles = new Vector3?[actors.Length];
             for (int i=0;i<actors.Length;i++) { _bodies.Add(actors[i].Body,i); _bodies.Add(actors[i].HeadHitbox,i); }
             _signals = new ArenaSignals(actors, map, root, _bodies);
@@ -31,8 +35,11 @@ namespace AnimeCS.Play
         public bool TrySound(int seat,int seq,out SoundClue clue)=>_signals.TrySound(seat,seq,out clue);
         public void Dispose(){_signals.ResetRound();_shots?.Dispose();}
         public void ResetRound() { for(int i=0;i<_actors.Length;i++) _history.Invalidate(i); _signals.ResetRound(); _shots?.Reset(); _localView=null; _pendingShots.Clear(); System.Array.Clear(_muzzles,0,_muzzles.Length); }
-        public void DeviceSound(Vector3 point,bool expired) =>
-            _signals.Emit(point+Vector3.up*.18f,expired ? SoundKind.DeviceBurst : SoundKind.DevicePulse,expired ? 125f : 26f);
+        public void DeviceSound(Vector3 point,bool expired)
+        {
+            _signals.Emit(point+Vector3.up*.18f,expired?SoundKind.DeviceBurst:SoundKind.DevicePulse,expired?125f:26f);
+            if(expired && _blast)DeviceBurst.Show(point,_root,_blast);
+        }
         public void SetMuzzle(int seat, Vector3? muzzle) => _muzzles[seat]=muzzle;
         public void RenderFeedback(float alpha)
         {
@@ -48,6 +55,7 @@ namespace AnimeCS.Play
         public void Throw(int seat, UtilityDefinition item) => _signals.Throw(seat, item);
         public void Emit(int seat, SoundKind kind, float radius, bool suppressed = false) =>
             _signals.Emit(_actors[seat].Eye, kind, radius, seat, suppressed);
+        public void EmitGun(int seat,WeaponDefinition gun)=>_signals.Emit(_actors[seat].Eye,SoundKind.Gun,gun.SoundRadius,seat,gun.Suppressed,gun.Class);
         public SoundClue? Heard(int seat) => _signals.Heard(seat);
         public bool Blinded(int seat) => _signals.Blinded(seat);
         public bool InSmoke(int seat) => _signals.Occludes(_actors[seat].Eye, _actors[seat].Eye);
@@ -59,7 +67,7 @@ namespace AnimeCS.Play
         public Vector3 LastGround(int seat) => _actors[seat].LastGround;
         public void SyncMovement() => Physics.SyncTransforms();
 
-        private readonly Dictionary<WeaponDefinition, Bounds> _dropBounds = new Dictionary<WeaponDefinition, Bounds>();
+        private readonly Dictionary<ContentDefinition, Bounds> _dropBounds = new Dictionary<ContentDefinition, Bounds>();
         private static readonly float[] DropDistances = { 1.35f, .9f, .5f, 0f };
 
         public bool VisibleAlly(Vector3 eye,int teammate,Vector3 head)
@@ -101,21 +109,22 @@ namespace AnimeCS.Play
         }
 
         private static readonly float[] DropBearings = { 0, 48, -48, 95, -95, 160 };
-        public bool TryRestingPose(int seat, WeaponDefinition gun, bool thrown, IReadOnlyList<GroundPickup> occupied, out Pose rest)
+        public bool TryRestingPose(int seat, ContentDefinition gun, bool thrown, IReadOnlyList<GroundPickup> occupied, out Pose rest)
         {
             Bounds bounds;
-            if (!gun) bounds = ModelBounds(null);
-            else if (!_dropBounds.TryGetValue(gun, out bounds)) _dropBounds[gun] = bounds = ModelBounds(gun.WorldModel);
+            if (!gun) bounds = _packBounds;
+            else if (!_dropBounds.TryGetValue(gun, out bounds)) _dropBounds[gun] = bounds = ModelBounds(gun is WeaponDefinition weapon?weapon.WorldModel:((UtilityDefinition)gun).Model);
             var actor = _actors[seat];
             var floor = actor.LastGround;
             var head = actor.transform.position + Vector3.up * Mathf.Min(.85f, actor.Height * .6f);
             var forward = Quaternion.Euler(0, actor.Yaw, 0);
-            var lateral = gun && gun.Class == WeaponClass.Pistol ? -.23f : .20f;
+            var lateral = gun is WeaponDefinition pistol && pistol.Class == WeaponClass.Pistol ? -.23f : .20f;
             rest=default;
             foreach(float bearing in DropBearings)
             foreach (float distance in DropDistances)
             {
                 var offset = forward * Quaternion.Euler(0,bearing,0) * new Vector3(lateral * distance, 0, distance * (thrown ? 1f : .47f));
+                if(thrown) offset+=Vector3.ProjectOnPlane(actor.Momentum,Vector3.up)*(GroundPickup.TravelSeconds*.82f*distance/DropDistances[0]);
                 if (offset.sqrMagnitude > .001f && Physics.SphereCast(head, .09f, offset.normalized, out _, offset.magnitude,
                     Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore)) continue;
                 for (int turn = 0; turn < 3; turn++)
@@ -141,13 +150,13 @@ namespace AnimeCS.Play
             }
             var box=Volume(rest,local);
             foreach (var other in occupied)
-                if (_dropBounds.TryGetValue(other.Weapon.Definition,out var bounds) && box.Intersects(Volume(other.Rest,bounds))) return false;
+                if (_dropBounds.TryGetValue(other.Item,out var bounds) && box.Intersects(Volume(other.Rest,bounds))) return false;
             return true;
         }
 
-        public void DropPath(int seat, WeaponDefinition gun, Pose rest, out Vector3 launch, out Vector3 apex)
+        public void DropPath(int seat, ContentDefinition gun, Pose rest, out Vector3 launch, out Vector3 apex)
         {
-            var bounds = _dropBounds[gun];
+            var bounds = gun?_dropBounds[gun]:_packBounds;
             var center = rest.position + rest.rotation * bounds.center;
             Vector3 extents = Vector3.Max(bounds.extents,Vector3.one*.008f);
             // Both segments are swept using the resting mesh orientation. Narrow spaces shorten the throw.
@@ -160,9 +169,9 @@ namespace AnimeCS.Play
                     return from+delta.normalized*Mathf.Max(0,hit.distance-.012f);
                 return to;
             }
-            var high=ClearSegment(center,center+Vector3.up*.67f);
+            var high=ClearSegment(center,center+Vector3.up*Mathf.Clamp(.67f+_actors[seat].Momentum.y*.10f,.32f,1.6f));
             var near=_actors[seat].transform.position;near.y=high.y-.025f;
-            var start=ClearSegment(high,high+Vector3.ClampMagnitude(near-high,.92f));
+            var start=ClearSegment(high,high+Vector3.ClampMagnitude(near-high,.92f+_actors[seat].Momentum.magnitude*GroundPickup.TravelSeconds));
             apex=rest.position+high-center; launch=rest.position+start-center;
         }
 
@@ -262,6 +271,7 @@ namespace AnimeCS.Play
             var end=pawn?ray.GetPoint(distance):wall?obstruction.point:ray.GetPoint(50);
             if(_shots!=null)_pendingShots.Add(new Shot{seat=seat,end=end,normal=wall&&!pawn?obstruction.normal:Vector3.up,
                 trail=!suppressed&&!_signals.Occludes(ray.origin,end),wall=wall&&!pawn});
+            _signals.Punch(ray.origin,wall || pawn ? end : ray.GetPoint(500));
             if(!pawn)return null;
             int sample=_history.ClampedTick(currentTick,viewTick);
             float height=_history.HeightAt(sample,target);
@@ -282,6 +292,7 @@ namespace AnimeCS.Play
             Vector3 end=contact ? hit.point : eye+ray*50;
             if (_shots!=null) _pendingShots.Add(new Shot {seat=seat,end=end,normal=contact?hit.normal:Vector3.up,
                 trail=!suppressed && !_signals.Occludes(eye,end),wall=contact && !pawn});
+            _signals.Punch(eye,contact?end:eye+ray*500);
             if (!pawn) return null;
             float height = (hit.point.y - _actors[target].transform.position.y) * SeatMovement.StandingHeight / _actors[target].Height;
             HitZone zone = hit.collider==_actors[target].HeadHitbox ? HitZone.Head : height >= 1.05f ? HitZone.Chest :

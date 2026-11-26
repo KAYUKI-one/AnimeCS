@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 010b2f5c0dd47ac4b91313bb11cebfbf, type: 3}
+  m_Name: Michele
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.CharacterDefinition
+  _id: character.michele
+  _displayName: "\u7C73\u96EA\u513F"
+  _thumbnail: {fileID: 0}
+  _glyph: {fileID: 0}
+  _archived: 0
+  _model: {fileID: 919132149155446097, guid: eb238b9f4cc5d7344ad679e16c8b22c0, type: 3}
+  _portrait: {fileID: 2800000, guid: af6a5d6ae38693746b98a2831de5f285, type: 3}
+  _icon: {fileID: 2800000, guid: 8b1d42aef19cab946b92c6e786c60b9a, type: 3}
+  _attackInsignia: {fileID: 4733463027312376454, guid: c96ed6876782fff488689124a141fe8c, type: 3}
+  _defendInsignia: {fileID: 1597793924865501055, guid: 667e9840fad1c5f438eeb26426026538, type: 3}
+  _controller: {fileID: 9100000, guid: dda641f82b1570747be311378167f262, type: 2}
+  _weaponSocket: 
+  _faction: 1
+  _headwearOffset: {x: 0, y: 0.064, z: 0}
+  _faceAnchor: {x: 0.00005030892, y: 0.056660995, z: 0.07152736}
+  _standingEyes: 1.4925036
+  _combatHeadScale: 1.025

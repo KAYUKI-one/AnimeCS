@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.OutfitDefinition
   _id: outfit.rover
   _displayName: "\u7537\u6F02\u6CCA\u8005"
+  _thumbnail: {fileID: 0}
+  _glyph: {fileID: 0}
+  _archived: 0
   _character: {fileID: 11400000, guid: dd19b401d68736749b2a2131983df047, type: 2}
   _model: {fileID: 0}
   _arms: {fileID: 919132149155446097, guid: f594efa123ba6a64c98bcd0ee57eb2a9, type: 3}
@@ -23,6 +26,8 @@ MonoBehaviour:
   _bodyRegions:
   - source: {fileID: 5892893724314545434, guid: 92197bc7fcea41c46bca4af1be3ed203, type: 3}
     partitioned: {fileID: 4300000, guid: 3a095c256e0483a4d8f78b73f7fc3dd5, type: 2}
+    firstPersonLower: {fileID: 4300000, guid: 52de387a8fccb214f99c287211030924, type: 2}
+    lowerMaterialSlots: 0100000002000000
     materials:
     - {fileID: 2100000, guid: 5a60d4fcd264c344d84643da68f38e4e, type: 2}
     - {fileID: 2100000, guid: 5a60d4fcd264c344d84643da68f38e4e, type: 2}
@@ -37,8 +42,11 @@ MonoBehaviour:
   _viewRegions:
   - source: {fileID: -7677519318167714445, guid: 095324f0c7cdc7f4cba7bccc451b016d, type: 3}
     partitioned: {fileID: 4300000, guid: e60730dd150372a44bfbf50c77432234, type: 2}
+    firstPersonLower: {fileID: 0}
+    lowerMaterialSlots: 
     materials:
     - {fileID: 2100000, guid: 1ec598280c844be4ead7a1350dee4bb0, type: 2}
     - {fileID: 2100000, guid: 1ec598280c844be4ead7a1350dee4bb0, type: 2}
     slots: 0100000002000000
   _hiddenRegion: {fileID: 2100000, guid: 95cc80d7c57e58c489b4230fb9af32f3, type: 2}
+  _stanceController: {fileID: 0}

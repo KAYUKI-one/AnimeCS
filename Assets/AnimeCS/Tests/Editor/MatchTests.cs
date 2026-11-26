@@ -12,7 +12,7 @@ namespace AnimeCS.Tests
 {
     public sealed class MatchTests
     {
-        private sealed class Arena : IMatchWorld, IMeleeWorld
+        private sealed class Arena : IMatchWorld, IMeleeWorld, IMatchSignals
         {
             public readonly Vector3[] Points = new Vector3[10];
             public readonly int[] Targets = Enumerable.Repeat(-1, 10).ToArray();
@@ -20,6 +20,7 @@ namespace AnimeCS.Tests
             public readonly bool[] Air = new bool[10];
             public readonly List<Vector2> Rays = new List<Vector2>();
             public readonly HitZone?[] Zones = new HitZone?[10];
+            public readonly List<UtilityDefinition> Thrown = new List<UtilityDefinition>();
             public void Spawn(int seat, Vector3 position, float yaw) { Points[seat] = position; Alive[seat] = true; }
             public MotionContact Move(int seat, Vector2 velocity, float yaw, float pitch, bool jump, bool crouch) =>
                 new MotionContact { Grounded = !Air[seat], Velocity = velocity, VerticalSpeed = Air[seat] ? 3f : 0f };
@@ -30,6 +31,13 @@ namespace AnimeCS.Tests
             public bool SeesPoint(int seat, Vector3 point) => false;
             public HitZone Zone = HitZone.Head;
             public void SyncMovement() { }
+            public void ResetRound() => Thrown.Clear();
+            public void Advance(int tick) { }
+            public void Throw(int seat, UtilityDefinition item) => Thrown.Add(item);
+            public void Emit(int seat, SoundKind kind, float radius, bool suppressed = false) { }
+            public SoundClue? Heard(int seat) => null;
+            public bool Blinded(int seat) => false;
+            public bool InSmoke(int seat) => false;
             public ArenaHit? Swing(int seat) => Trace(seat, Vector2.zero, false);
             public ArenaHit? Trace(int seat, Vector2 offset, bool suppressed)
             {
@@ -84,7 +92,7 @@ namespace AnimeCS.Tests
             Assert.That(CharacterAt(player.Read()), Is.EqualTo("character.laevatain"));
             Assert.That(_arena.Alive.Count(x=>x),Is.EqualTo(6));
             var targets = CharactersOnSide(Side.Defend, aliveOnly: true);
-            Assert.That(targets, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily" }));
+            Assert.That(targets, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily", "character.michele" }));
             _arena.Points[0]=new Vector3(999,0,999);int opening=player.Read().Credits;
             foreach(var gun in _catalog.Entries.OfType<WeaponDefinition>().Where(x=>!x.Archived))
             {
@@ -92,7 +100,11 @@ namespace AnimeCS.Tests
                 Assert.That(player.Read().WeaponId,Is.EqualTo(gun.Id));
             }
             foreach(var item in _catalog.Entries.OfType<UtilityDefinition>().Where(x=>!x.Archived))
-            { Input(0,new SeatIntent{Buy=BuySlot.Utility,ItemId=item.Id});_match.Step();Assert.That(player.Read().UtilityId,Is.EqualTo(item.Id)); }
+            {
+                Input(0, new SeatIntent { Buy = BuySlot.Utility, ItemId = item.Id });
+                _match.Step();
+                Assert.That(player.Read().Utilities.Count(item.Effect), Is.EqualTo(1));
+            }
             Input(0,new SeatIntent{Buy=BuySlot.Kit});_match.Step();Assert.That(player.Read().HasKit,Is.True);
             Input(0,new SeatIntent{Buy=BuySlot.Armor});_match.Step();Assert.That(player.Read().Armor,Is.True);
             Input(0,new SeatIntent{Buy=BuySlot.Primary,ItemId="weapon.longglass96"});_match.Step();
@@ -322,8 +334,8 @@ namespace AnimeCS.Tests
             _seats = Enumerable.Range(0, LocalMatch.Seats).Select(_match.BindSeat).ToArray();
             var attackers = CharactersOnSide(Side.Attack);
             var defenders = CharactersOnSide(Side.Defend);
-            Assert.That(attackers, Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain" }));
-            Assert.That(defenders, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily" }));
+            Assert.That(attackers, Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain", "character.nora" }));
+            Assert.That(defenders, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily", "character.michele" }));
             int attackCount = 0;
             for (int round = 1; round <= wins + losses; round++)
             {
@@ -444,6 +456,108 @@ namespace AnimeCS.Tests
             Until(RoundPhase.Contest);
             Assert.That(_seats[0].Read().WeaponId, Is.EqualTo("weapon.street20"));
             Assert.That(_seats[0].Read().Credits, Is.EqualTo(900));
+        }
+
+        [Test] public void UtilityOrdersChargeByQuantityHonorBothCapsAndCancelOneOfTheSelectedType()
+        {
+            const int funds = 2000;
+            var bag = new SeatInventory(_catalog, WardrobeProfile.Create(_catalog).current) { Wallet = funds };
+            var smoke = _catalog.Find<UtilityDefinition>("utility.smoke");
+            var flash = _catalog.Find<UtilityDefinition>("utility.flash");
+            var echo = _catalog.Find<UtilityDefinition>("utility.echo");
+            Order(smoke);
+            Order(smoke);
+            Order(smoke);
+            Assert.That(bag.Draft.Utilities.Count(UtilityEffect.Smoke), Is.EqualTo(2));
+            Assert.That(bag.Available(_rules), Is.EqualTo(funds - smoke.Price * 2));
+
+            Order(flash);
+            Order(echo);
+            Order(flash);
+            Assert.That(bag.Draft.Utilities.Total, Is.EqualTo(4));
+            Assert.That(bag.Draft.Utilities.Count(UtilityEffect.Flash), Is.EqualTo(1));
+            Assert.That(bag.Available(_rules), Is.EqualTo(funds - smoke.Price * 2 - flash.Price - echo.Price));
+
+            Order(smoke, cancel: true);
+            Assert.That(bag.Draft.Utilities.Count(UtilityEffect.Smoke), Is.EqualTo(1));
+            Assert.That(bag.Draft.Utilities.Count(UtilityEffect.Flash), Is.EqualTo(1));
+            Assert.That(bag.Draft.Utilities.Count(UtilityEffect.Echo), Is.EqualTo(1));
+            int chargedBalance = funds - smoke.Price - flash.Price - echo.Price;
+            Assert.That(bag.Available(_rules), Is.EqualTo(chargedBalance));
+            bag.Commit(_rules);
+            Order(smoke, cancel: true);
+            Assert.That(bag.Draft.Utilities.Total, Is.Zero);
+            Assert.That(bag.Utility, Is.Not.Null);
+            Assert.That(bag.Wallet, Is.EqualTo(chargedBalance));
+            bag.Commit(_rules);
+            Assert.That(bag.Wallet, Is.EqualTo(chargedBalance));
+
+            void Order(UtilityDefinition item, bool cancel = false) =>
+                bag.Order(new SeatIntent { Buy = BuySlot.Utility, ItemId = item.Id, CancelPurchase = cancel }, Side.Attack, _rules);
+        }
+
+        [Test] public void UtilitySlotAndWheelSkipEmptySlotsAndThrowOrDropExactlyOneItem()
+        {
+            _rules.contestSeconds = 8;
+            for (int i = 0; i < 2; i++) Act(new SeatIntent { Buy = BuySlot.Utility, ItemId = "utility.smoke" });
+            Act(new SeatIntent { Buy = BuySlot.Utility, ItemId = "utility.flash" });
+            Until(RoundPhase.Contest);
+            var player = _seats[0];
+            Assert.That(player.Read().Utilities.Total, Is.EqualTo(3));
+            Act(new SeatIntent { Select = HeldSlot.Utility });
+            Assert.That(player.Read().Held, Is.EqualTo(HeldSlot.Utility));
+            string first = player.Read().UtilityId;
+            Act(new SeatIntent { Select = HeldSlot.Utility });
+            string second = player.Read().UtilityId;
+            Assert.That(second, Is.Not.EqualTo(first));
+            Act(new SeatIntent { Select = HeldSlot.Utility });
+            Assert.That(player.Read().UtilityId, Is.EqualTo(first));
+            Act(new SeatIntent { Cycle = -1 });
+            Assert.That(player.Read().Held, Is.EqualTo(HeldSlot.Knife));
+            Act(new SeatIntent { Cycle = 1 });
+            Assert.That(player.Read().Held, Is.EqualTo(HeldSlot.Utility));
+
+            for (int i = 0; i < 20; i++) _match.Step();
+            var selected = _catalog.Find<UtilityDefinition>(player.Read().UtilityId);
+            int countBefore = player.Read().Utilities.Count(selected.Effect);
+            Act(new SeatIntent { Fire = true, FirePressed = true });
+            for (int i = 0; i < 35; i++) Act(new SeatIntent { Fire = true });
+            Assert.That(_arena.Thrown, Is.EqualTo(new[] { selected }));
+            Assert.That(player.Read().Utilities.Total, Is.EqualTo(2));
+            Assert.That(player.Read().Utilities.Count(selected.Effect), Is.EqualTo(countBefore - 1));
+
+            Act(new SeatIntent { Select = HeldSlot.Utility });
+            var dropped = _catalog.Find<UtilityDefinition>(player.Read().UtilityId);
+            countBefore = player.Read().Utilities.Count(dropped.Effect);
+            Act(new SeatIntent { DropHeld = true });
+            Assert.That(_match.GroundWeapons.Count(x => x.Utility == dropped), Is.EqualTo(1));
+            Assert.That(player.Read().Utilities.Total, Is.EqualTo(1));
+            Assert.That(player.Read().Utilities.Count(dropped.Effect), Is.EqualTo(countBefore - 1));
+            Assert.That(_arena.Thrown, Is.EqualTo(new[] { selected }));
+
+            void Act(SeatIntent intent) { Input(0, intent); _match.Step(); }
+        }
+
+        [Test] public void DeadSeatWatchesOnlyLivingTeamMembersInBothDirections()
+        {
+            Until(RoundPhase.Contest);
+            Assert.That(_seats[0].WatchTeam(1).Seat, Is.Zero);
+            _arena.Targets[5] = 0;
+            _arena.Targets[6] = 2;
+            Input(5, new SeatIntent { Fire = true });
+            Input(6, new SeatIntent { Fire = true });
+            _match.Step();
+            Assert.That(_seats[0].Read().Health, Is.Zero);
+            Assert.That(_seats[2].Read().Health, Is.Zero);
+
+            var port = _seats[0];
+            Assert.That(port.WatchTeam().Seat, Is.EqualTo(1));
+            Assert.That(port.WatchTeam(1).Seat, Is.EqualTo(3));
+            Assert.That(port.WatchTeam().Seat, Is.EqualTo(3));
+            Assert.That(port.WatchTeam(1).Seat, Is.EqualTo(4));
+            Assert.That(port.WatchTeam(1).Seat, Is.EqualTo(1));
+            Assert.That(port.WatchTeam(-1).Seat, Is.EqualTo(4));
+            Assert.That(port.WatchTeam(-1).Seat, Is.EqualTo(3));
         }
 
         [Test] public void RoundReceiptsRecordOverflowAndNeverPayTwice()

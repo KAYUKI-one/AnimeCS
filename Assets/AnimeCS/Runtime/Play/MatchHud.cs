@@ -136,14 +136,14 @@ namespace AnimeCS.Play
             _kills.Present(_session,watched.Seat,self.Seat,active&&!_paused&&!finished&&!_open);
             _labels["objective"].text=watched.HasObjective?"5  目标包":"";
             _labels["ammo"].text=active && watched.WeaponId!=null && watched.Held!=HeldSlot.Knife?$"{watched.Magazine} / {watched.Reserve}":"";
-            _labels["held-name"].text=watched.Held==HeldSlot.Objective?"目标包":active?_catalog.Find<WeaponDefinition>(watched.WeaponId)?.DisplayName:"";
+            _labels["held-name"].text=watched.Held==HeldSlot.Objective?"目标包":watched.Held==HeldSlot.Utility?_catalog.Find<UtilityDefinition>(watched.UtilityId)?.DisplayName:active?_catalog.Find<WeaponDefinition>(watched.WeaponId)?.DisplayName:"";
             Slot("primary","1",watched.PrimaryId,watched.WeaponId);
             Slot("sidearm","2",watched.SidearmId,watched.WeaponId);
             Slot("knife","3",watched.KnifeId,watched.WeaponId);
-            Slot("utility","X",watched.UtilityId, null);
+            Slot("utility",watched.Utilities.Total>1?"4 ×"+watched.Utilities.Total:"4",watched.UtilityId, watched.Held==HeldSlot.Utility?watched.UtilityId:null);
             _labels["region"].text=active?_catalog.Map.NearestRegion(watched.Position):"";
             _labels["action"].text=watched.InteractionFraction>0?(match.Phase==RoundPhase.Planted?"拆除  ":"安装  ")+watched.InteractionFraction.ToString("P0"):
-                self.Health<=0&&active?"观战队友 "+(watched.Seat+1):"";
+                self.Health<=0&&active?"观战  "+watched.DisplayId+"   ·   左 / 右键切换":"";
             var clue=watched.Heard;
             _labels["event"].text=clue.HasValue&&!clue.Value.Own&&match.Tick-clue.Value.Tick<45?
                 clue.Value.Region+"  ·  "+SoundName(clue.Value.Kind):"";
@@ -237,6 +237,15 @@ namespace AnimeCS.Play
                 var offer = _offers[i];
                 offer.button.EnableInClassList("shop-focus", i == _offerIndex);
                 var draft=self.Draft;
+                if(offer.slot==BuySlot.Utility && _catalog.Find<UtilityDefinition>(offer.id) is UtilityDefinition util)
+                {
+                    int count=self.Utilities.Count(util.Effect);
+                    bool free=_session.Mode==MatchMode.AimPractice;
+                    offer.button.text=util.DisplayName+(count>0?"  ×"+count:"")+(free?"":"   "+util.Price);
+                    offer.button.EnableInClassList("chosen",draft.Utilities.Count(util.Effect)>0);
+                    offer.button.SetEnabled(self.Utilities.CanAdd(util.Effect) && (free || self.Credits>=util.Price));
+                    continue;
+                }
                 string pending=offer.slot switch {BuySlot.Primary=>draft.Primary,BuySlot.Sidearm=>draft.Sidearm,BuySlot.Utility=>draft.Utility,_=>null};
                 bool chosen=offer.slot switch {BuySlot.Kit=>draft.Kit,BuySlot.Armor=>draft.Armor,BuySlot.Helmet=>draft.Helmet,_=>offer.id!=null && pending==offer.id};
                 var current=_catalog.Find<ContentDefinition>(pending);

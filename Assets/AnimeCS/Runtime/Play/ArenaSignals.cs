@@ -12,7 +12,8 @@ namespace AnimeCS.Play
         {
             public UtilityDefinition Item;
             public Vector3 Position, Velocity, Fallback;
-            public GameObject Visual, Cloud;
+            public GameObject Visual;
+            public SmokeField Cloud;
             public int Thrown, Landed = -1, Pulse;
         }
         private readonly List<Effect> _effects = new List<Effect>(10);
@@ -54,7 +55,7 @@ namespace AnimeCS.Play
             var visual = AppearancePresenter.NewRoot(item.DisplayName, _root);
             AppearancePresenter.AddVisual(item.Model, visual.transform, Vector3.zero);
             visual.transform.position = actor.Eye; visual.SetActive(true);
-            _effects.Add(new Effect { Item = item, Position = actor.Eye, Velocity = direction * 10 + Vector3.up * 2.6f,
+            _effects.Add(new Effect { Item = item, Position = actor.Eye, Velocity = actor.Momentum + direction * 10 + Vector3.up * 2.6f,
                 Fallback = actor.transform.position, Thrown = _tick, Visual = visual });
         }
 
@@ -73,13 +74,10 @@ namespace AnimeCS.Play
                     case UtilityEffect.Smoke:
                         if (e.Cloud == null)
                         {
-                            e.Cloud = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                            e.Cloud.name = "Smoke volume"; e.Cloud.GetComponent<Collider>().enabled = false;
-                            e.Cloud.transform.SetParent(_root, false); e.Cloud.transform.position = Center(e);
-                            e.Cloud.transform.localScale = Vector3.one * (2 * e.Item.Radius);
-                            if (e.Item.Cloud != null) e.Cloud.GetComponent<Renderer>().sharedMaterial = e.Item.Cloud;
+                            e.Cloud=new SmokeField(e.Position,e.Item.Radius,e.Thrown,_root,e.Item.Cloud);
                             Emit(e.Position, SoundKind.Utility, 12);
                         }
+                        e.Cloud.Advance(age*SeatMovement.StepTime,e.Item.Duration-age*SeatMovement.StepTime);
                         done = age >= MatchRules.Ticks(e.Item.Duration);
                         break;
                     case UtilityEffect.Flash:
@@ -110,17 +108,13 @@ namespace AnimeCS.Play
             e.Visual.transform.position = e.Position;
         }
 
-        private static Vector3 Center(Effect e) => e.Position + Vector3.up * (e.Item.Radius * 0.35f);
+        public void Punch(Vector3 start,Vector3 end)
+        {
+            foreach(var e in _effects)e.Cloud?.Punch(start,end);
+        }
         public bool Occludes(Vector3 start, Vector3 end)
         {
-            var segment = end - start;
-            foreach (var e in _effects)
-            {
-                if (e.Cloud == null) continue;
-                Vector3 center = Center(e);
-                float t = segment.sqrMagnitude < 0.00001f ? 0 : Mathf.Clamp01(Vector3.Dot(center - start, segment) / segment.sqrMagnitude);
-                if ((start + t * segment - center).sqrMagnitude <= e.Item.Radius * e.Item.Radius) return true;
-            }
+            foreach(var e in _effects)if(e.Cloud!=null && e.Cloud.Occludes(start,end))return true;
             return false;
         }
 
@@ -141,7 +135,7 @@ namespace AnimeCS.Play
             }
         }
 
-        public void Emit(Vector3 source, SoundKind kind, float radius, int sourceSeat = -1, bool suppressed = false)
+        public void Emit(Vector3 source, SoundKind kind, float radius, int sourceSeat = -1, bool suppressed = false, WeaponClass category=WeaponClass.Rifle)
         {
             for (int i = 0; i < _actors.Length; i++)
             {
@@ -153,7 +147,7 @@ namespace AnimeCS.Play
                 float reach = radius;
                 for (int k = 0; k < count; k++) if (!_bodies.ContainsKey(_walls[k].collider)) reach *= 0.5f;
                 if (delta.sqrMagnitude > reach * reach) continue;
-                var clue = new SoundClue { Kind = kind, Own = i == sourceSeat, Suppressed = suppressed, Region = _map.NearestRegion(source),
+                var clue = new SoundClue { Kind = kind, WeaponClass=category, Own = i == sourceSeat, Suppressed = suppressed, Region = _map.NearestRegion(source),
                     Bearing = Mathf.RoundToInt(Mathf.Repeat(Mathf.Atan2(delta.x, delta.z) * Mathf.Rad2Deg, 360f) / 45f) % 8,
                     Tick = _tick, Expires = _tick + 3 * MatchRules.TickRate };
                 _events[i,_sequence[i]++%SoundCapacity]=clue;
@@ -161,6 +155,6 @@ namespace AnimeCS.Play
                 if(!previous.HasValue || previous.Value.Tick!=_tick || !previous.Value.Own || previous.Value.Kind!=SoundKind.Gun)_heard[i]=clue;
             }
         }
-        private static void Remove(Effect e) { AppearancePresenter.Retire(e.Visual); AppearancePresenter.Retire(e.Cloud); }
+        private static void Remove(Effect e) { AppearancePresenter.Retire(e.Visual); e.Cloud?.Dispose(); }
     }
 }

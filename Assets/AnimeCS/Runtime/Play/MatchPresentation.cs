@@ -25,7 +25,10 @@ namespace AnimeCS.Play
         public bool tracers = true, surfaceMarks = true, hitReaction = true;
         public Material tracerMaterial, impactMaterial;
         [InspectorName("枪口火光材质")] public Material muzzleMaterial;
-        public AudioClip shotSound, suppressedSound;
+        public AudioClip shotSound, suppressedSound, pistolSound, marksmanSound, alternateRifleSound, deviceBurstSound;
+        public AudioClip[] bootSteps;
+        public Material deviceBlast;
+        public GameObject recoveryKit;
         [Range(.015f,.18f)] public float tracerSeconds = .055f;
         [Range(.003f,.09f)] public float tracerWidth = .025f;
         [Range(.03f,.4f)] public float markSize = .12f;

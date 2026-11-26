@@ -1,0 +1,22 @@
+AnimeCS — field audio and effects credits
+
+Gunshot Sounds by Vincent Sevedge (Tabasco)
+https://lpc.opengameart.org/content/gunshot-sounds
+CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
+Selected recordings were trimmed to single game cues, faded and converted to mono 48 kHz.
+
+Footsteps on different surfaces, edited and mastered by congusbongus
+https://opengameart.org/content/footsteps-on-different-surfaces
+Concrete boot samples by swuing, https://freesound.org/people/swuing/sounds/38873/
+CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
+Five concrete variations from the collection were selected and renamed.
+
+Hollywood-style pistol silencer sound effect by bart
+https://opengameart.org/content/hollywood-style-pistol-silencer-sound-effect
+Sci-fi Sounds and Smoke particle assets by Kenney (Kenney Vleugels)
+https://kenney.nl/assets/sci-fi-sounds
+https://opengameart.org/content/smoke-particle-assets
+2D Explosion Animations #2 by Sinestesia
+https://opengameart.org/content/2d-explosion-animations-2-frame-by-frame
+These last four assets are CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/
+

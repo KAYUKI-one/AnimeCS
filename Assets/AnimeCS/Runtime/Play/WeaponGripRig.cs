@@ -21,9 +21,9 @@ namespace AnimeCS.Play
             if (!Valid || !mount || !weapon) return;
             if(weapon.Class==WeaponClass.Knife){PoseKnife(body,mount,weapon,aim,view,swing,action);return;}
             bool pistol = weapon.Class == WeaponClass.Pistol;
-            var rotation = aim * (view ? Quaternion.Euler(pistol ? -3.5f : -6.5f, -7, 0) : Quaternion.identity) * Quaternion.Euler(action.Angles) * weapon.Rotation(view);
+            var rotation = aim * (view ? Quaternion.Euler(pistol ? -3.5f : 2.6f, pistol ? -7f : -3.2f, 0) : Quaternion.identity) * Quaternion.Euler(action.Angles) * weapon.Rotation(view);
             var contact = view
-                ? body.TransformPoint(new Vector3(pistol ? .185f : .168f, pistol ? -.194f : -.239f, pistol ? .39f : .337f))
+                ? body.TransformPoint(new Vector3(pistol ? .185f : .264f, pistol ? -.194f : -.233f, pistol ? .39f : .320f))
                 : (_right.Shoulder.position + _left.Shoulder.position) * .5f +
                   body.right * (pistol ? .045f : .098f) - body.up * (pistol ? .105f : .14f) +
                   aim * Vector3.forward * (pistol ? .375f : .22f);
@@ -82,7 +82,28 @@ namespace AnimeCS.Play
             }
         }
 
-        private void PoseKnife(Transform body,Transform mount,WeaponDefinition knife,Quaternion aim,bool view,float swing,WeaponActionPose action)
+        internal void PoseDevice(Transform body,Transform mount,Quaternion aim,bool view,WeaponActionPose action)
+        {
+            var shoulders=(_right.Shoulder.position+_left.Shoulder.position)*.5f;
+            var center=view?body.TransformPoint(new Vector3(.050f,-.225f,.47f)):shoulders-body.up*.25f+aim*Vector3.forward*.35f;
+            center+=aim*action.Offset;
+            var rotation=aim*Quaternion.Euler(action.Angles)*Quaternion.Euler(-14f,-7f,0);
+            mount.SetPositionAndRotation(center,rotation);
+            var leftPalm=rotation*Quaternion.LookRotation(new Vector3(.45f,.12f,.87f),Vector3.right);
+            var rightPalm=rotation*Quaternion.LookRotation(new Vector3(-.45f,.12f,.87f),Vector3.left);
+            var left=_left.WristTarget(mount.TransformPoint(new Vector3(-.204f,.045f,-.027f)),leftPalm);
+            var right=_right.WristTarget(mount.TransformPoint(new Vector3(.207f,.045f,-.024f)),rightPalm);
+            if(view)
+            {
+                _left.Shoulder.position=left+body.TransformDirection(new Vector3(-.36f,-.39f,-.69f))*_left.Reach;
+                _right.Shoulder.position=right+body.TransformDirection(new Vector3(.38f,-.40f,-.68f))*_right.Reach;
+            }
+            _left.Solve(left,body.TransformDirection(new Vector3(-.7f,-1,-.25f)),leftPalm);
+            _right.Solve(right,body.TransformDirection(new Vector3(.7f,-1,-.25f)),rightPalm);
+            _left.PoseFingers(rotation,true,true);_right.PoseFingers(rotation,false,true);
+        }
+
+        internal void PoseKnife(Transform body,Transform mount,WeaponDefinition knife,Quaternion aim,bool view,float swing,WeaponActionPose action)
         {
             var shoulderCenter=(_left.Shoulder.position+_right.Shoulder.position)*.5f;
             var right=view ? body.TransformPoint(new Vector3(.196f-.105f*swing,-.145f+.055f*swing,.35f+.035f*swing))
@@ -91,10 +112,12 @@ namespace AnimeCS.Play
                 : shoulderCenter-body.right*.24f-body.up*.105f+aim*Vector3.forward*.40f;
             right += aim * action.Offset;
             left += aim * action.Offset * .30f;
-            var rotation=aim*Quaternion.Euler(action.Angles)*Quaternion.Euler(view ? -23 : -24,view ? -57-25*swing : -18-26*swing,view ? -17 : -12)*knife.Rotation(view);
+            var rotation=knife ? aim*Quaternion.Euler(action.Angles)*Quaternion.Euler(view ? -23 : -24,view ? -57-25*swing : -18-26*swing,view ? -17 : -12)*knife.Rotation(view)
+                : aim*Quaternion.Euler(action.Angles)*Quaternion.Euler(-12,18,9);
             var rightPalm=rotation*Quaternion.LookRotation(new Vector3(.46f,.75f,.45f),Vector3.forward);
             var leftPalm=aim*Quaternion.LookRotation(new Vector3(.20f,.26f,.94f),Vector3.right);
-            right+=aim*knife.Offset(view);
+            if(knife)right+=aim*knife.Offset(view);
+            var grip=knife?knife.Grip:new Vector3(.035f,-.01f,.003f);
             var rw=_right.WristTarget(right,rightPalm);var lw=_left.WristTarget(left,leftPalm);
             if(view)
             {
@@ -106,10 +129,11 @@ namespace AnimeCS.Play
                 var correction=_right.ReachCorrection(rw);right+=correction;rw+=correction;
                 lw+=_left.ReachCorrection(lw);
             }
-            mount.SetPositionAndRotation(right-rotation*knife.Grip,rotation);
+            mount.SetPositionAndRotation(right-rotation*grip,rotation);
             _right.Solve(rw,body.TransformDirection(new Vector3(.85f,-.85f,-.34f)),rightPalm);
             _left.Solve(lw,body.TransformDirection(new Vector3(-.80f,-1,-.34f)),leftPalm);
-            _right.KnifeFingers(mount,knife.Grip);
+            if(knife)_right.KnifeFingers(mount,grip);
+            else _right.PoseFingers(rotation,false,true);
             _left.OpenFingers(aim);
         }
 

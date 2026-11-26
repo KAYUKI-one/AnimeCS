@@ -15,13 +15,17 @@ namespace AnimeCS.Editor
     {
         private const string Art = "Assets/AnimeCS/Art";
         private const string MotionPath = Art + "/Characters/Locomotion.controller";
-        private static readonly string[] Cast = { "Rover", "Lily", "Mornye", "Flor", "BlackMiku", "Laevatain" };
-        private static readonly string[] Labels = { "男漂泊者", "莉莉 · 护士服", "莫宁", "弗洛洛", "黑色 Miku", "莱万汀" };
-        private static bool Attacks(string name) => name=="Flor" || name=="BlackMiku" || name=="Laevatain";
+        private static readonly string[] Cast = { "Rover", "Lily", "Mornye", "Flor", "BlackMiku", "Laevatain", "Michele", "Nora" };
+        private static readonly string[] Labels = { "男漂泊者", "莉莉 · 护士服", "莫宁", "弗洛洛", "黑色 Miku", "莱万汀", "米雪儿", "诺诺" };
+        private static bool Attacks(string name) => name=="Flor" || name=="BlackMiku" || name=="Laevatain" || name=="Nora";
         private static string BodyPath(string name) => $"{Art}/Characters/{(Attacks(name)?"Ember":"Aegis")}_{(name=="Flor"?"Phrolova":name)}/{name}.fbx";
 
         [MenuItem("AnimeCS/美术/同步随附角色与展示枪模")]
-        public static void Synchronize()
+        public static void Synchronize()=>Synchronize(false);
+
+        [MenuItem("AnimeCS/美术/同步角色与服饰")]
+        public static void SynchronizeCharacters()=>Synchronize(true);
+        private static void Synchronize(bool castOnly)
         {
             var catalog = ContentLibrary.Catalog;
             var outfits = new List<OutfitDefinition>();
@@ -31,7 +35,7 @@ namespace AnimeCS.Editor
             {
                 ConfigureBody(name);
                 var sleeves = BodyPath(name).Replace(".fbx", "ViewRig.fbx");
-                ConfigureHuman(sleeves, false);
+                ConfigureHuman(sleeves,false,((ModelImporter)AssetImporter.GetAtPath(BodyPath(name))).humanDescription.human);
                 // An arms-only mesh has no head weights. Keep its own bind transforms and reuse the body's complete mapping.
                 var sleeveAnimator = Load<GameObject>(sleeves).GetComponent<Animator>();
                 if (!sleeveAnimator || !sleeveAnimator.isHuman)
@@ -49,6 +53,7 @@ namespace AnimeCS.Editor
             }
             var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(MotionPath);
             if (!controller) controller = CreateController();
+            LocalBodyBake.ConfigureLayers(controller);
             for (int i = 0; i < Cast.Length; i++)
             {
                 string name = Cast[i], key = name.ToLowerInvariant();
@@ -78,7 +83,9 @@ namespace AnimeCS.Editor
                 Set(serialized, "_sidearmArms", Load<GameObject>(BodyPath(name).Replace(".fbx","SidearmArms.fbx")));
                 serialized.FindProperty("_included").boolValue = true;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
-                GarmentStances.Bind(outfit);
+                var sharedPose = new SerializedObject(outfit);
+                sharedPose.FindProperty("_stanceController").objectReferenceValue=null;
+                sharedPose.ApplyModifiedPropertiesWithoutUndo();
                 CastEyeCalibration.Bind(outfit);
                 outfits.Add(outfit);
             }
@@ -91,6 +98,7 @@ namespace AnimeCS.Editor
             pool.arraySize = outfits.Count;
             for (int i = 0; i < outfits.Count; i++) pool.GetArrayElementAtIndex(i).objectReferenceValue = outfits[i];
             data.ApplyModifiedPropertiesWithoutUndo();
+            if(castOnly) { WearableBake.Bake(catalog,outfits.Take(Cast.Length).ToList()); AssetDatabase.SaveAssets(); return; }
             // Contact points are authored on the imported mesh after its original FBX axis conversion.
             // The right knuckles sit outside the rear grip. The support knuckles follow the forend or the other hand.
             var fits = new (string name, Vector3 grip, Vector3 support)[] {
@@ -162,7 +170,7 @@ namespace AnimeCS.Editor
         }
 
         private static void ConfigureBody(string name) => ConfigureHuman(BodyPath(name), name == "Rover");
-        private static void ConfigureHuman(string path, bool donor)
+        private static void ConfigureHuman(string path, bool donor,HumanBone[] bodyMap=null)
         {
             var im = (ModelImporter)AssetImporter.GetAtPath(path);
             bool setup = im.animationType != ModelImporterAnimationType.Human || im.importAnimation != donor ||
@@ -171,6 +179,7 @@ namespace AnimeCS.Editor
             im.animationType = ModelImporterAnimationType.Human;
             im.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             im.importAnimation = donor;
+            if(bodyMap!=null){var mapped=im.humanDescription;mapped.human=bodyMap;im.humanDescription=mapped;}
             if (donor)
             {
                 var clips = im.defaultClipAnimations;

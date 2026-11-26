@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2f829e6e69564d42a5cfe1203321163, type: 3}
+  m_Name: Nora
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.OutfitDefinition
+  _id: outfit.nora
+  _displayName: "\u8BFA\u8BFA"
+  _thumbnail: {fileID: 0}
+  _glyph: {fileID: 0}
+  _archived: 0
+  _character: {fileID: 11400000, guid: cd48c2083c87bbf459401172573bde7d, type: 2}
+  _model: {fileID: 0}
+  _arms: {fileID: 919132149155446097, guid: 37d458c9c10d9c0409cd628cca0a67d6, type: 3}
+  _sidearmArms: {fileID: 919132149155446097, guid: b2ebffee7f7ec7a4faafc59a08d3b9ee, type: 3}
+  _viewRig: {fileID: 919132149155446097, guid: d2809ec58baae3f40805d9dcad6672b6, type: 3}
+  _included: 1
+  _bodyRegions:
+  - source: {fileID: -5260679740581417452, guid: 9d0703a2711076749bf99d7da3a84d09, type: 3}
+    partitioned: {fileID: 4300000, guid: 08fa7a0ef8896ba44a9b09b6bf99fd25, type: 2}
+    firstPersonLower: {fileID: 4300000, guid: 776e9d0c53b80be429eb2bc0c1ad8813, type: 2}
+    lowerMaterialSlots: 0500000006000000
+    materials:
+    - {fileID: 2100000, guid: e92063a7301a1a34fbf371418a8eb287, type: 2}
+    - {fileID: 2100000, guid: 8e4a659804c6e6940b53d462eefedeeb, type: 2}
+    - {fileID: 2100000, guid: ab62d229ee7755f41809cb6f5c41cb1b, type: 2}
+    - {fileID: 2100000, guid: ab62d229ee7755f41809cb6f5c41cb1b, type: 2}
+    - {fileID: 2100000, guid: ab62d229ee7755f41809cb6f5c41cb1b, type: 2}
+    - {fileID: 2100000, guid: ab62d229ee7755f41809cb6f5c41cb1b, type: 2}
+    - {fileID: 2100000, guid: ab62d229ee7755f41809cb6f5c41cb1b, type: 2}
+    slots: ffffffffffffffffffffffff01000000020000000300000004000000
+  _viewRegions:
+  - source: {fileID: 512210313034403653, guid: d2809ec58baae3f40805d9dcad6672b6, type: 3}
+    partitioned: {fileID: 4300000, guid: 2f360be4588012f4f89aaa2065cc5525, type: 2}
+    firstPersonLower: {fileID: 0}
+    lowerMaterialSlots: 
+    materials:
+    - {fileID: 2100000, guid: ab62d229ee7755f41809cb6f5c41cb1b, type: 2}
+    - {fileID: 2100000, guid: ab62d229ee7755f41809cb6f5c41cb1b, type: 2}
+    slots: 0100000002000000
+  _hiddenRegion: {fileID: 2100000, guid: 95cc80d7c57e58c489b4230fb9af32f3, type: 2}
+  _stanceController: {fileID: 0}

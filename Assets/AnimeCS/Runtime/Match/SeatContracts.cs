@@ -5,7 +5,7 @@ namespace AnimeCS.Match
 {
     public enum RoundPhase { Buy, Contest, Planted, Settlement, Finished, Practice }
     public enum WinReason { None, TimeExpired, Eliminated, Defused, DeviceExpired }
-    public enum HeldSlot { Current, Primary, Sidearm, Knife, Objective }
+    public enum HeldSlot { Current, Primary, Sidearm, Knife, Objective, Utility }
     public interface IDeviceFeedback { void DeviceSound(Vector3 point, bool expired); }
     public interface IMeleeWorld { ArenaHit? Swing(int seat); }
     public enum BuySlot { None, Primary, Sidearm, Armor, Utility, Kit, Knife, Helmet }
@@ -70,11 +70,13 @@ namespace AnimeCS.Match
         public SoundClue? Heard;
         public bool Blinded, InsideSmoke;
         public PurchaseDraft Draft;
+        public UtilityCounts Utilities;
     }
 
     public struct PurchaseDraft
     {
         public string Primary, Sidearm, Utility;
+        public UtilityCounts Utilities;
         public bool Armor, Helmet, Kit;
     }
 
@@ -82,6 +84,7 @@ namespace AnimeCS.Match
     public struct SoundClue
     {
         public SoundKind Kind;
+        public WeaponClass WeaponClass;
         public bool Own, Suppressed;
         public string Region;
         public int Bearing, Tick, Expires; // Eight directions; never an exact source position.
@@ -93,6 +96,7 @@ namespace AnimeCS.Match
         void ResetRound();
         void Advance(int tick);
         void Throw(int seat, UtilityDefinition item);
+        void EmitGun(int seat,WeaponDefinition gun)=>Emit(seat,SoundKind.Gun,gun.SoundRadius,gun.Suppressed);
         void Emit(int seat, SoundKind kind, float radius, bool suppressed = false);
         SoundClue? Heard(int seat);
         bool Blinded(int seat);
@@ -103,7 +107,7 @@ namespace AnimeCS.Match
     public interface ISeatPort
     {
         SeatView Read();
-        SeatView WatchTeam();
+        SeatView WatchTeam(int direction = 0);
         bool Submit(int tick, SeatIntent intent);
     }
 

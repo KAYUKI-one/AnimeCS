@@ -28,3 +28,4 @@ MonoBehaviour:
   _headwearOffset: {x: 0, y: 0.082, z: 0}
   _faceAnchor: {x: 0, y: 0.05996, z: 0.06696}
   _standingEyes: 1.5103
+  _combatHeadScale: 1.025

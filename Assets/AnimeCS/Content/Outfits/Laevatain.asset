@@ -26,6 +26,8 @@ MonoBehaviour:
   _bodyRegions:
   - source: {fileID: 7426929773553543812, guid: a646751f122dce64fa0a852701a40512, type: 3}
     partitioned: {fileID: 4300000, guid: ce2aaa72edd408348ad6d0c4f4c13e21, type: 2}
+    firstPersonLower: {fileID: 4300000, guid: ed6b69033dd131c4c91d7dc1863d653c, type: 2}
+    lowerMaterialSlots: 050000000a0000000b000000
     materials:
     - {fileID: 2100000, guid: b6fc990b3db702d4cbdecaec1d32835f, type: 2}
     - {fileID: 2100000, guid: 7f54e425abf337c419f91de7418cf9de, type: 2}
@@ -44,6 +46,8 @@ MonoBehaviour:
   _viewRegions:
   - source: {fileID: 7986760452662843428, guid: ef11936d7921a784596303fd06390e53, type: 3}
     partitioned: {fileID: 4300000, guid: 22da9ecf1671a864785416165a8addd4, type: 2}
+    firstPersonLower: {fileID: 0}
+    lowerMaterialSlots: 
     materials:
     - {fileID: 2100000, guid: 6d1bb9a895c9f004fbd8725d2d49d918, type: 2}
     - {fileID: 2100000, guid: 6d1bb9a895c9f004fbd8725d2d49d918, type: 2}
@@ -51,4 +55,4 @@ MonoBehaviour:
     - {fileID: 2100000, guid: 3845661e6e82a7443a8c2dea3c4cbbb4, type: 2}
     slots: 01000000020000000100000002000000
   _hiddenRegion: {fileID: 2100000, guid: 95cc80d7c57e58c489b4230fb9af32f3, type: 2}
-  _stanceController: {fileID: 22100000, guid: 570690610d84a59448beb75c5df4cb68, type: 2}
+  _stanceController: {fileID: 0}

@@ -45,6 +45,7 @@ namespace AnimeCS.Play
             BindSlot("Previous", "<Keyboard>/1", HeldSlot.Primary);
             BindSlot("Next", "<Keyboard>/2", HeldSlot.Sidearm);
             BindSlot("Knife", "<Keyboard>/3", HeldSlot.Knife);
+            BindSlot("UtilitySlot", "<Keyboard>/4", HeldSlot.Utility);
             BindSlot("Objective", "<Keyboard>/5", HeldSlot.Objective);
             BindSlot("LastWeapon", "<Keyboard>/q", HeldSlot.Current);
             Button("PauseMatch", "<Keyboard>/escape").performed += _ => _pausePressed = true;

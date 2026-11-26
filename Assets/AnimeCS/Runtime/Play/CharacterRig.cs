@@ -13,7 +13,7 @@ namespace AnimeCS.Play
         public bool AimFromHand { get; }
         public Transform Head { get; }
         public Transform HeadMount { get; }
-        private readonly List<(SkinnedMeshRenderer renderer, int stand, int crouch)> _drapes = new();
+        private readonly List<(SkinnedMeshRenderer renderer, Mesh mesh, int stand, int crouch)> _drapes = new();
         private readonly Transform[] _feet = new Transform[4];
         private readonly Vector3[] _soleLocal = new Vector3[4];
         private readonly Vector3 _faceLocal;
@@ -28,7 +28,9 @@ namespace AnimeCS.Play
         private readonly Animator _animator;
         private bool _checked, _driven, _air;
         private int _tick = -1, _round = -1, _landUntil;
-        private float _yaw, _turn;
+        private LocomotionPose _locomotion;
+        internal float BodyYaw => _locomotion.BodyYaw;
+        internal float WaistYaw => _locomotion.Twist;
         private static readonly int Strafe = Animator.StringToHash("Strafe"), Forward = Animator.StringToHash("Forward"),
             Crouch = Animator.StringToHash("Crouch"), Vertical = Animator.StringToHash("Vertical"), AirTurn = Animator.StringToHash("AirTurn");
         public CharacterRig(GameObject body, CharacterDefinition definition, RuntimeAnimatorController stanceController=null)
@@ -50,7 +52,7 @@ namespace AnimeCS.Play
                     if (name.EndsWith("DrapeStand", System.StringComparison.Ordinal)) stand = i;
                     if (name.EndsWith("DrapeCrouch", System.StringComparison.Ordinal)) crouch = i;
                 }
-                if (stand >= 0 && crouch >= 0) _drapes.Add((renderer, stand, crouch));
+                if (stand >= 0 && crouch >= 0) _drapes.Add((renderer, mesh, stand, crouch));
             }
             FitDrape(0);
             var animator = body.GetComponentInChildren<Animator>(true);
@@ -125,10 +127,22 @@ namespace AnimeCS.Play
         public void FitDrape(float crouch)
         {
             float duck = 100f * Mathf.Clamp01(crouch);
-            foreach (var drape in _drapes)
+            for(int i=0;i<_drapes.Count;i++)
             {
-                drape.renderer.SetBlendShapeWeight(drape.stand, 100f - duck);
-                drape.renderer.SetBlendShapeWeight(drape.crouch, duck);
+                var drape=_drapes[i];
+                if(drape.renderer.sharedMesh!=drape.mesh)
+                {
+                    drape.mesh=drape.renderer.sharedMesh;drape.stand=drape.crouch=-1;
+                    for(int shape=0;shape<drape.mesh.blendShapeCount;shape++)
+                    {
+                        string name=drape.mesh.GetBlendShapeName(shape);
+                        if(name.EndsWith("DrapeStand",System.StringComparison.Ordinal))drape.stand=shape;
+                        if(name.EndsWith("DrapeCrouch",System.StringComparison.Ordinal))drape.crouch=shape;
+                    }
+                    _drapes[i]=drape;
+                }
+                if(drape.stand>=0)drape.renderer.SetBlendShapeWeight(drape.stand,100f-duck);
+                if(drape.crouch>=0)drape.renderer.SetBlendShapeWeight(drape.crouch,duck);
             }
         }
 
@@ -165,8 +179,9 @@ namespace AnimeCS.Play
             _hitApplied = true;
         }
 
-        public void Animate(in SeatView view, float runSpeed)
+        public void Animate(in SeatView view, float runSpeed, float alpha = 0)
         {
+            _locomotion.Sample(view, runSpeed, alpha);
             if (_animator == null || !_animator.isActiveAndEnabled || !_animator.runtimeAnimatorController) return;
             if (!_checked)
             {
@@ -178,21 +193,17 @@ namespace AnimeCS.Play
             int tick = view.Match.Tick;
             if (_round != view.Match.Round || tick < _tick)
             {
-                _round = view.Match.Round; _tick = -1; _landUntil = 0; _air = false; _turn = 0; _yaw = view.Yaw;
+                _round = view.Match.Round; _tick = -1; _landUntil = 0; _air = false;
                 _animator.Play("Base Layer.Ground", 0, 0);
             }
+            _animator.SetFloat(Strafe, _locomotion.Direction.x);
+            _animator.SetFloat(Forward, _locomotion.Direction.y);
+            _animator.SetFloat(Crouch, _locomotion.Crouch);
+            _animator.SetFloat(Vertical, _locomotion.Vertical);
+            _animator.SetFloat(AirTurn, _locomotion.AirTurn);
             if (tick == _tick) return;
-            float dt = Mathf.Max(1, tick - _tick) * SeatMovement.StepTime;
             var motion = view.Motion;
             FitDrape(motion.Crouch);
-            var local = Quaternion.Euler(0, -view.Yaw, 0) * new Vector3(motion.Velocity.x, 0, motion.Velocity.y);
-            float rate = Mathf.DeltaAngle(_yaw, view.Yaw) / dt;
-            _turn = Mathf.MoveTowards(_turn, Mathf.Clamp(rate / 170f, -1, 1), dt * 8);
-            _animator.SetFloat(Strafe, local.x / runSpeed);
-            _animator.SetFloat(Forward, local.z / runSpeed);
-            _animator.SetFloat(Crouch, motion.Crouch);
-            _animator.SetFloat(Vertical, motion.VerticalSpeed);
-            _animator.SetFloat(AirTurn, _turn);
             if (!motion.Grounded && !_air) { _animator.CrossFadeInFixedTime("Base Layer.Air", .085f); _landUntil=0; }
             if (motion.Grounded && _air)
             {
@@ -203,7 +214,7 @@ namespace AnimeCS.Play
             {
                 _animator.CrossFadeInFixedTime("Base Layer.Ground", .095f); _landUntil=0;
             }
-            _air = !motion.Grounded; _yaw = view.Yaw; _tick = tick;
+            _air = !motion.Grounded; _tick = tick;
         }
 
         public bool BindClothing(GameObject garment)

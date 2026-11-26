@@ -107,7 +107,7 @@ namespace AnimeCS.Tests
                 float expected=crouch?1.16f:1.62f;
                 Assert.That(main.transform.position.y-actors[0].Visuals.position.y,Is.EqualTo(expected).Within(.004));
                 // Seat zero uses the first-person camera. The other four attack seats
-                // and five defend seats cover all six third-person rigs.
+                // and five defend seats cover all eight third-person rigs.
                 for(int i=1;i<LocalMatch.Seats;i++)
                 {
                     var view = match.BindSeat(i).Read();
@@ -138,8 +138,8 @@ namespace AnimeCS.Tests
                     Assert.That(hit.transform.TransformPoint(hit.center).y-actors[i].transform.position.y,Is.EqualTo(expected+.006).Within(.001));
                     Assert.That(hit.radius * hit.transform.lossyScale.x * 2f, Is.EqualTo(.29f).Within(.001f), character.Id);
                 }
-                Assert.That(attackIds, Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain" }));
-                Assert.That(defendIds, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily" }));
+                Assert.That(attackIds, Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain", "character.nora" }));
+                Assert.That(defendIds, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily", "character.michele" }));
             }
             // Attack pistol has a visible flash. Shoot away from other actors so the driver remains alive.
             yield return null; yield return null;

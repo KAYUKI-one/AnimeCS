@@ -21,9 +21,9 @@ namespace AnimeCS.Tests
             Assert.That(catalog.Entries.OfType<WeaponDefinition>().Count(), Is.GreaterThanOrEqualTo(12));
             Assert.That(catalog.Entries.OfType<UtilityDefinition>().Select(x => x.Effect).Distinct().Count(), Is.EqualTo(3));
             Assert.That(catalog.SeatOutfits.Where(outfit => outfit.Character.Faction == Side.Attack)
-                .Select(outfit => outfit.Character.Id), Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain" }));
+                .Select(outfit => outfit.Character.Id), Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain", "character.nora" }));
             Assert.That(catalog.SeatOutfits.Where(outfit => outfit.Character.Faction == Side.Defend)
-                .Select(outfit => outfit.Character.Id), Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily" }));
+                .Select(outfit => outfit.Character.Id), Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily", "character.michele" }));
             Assert.That(catalog.Entries.Any(entry => entry && !entry.Archived &&
                 (entry.Id == "character.endmin" || entry.Id == "outfit.endmin")), Is.False);
             Assert.That(catalog.OutfitForSide(Side.Attack, "outfit.lily").Character.Faction, Is.EqualTo(Side.Attack));
