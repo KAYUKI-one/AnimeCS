@@ -45,7 +45,7 @@ namespace AnimeCS.Tests
             finally{nav.Remove();if(geometry)Object.DestroyImmediate(geometry);}
         }
 
-        [Test] public void WardrobeRepairsOneSlotAndKeepsAllFiveFittedGlovePairs()
+        [Test] public void WardrobeRepairsOneSlotAndKeepsEachPlayableCharactersFittedGloves()
         {
             var c=ContentLibrary.Catalog;var p=WardrobeProfile.Create(c);
             p.current.worn=new WornItems{headwear="wear.catband",gloves="wear.irisgloves",shoes="wear.fieldjacket",bottom="wear.fieldtrousers"};

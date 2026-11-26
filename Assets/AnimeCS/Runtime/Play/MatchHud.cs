@@ -73,6 +73,11 @@ namespace AnimeCS.Play
             foreach(var site in _sites) Show(site,!practice);
             Show(_targetMotion,practice); _targetMotion.text="靶位移动　关";
             _root.Q("map-art").style.backgroundImage=_catalog.Map.Radar;Place(_sites[0],_catalog.Map.SitePosition(Site.A));Place(_sites[1],_catalog.Map.SitePosition(Site.B));
+            UpdatePortraits(match);
+        }
+
+        private void UpdatePortraits(LocalMatch match)
+        {
             for (int i=0;i<_portraits.Length;i++)
             {
                 var fit=_catalog.Find<OutfitDefinition>(match.RosterOutfit(i));
@@ -103,7 +108,7 @@ namespace AnimeCS.Play
             _lastTick=match.Tick; _paused=match.Paused;
             bool practice=match.Phase==RoundPhase.Practice;
             bool buy=match.Phase==RoundPhase.Buy, finished=match.Phase==RoundPhase.Finished;
-            if (match.Round!=_round) { _round=match.Round; _open=false; BuildShop(self.Side); }
+            if (match.Round!=_round) { _round=match.Round; _open=false; BuildShop(self.Side); UpdatePortraits(_session); }
             if (!self.CanBuy) _open=false;
             Show(_shop,self.CanBuy&&_open&&!_paused); Show(_root.Q("open-shop"),self.CanBuy&&!_open&&!_paused);
             if (self.CanBuy)
@@ -121,7 +126,7 @@ namespace AnimeCS.Play
             _labels["clock"].text=practice?"练枪地图":$"{seconds/60:0}:{seconds%60:00}";
             _labels["our-score"].text=match.Score0.ToString();_labels["their-score"].text=match.Score1.ToString();
             _labels["phase"].text=practice?$"击倒 {match.PracticeKills}    爆头 {match.PracticeHeadshots}":buy?"冻结时间":match.Phase==RoundPhase.Planted?"已安装 · "+match.PlantedSite:
-                match.Phase==RoundPhase.Settlement?(match.Winner==Side.Attack?"攻方胜":"守方胜")+"  ·  "+ResultName(match.Reason):string.Empty;
+                match.Phase==RoundPhase.Settlement?(CharacterDefinition.FactionName(match.Winner)+"胜")+"  ·  "+ResultName(match.Reason):string.Empty;
             bool active=watched.Seat>=0;
             _labels["credits"].text=practice?"自由补给":"$ "+self.Credits;
             _labels["hp"].text=active?watched.Health+"  HP":"公共观战";
@@ -145,6 +150,7 @@ namespace AnimeCS.Play
             Show(_root.Q("reticle"),aimVisible && _catalog.Find<WeaponDefinition>(watched.WeaponId)?.Optics==null);
             Show(_root.Q("obscured"),watched.Blinded||watched.InsideSmoke);
             _root.Q("obscured").EnableInClassList("flash",watched.Blinded);
+            Show(_root.Q("hit-confirm"),aimVisible && _style.hitConfirm && match.Tick-watched.LastConfirmationTick<6);
             Show(_root.Q("wound"),active&&_style.hitReaction&&match.Tick-watched.LastHitTick<7);
             for (int i=0;i<_friends.Length;i++)
             {

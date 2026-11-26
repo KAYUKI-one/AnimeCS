@@ -19,11 +19,14 @@ MonoBehaviour:
   lobbyWeapon: {fileID: 11400000, guid: efaf2cc50cabe634e9adcae18ee47c1e, type: 2}
   lobbyFieldOfView: 29
   daylightSky: {fileID: 2100000, guid: ba56070f1c8d59a4084be9cbe7b333f1, type: 2}
+  daylightGrade: {fileID: 11400000, guid: 51f63328211cad94e876ae26a53ffd41, type: 2}
   skyLight: {r: 0.84, g: 0.87, b: 0.9, a: 1}
   horizonLight: {r: 0.69, g: 0.71, b: 0.73, a: 1}
   groundLight: {r: 0.44, g: 0.41, b: 0.37, a: 1}
   sunIntensity: 1.75
   handlingMotion: 1
+  hitConfirm: 1
+  cameraKickDegrees: 0.58
   tracers: 1
   surfaceMarks: 1
   hitReaction: 1

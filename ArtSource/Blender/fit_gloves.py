@@ -2,14 +2,17 @@
 import bpy,bmesh,re,sys
 from pathlib import Path
 from mathutils import Vector,Matrix
-source,art=map(Path,sys.argv[sys.argv.index('--')+1:])
-out=art/'Wearables'/'Iris';out.mkdir(exist_ok=True)
-for cast in ['Rover','Flor','Lily','Cantarella','Endmin']:
+sys.path.insert(0,str(Path(__file__).parent))
+from cast_roster import playable, folders
+params=sys.argv[sys.argv.index('--')+1:]
+source,art=map(Path,params[:2])
+out=art/'Wearables'/'Iris';out.mkdir(parents=True,exist_ok=True)
+for cast in params[2:] or playable:
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=str(source/'Gloves/gloves.gltf'))
     old=next(o for o in bpy.context.scene.objects if o.type=='ARMATURE')
     glove=next(o for o in bpy.context.scene.objects if o.name.endswith('.viewmodel'))
-    bpy.ops.import_scene.fbx(filepath=str(art/'Characters'/cast/(cast+'.fbx')),use_anim=False,ignore_leaf_bones=False)
+    bpy.ops.import_scene.fbx(filepath=str(art/'Characters'/folders[cast]/(cast+'.fbx')),use_anim=False,ignore_leaf_bones=False)
     rig=next(o for o in bpy.context.scene.objects if o.type=='ARMATURE' and o!=old)
     def head(ob,n): return ob.matrix_world@ob.data.bones[n].head_local
     def frame(along,across):

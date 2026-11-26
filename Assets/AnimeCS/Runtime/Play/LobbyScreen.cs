@@ -106,8 +106,9 @@ namespace AnimeCS.Play
                 Header("地图");var maps=Row();
                 foreach(var map in _catalog.Entries.OfType<MapDefinition>().Where(m=>!m.Practice && !m.Archived))
                     Choice(maps,map.DisplayName,map==_game.SelectedMap,()=>{_game.SelectMap(map);Render();});
+                if(_game.Mode==MatchMode.Online){_content.Add(new Label("联机试玩 · 随机阵营"));return;}
                 Header("开局阵营");var sides=Row();
-                foreach(FirstSide side in Enum.GetValues(typeof(FirstSide)))Choice(sides,side==FirstSide.Attack?"先攻":side==FirstSide.Defend?"先守":"随机",_game.OpeningSide==side,()=>{_game.OpeningSide=side;Render();});
+                foreach(FirstSide side in Enum.GetValues(typeof(FirstSide)))Choice(sides,side==FirstSide.Attack?"余烬 · 先攻":side==FirstSide.Defend?"苍盾 · 先守":"随机",_game.OpeningSide==side,()=>{_game.OpeningSide=side;Render();});
                 return;
             }
             if(_section=="inventory") { Inventory(); return; }

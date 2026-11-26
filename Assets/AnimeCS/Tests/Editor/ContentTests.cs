@@ -20,6 +20,14 @@ namespace AnimeCS.Tests
             Assert.That(FoundationBuild.ValidateCatalog(catalog), Is.Empty);
             Assert.That(catalog.Entries.OfType<WeaponDefinition>().Count(), Is.GreaterThanOrEqualTo(12));
             Assert.That(catalog.Entries.OfType<UtilityDefinition>().Select(x => x.Effect).Distinct().Count(), Is.EqualTo(3));
+            Assert.That(catalog.SeatOutfits.Where(outfit => outfit.Character.Faction == Side.Attack)
+                .Select(outfit => outfit.Character.Id), Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain" }));
+            Assert.That(catalog.SeatOutfits.Where(outfit => outfit.Character.Faction == Side.Defend)
+                .Select(outfit => outfit.Character.Id), Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily" }));
+            Assert.That(catalog.Entries.Any(entry => entry && !entry.Archived &&
+                (entry.Id == "character.endmin" || entry.Id == "outfit.endmin")), Is.False);
+            Assert.That(catalog.OutfitForSide(Side.Attack, "outfit.lily").Character.Faction, Is.EqualTo(Side.Attack));
+            Assert.That(catalog.OutfitForSide(Side.Defend, "outfit.flor").Character.Faction, Is.EqualTo(Side.Defend));
             Assert.That(catalog.Map.SpawnCount(Side.Attack), Is.EqualTo(5));
             Assert.That(catalog.Map.SpawnCount(Side.Defend), Is.EqualTo(5));
             Assert.That(EditorBuildSettings.scenes.First(s => s.enabled).path, Is.EqualTo(FoundationBuild.BootScene));
@@ -60,7 +68,11 @@ namespace AnimeCS.Tests
             var catalog = ContentLibrary.Catalog;
             var profile = WardrobeProfile.Create(catalog);
             var skins = catalog.Entries.OfType<WeaponSkinDefinition>().Take(2).ToArray();
-            profile.current.outfitId = catalog.Entries.OfType<OutfitDefinition>().First(x => !x.Archived && x != catalog.Outfit).Id;
+            profile.current.outfitId = "outfit.blackmiku";
+            profile.current.attackOutfitId = "outfit.blackmiku";
+            profile.current.defendOutfitId = "outfit.lily";
+            profile.presets[0].attackOutfitId = "outfit.laevatain";
+            profile.presets[0].defendOutfitId = "outfit.rover";
             profile.current.skins.Add(new SkinChoice { weaponId = skins[0].Weapon.Id, skinId = skins[0].Id });
             profile.current.skins.Add(new SkinChoice { weaponId = skins[1].Weapon.Id, skinId = skins[0].Id });
             var temp = Path.Combine(Path.GetTempPath(), "AnimeCS-profile-" + Guid.NewGuid().ToString("N") + ".json");
@@ -71,12 +83,62 @@ namespace AnimeCS.Tests
                 File.WriteAllText(temp,legacy.Insert(legacy.IndexOf('{')+1,"\"displayMask\":true,"));
                 var copy = store.Load(catalog);
                 Assert.That(copy.current.outfitId, Is.EqualTo(profile.current.outfitId));
+                Assert.That(copy.current.OutfitFor(Side.Attack), Is.EqualTo("outfit.blackmiku"));
+                Assert.That(copy.current.OutfitFor(Side.Defend), Is.EqualTo("outfit.lily"));
                 Assert.That(copy.current.SkinFor(skins[0].Weapon.Id), Is.EqualTo(skins[0].Id));
                 Assert.That(copy.current.SkinFor(skins[1].Weapon.Id), Is.Null);
                 Assert.That(copy.presets.Length, Is.EqualTo(2)); Assert.That(copy.presets[0], Is.Not.SameAs(copy.presets[1]));
+                Assert.That(copy.presets[0].OutfitFor(Side.Attack), Is.EqualTo("outfit.laevatain"));
+                Assert.That(copy.presets[0].OutfitFor(Side.Defend), Is.EqualTo("outfit.rover"));
                 File.WriteAllText(temp, "{"); Assert.That(store.Load(catalog).current.outfitId, Is.EqualTo(profile.current.outfitId));
             }
             finally { if (File.Exists(temp)) File.Delete(temp); if (File.Exists(temp + ".bak")) File.Delete(temp + ".bak"); }
+        }
+
+        [Test] public void LegacyProfileReplacesRetiredOutfitsAndPreservesWeaponsAndSkins()
+        {
+            var catalog = ContentLibrary.Catalog;
+            var skin = catalog.Entries.OfType<WeaponSkinDefinition>().First(item => !item.Archived);
+            const string legacy = @"{
+                ""version"": 1,
+                ""owned"": [""character.endmin"", ""outfit.endmin"", ""outfit.lily"", ""SKIN""],
+                ""current"": {
+                    ""outfitId"": ""outfit.endmin"",
+                    ""primaryId"": ""weapon.ember47"",
+                    ""skins"": [{""weaponId"": ""SKIN_WEAPON"", ""skinId"": ""SKIN""}]
+                },
+                ""presets"": [{""outfitId"": ""outfit.lily""}, {""outfitId"": ""outfit.endmin""}]
+            }";
+            var temp = Path.Combine(Path.GetTempPath(), "AnimeCS-legacy-" + Guid.NewGuid().ToString("N") + ".json");
+            try
+            {
+                File.WriteAllText(temp, legacy.Replace("SKIN_WEAPON", skin.Weapon.Id).Replace("SKIN", skin.Id));
+                var store = new LocalProfileStore(temp);
+                var profile = store.Load(catalog);
+                Assert.That(profile.version, Is.EqualTo(2));
+                Assert.That(profile.current.primaryId, Is.EqualTo("weapon.ember47"));
+                Assert.That(profile.current.SkinFor(skin.Weapon.Id), Is.EqualTo(skin.Id));
+                Assert.That(profile.presets.Length, Is.EqualTo(2));
+                Assert.That(profile.presets[0], Is.Not.SameAs(profile.presets[1]));
+                Assert.That(profile.presets[0].OutfitFor(Side.Defend), Is.EqualTo("outfit.lily"));
+                foreach (var loadout in profile.presets.Prepend(profile.current))
+                {
+                    Assert.That(loadout.outfitId, Is.Not.EqualTo("outfit.endmin"));
+                    var outfit = catalog.Find<OutfitDefinition>(loadout.outfitId);
+                    Assert.That(outfit, Is.Not.Null, loadout.outfitId);
+                    Assert.That(outfit.Archived, Is.False);
+                    Assert.That(outfit.Character, Is.Not.Null);
+                    Assert.That(outfit.Character.Archived, Is.False);
+                    foreach (Side side in Enum.GetValues(typeof(Side)))
+                    {
+                        var factionOutfit = catalog.Find<OutfitDefinition>(loadout.OutfitFor(side));
+                        Assert.That(factionOutfit, Is.Not.Null, side.ToString());
+                        Assert.That(factionOutfit.Character.Faction, Is.EqualTo(side));
+                        Assert.That(factionOutfit.Character.Id, Is.Not.EqualTo("character.endmin"));
+                    }
+                }
+            }
+            finally { if (File.Exists(temp)) File.Delete(temp); }
         }
 
         [Test] public void ExternalTextureUsesUnityImporterAndRepeatKeepsItsGuid()

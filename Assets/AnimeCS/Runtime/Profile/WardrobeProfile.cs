@@ -17,7 +17,14 @@ namespace AnimeCS.Profile
     [Serializable]
     public sealed class WardrobeLoadout
     {
-        public string outfitId;
+        public string outfitId, attackOutfitId, defendOutfitId;
+        public string OutfitFor(Side side) => side == Side.Attack ? attackOutfitId : defendOutfitId;
+        public void Select(OutfitDefinition outfit)
+        {
+            outfitId=outfit.Id;
+            if(outfit.Character.Faction==Side.Attack) attackOutfitId=outfit.Id;
+            else defendOutfitId=outfit.Id;
+        }
         public string primaryId, sidearmId, knifeId;
         public WornItems worn;
         public List<SkinChoice> skins = new List<SkinChoice>();
@@ -33,7 +40,7 @@ namespace AnimeCS.Profile
     [Serializable]
     public sealed class WardrobeProfile
     {
-        public int version = 1;
+        public int version = 2;
         public List<string> owned = new List<string>();
         public WardrobeLoadout current = new WardrobeLoadout();
         public WardrobeLoadout[] presets = new WardrobeLoadout[2];
@@ -50,6 +57,7 @@ namespace AnimeCS.Profile
         public void Repair(ContentCatalog catalog)
         {
             owned ??= new List<string>();
+            owned.RemoveAll(id=>{var item=catalog.Find<ContentDefinition>(id); return !item || item.Archived;});
             foreach (var item in catalog.Entries)
                 if (item && !item.Archived && !owned.Contains(item.Id) && (item is WeaponDefinition || item is CharacterDefinition ||
                     item is OutfitDefinition outfit && outfit.Included || item is WearableDefinition wear && wear.Included ||
@@ -64,8 +72,17 @@ namespace AnimeCS.Profile
         {
             var result = new WardrobeLoadout { outfitId = catalog.Outfit.Id };
             var outfit = catalog.Find<OutfitDefinition>(source?.outfitId);
-            if (outfit != null && !outfit.Archived && outfit.Character != null && catalog.Find<CharacterDefinition>(outfit.Character.Id) == outfit.Character && owned.Contains(outfit.Id))
-                result.outfitId = outfit.Id;
+            bool Allowed(OutfitDefinition f) => f && !f.Archived && f.Character && !f.Character.Archived && owned.Contains(f.Id);
+            if (Allowed(outfit)) result.outfitId = outfit.Id;
+            string ResolveSide(Side side)
+            {
+                var saved = catalog.Find<OutfitDefinition>(source?.OutfitFor(side));
+                if (Allowed(saved) && saved.Character.Faction==side) return saved.Id;
+                if (Allowed(outfit) && outfit.Character.Faction==side) return outfit.Id;
+                return catalog.OutfitForSide(side)?.Id;
+            }
+            result.attackOutfitId=ResolveSide(Side.Attack);
+            result.defendOutfitId=ResolveSide(Side.Defend);
             string ResolveWeapon(string id, HeldSlot kind)
             {
                 bool Fits(WeaponDefinition w) => w && !w.Archived && owned.Contains(w.Id) &&
@@ -114,8 +131,8 @@ namespace AnimeCS.Profile
                 {
                     var result = JsonUtility.FromJson<WardrobeProfile>(File.ReadAllText(path));
                     if (result == null) continue;
-                    if (result.version > 1) throw new NotSupportedException("衣柜档案版本高于当前游戏版本。");
-                    result.version = 1;
+                    if (result.version > 2) throw new NotSupportedException("衣柜档案版本高于当前游戏版本。");
+                    result.version = 2;
                     result.Repair(catalog);
                     return result;
                 }

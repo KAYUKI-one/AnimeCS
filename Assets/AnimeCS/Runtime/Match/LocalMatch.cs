@@ -16,11 +16,12 @@ namespace AnimeCS.Match
             public SeatInventory Bag;
             public string DisplayId;
             public int Health, NextShot, ReloadAt, ReloadStart, EquipTick, InspectTick, Burst;
+            public int ShotSequence;
             public bool FiredLastTick;
             public float Yaw, Pitch;
             public MotionContact Motion;
             public bool JustStopped;
-            public int LastHitTick, LastShotTick;
+            public int LastHitTick, LastShotTick, LastConfirmationTick;
             public ScopeState Scope;
             public HitZone LastHitZone;
             public Contact? Visible;
@@ -54,7 +55,7 @@ namespace AnimeCS.Match
             mode==MatchMode.BotMatch ? choice : mode==MatchMode.Online ? FirstSide.Random : FirstSide.Attack;
         private readonly IMatchWorld _world;
         private readonly IMatchSignals _signals;
-        private readonly System.Random _spread, _draw;
+        private readonly System.Random _draw;
         private readonly SeatState[] _seats = new SeatState[Seats];
         private readonly Port[] _ports = new Port[Seats];
         private readonly SeatIntent[] _inputs = new SeatIntent[Seats];
@@ -83,26 +84,17 @@ namespace AnimeCS.Match
             Mode=mode; openingSide=OpeningFor(mode,openingSide);
             _catalog = catalog; _rules = rules; _world = world; Seed = seed;
             _signals = world as IMatchSignals;
-            _spread = new System.Random(seed);
             _draw = new System.Random(seed ^ 0x51EA72);
             _attackTeam = openingSide == FirstSide.Random ? _draw.Next(2) : openingSide == FirstSide.Attack ? 0 : 1;
-            var outfits = new List<OutfitDefinition>();
             var skins = new List<WeaponSkinDefinition>();
             foreach (var entry in catalog.Entries)
             {
-                if (entry is OutfitDefinition outfit && outfit.Character != null) outfits.Add(outfit);
                 if (entry is WeaponSkinDefinition skin && skin.Weapon != null) skins.Add(skin);
-            }
-            if (catalog.SeatOutfits != null && catalog.SeatOutfits.Count > 0)
-            {
-                outfits.Clear();
-                foreach (var outfit in catalog.SeatOutfits)
-                    if (outfit != null && catalog.Find<OutfitDefinition>(outfit.Id) == outfit) outfits.Add(outfit);
             }
             for (int i = 0; i < Seats; i++)
             {
                 var appearance = i == 0 ? player.Resolve(player.current, catalog) :
-                    new WardrobeLoadout { outfitId = outfits.Count > 0 ? outfits[i % outfits.Count].Id : catalog.Outfit.Id };
+                    new WardrobeLoadout();
                 if (i > 0 && skins.Count > 0)
                 {
                     var skin = skins[(i - 1) % skins.Count];
@@ -242,13 +234,15 @@ namespace AnimeCS.Match
             {
                 var s = _seats[i];
                 if (reset) s.Bag.Wallet = decider ? _rules.deciderCredits : _rules.openingCredits;
-                s.Bag.BeginRound(SideOf(i), reset || s.Health == 0);
+                var side = SideOf(i);
+                s.Bag.Dress(_catalog.OutfitForSide(side,i==0?s.Bag.PreferredOutfit(side):null,i%TeamSize));
+                s.Bag.BeginRound(side, reset || s.Health == 0);
                 s.Bag.CarriesObjective = i == _carrier;
                 s.EquipTick = s.InspectTick = -100000; s.ReloadStart = 0;
                 s.Scope = default; s.Health = 100; s.NextShot = s.ReloadAt = s.Burst = 0; s.FiredLastTick = false;
                 s.Yaw = _catalog.Map.SpawnYaw(SideOf(i), i % TeamSize); s.Pitch = 0;
                 s.Motion = MotionContact.Standing; s.JustStopped = false;
-                s.LastHitTick = s.LastShotTick = -100000;
+                s.LastHitTick = s.LastShotTick = s.LastConfirmationTick = -100000;
                 _world.Spawn(i, _catalog.Map.Spawn(SideOf(i), i % TeamSize), s.Yaw);
                 if (Mode==MatchMode.AimPractice && i>0 && i<TeamSize) { s.Health=0; _world.SetAlive(i,false); }
             }
@@ -317,8 +311,10 @@ namespace AnimeCS.Match
                 ScopeLevel = s.Scope.Level, Magnification = s.Scope.Magnification(gun?.Definition.Optics,_tick),
                 ScopeStability = gun?.Definition.Optics is SniperOptics lens ? s.Scope.Stability(lens,_tick) : 0,
                 Bolting = s.Scope.ResumeLevel != 0,
+                CanStartShot = !_paused && _phase!=RoundPhase.Buy && _phase!=RoundPhase.Finished && s.Health>0 && _operator!=i &&
+                    gun!=null && gun.Definition.Class!=WeaponClass.Knife && gun.Magazine>0 && s.ReloadAt==0 && _tick+1>=s.NextShot,
                 EquipTick = s.EquipTick, InspectTick = s.InspectTick, ReloadStart = s.ReloadStart, ReloadEnd = s.ReloadAt,
-                LastHitTick = s.LastHitTick, LastHitZone = s.LastHitZone, LastShotTick = s.LastShotTick,
+                LastConfirmationTick=s.LastConfirmationTick, LastHitTick = s.LastHitTick, LastHitZone = s.LastHitZone, LastShotTick = s.LastShotTick,
                 PrimaryId = bag.Primary?.Definition.Id, SidearmId = bag.Sidearm?.Definition.Id, KnifeId = bag.Knife?.Definition.Id,
                 WeaponId = gun?.Definition.Id, SkinId = gun?.SkinId, Magazine = gun?.Magazine ?? 0, Reserve = gun?.Reserve ?? 0,
                 OutfitId = bag.OutfitId, Worn=bag.Worn, UtilityId = bag.Utility != null ? bag.Utility.Id : null,

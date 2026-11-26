@@ -16,7 +16,7 @@ MonoBehaviour:
   _displayName: "\u5C11\u5973\u574E\u7279\u857E\u62C9"
   _thumbnail: {fileID: 0}
   _glyph: {fileID: 0}
-  _archived: 0
+  _archived: 1
   _character: {fileID: 11400000, guid: 06a44ac11b57d1245aea8686024f55af, type: 2}
   _model: {fileID: 0}
   _arms: {fileID: 919132149155446097, guid: aca044b2b8e41944bab2435cf9cf32ce, type: 3}

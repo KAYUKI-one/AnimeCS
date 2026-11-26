@@ -26,7 +26,7 @@ WASD 移动，Shift 静步，左 Ctrl / C 下蹲，空格跳跃。滚轮循环�
 | 雷达 | 地图条目的雷达平面图、中心和覆盖宽深决定世界坐标如何映射到左上角；首图底图取自地图实际碰撞几何。队友点、朝向和当前肉眼可见的敌人由比赛更新。 |
 | 地面与空中操作 | [MatchRules.asset](Assets/AnimeCS/Content/MatchRules.asset) 包含起步、反向制动、松键减速、空中投影限速、跳跃重力、站蹲切换和受击速度恢复。角色外观共用同一套碰撞和判定规则。 |
 | 大厅 | 将任意大厅布景模型或预制体拖入 [Competitive.asset](Assets/AnimeCS/UI/Competitive.asset) 的 Lobby Set 字段。该预设也保存默认展示枪和镜头视野。组队服务可调用 `LocalGame.SetLobbyTeammates` 提交最多四名真实队友的 ID、服装、枪和涂装。比赛沿用队伍 ID，也可用 `LocalGame.SetSeatDisplayId` 更新。 |
-| 角色动作 | 五名角色使用 Humanoid 骨架，共用 [Locomotion.controller](Assets/AnimeCS/Art/Characters/Locomotion.controller)。慢走、跑步、蹲行支持方向混合，起跳和下落读取竖直速度，空中转身读取方向变化。第一人称使用服装自带的蒙皮袖口和手指。角色条目可换动画控制器。第三人称由席位的视角驱动脊柱、颈和头部，再将双手对齐到武器。刀有独立的空闲左手、右手环握及挥动动作。 |
+| 角色动作 | 六名角色使用 Humanoid 骨架，共用 [Locomotion.controller](Assets/AnimeCS/Art/Characters/Locomotion.controller)。慢走、跑步、蹲行支持方向混合，起跳和下落读取竖直速度，空中转身读取方向变化。第一人称使用服装自带的蒙皮袖口和手指。角色条目可换动画控制器。第三人称由席位的视角驱动脊柱、颈和头部，再将双手对齐到武器。刀有独立的空闲左手、右手环握及挥动动作。 |
 | 开火与受击 | 玩家即时命中从画面中心的相机位置计算。第三人称的火光和曳光从手中武器的枪口发出，第一人称手臂与武器用独立相机层渲染。角色站立和完全下蹲的公共眼线分别为 1.62 米和 1.16 米，服装和头饰不参与命中。消音武器使用独立枪声并隐藏曳光。只在场景表面留下弹孔。交火预设可切换两类声音、材质、尺寸、存留数量、曳光时长和受击动作幅度。 |
 
 ## 导入和管理资源
@@ -46,11 +46,11 @@ WASD 移动，Shift 静步，左 Ctrl / C 下蹲，空格跳跃。滚轮循环�
 - **角色与服装**分别指定基础身体、阵营标识、整套服装及第一人称袖口。蒙皮服装匹配基础角色的同名骨骼。新角色优先使用 Humanoid 左右眼骨；没有眼骨时，在角色条目填写头骨本地坐标的「眼间点」和待机离地高度，再在练枪场检查站、蹲眼线。Humanoid 模型会在移动动画后对齐双臂和手指，自定义非人形模型可以指定持枪节点。
 - **枪械与枪皮**分别配置数值和外观。选中枪械后点「预览与校准持枪」，可切换服装和第一、第三人称，编辑双手接触点、枪的位置与旋转。第三人称预览可拖动旋转、滚轮拉近。枪械可指定默认枪皮或独立视角模型。模型带有 Muzzle 或「枪口」节点时，绑定模型会读取该点；也可在持枪预览中手动调整第三人称枪口或单独覆盖第一人称枪口。资源管理器的枪皮页可替换材质或基础色贴图。掉落、拾取、观战与跨局保留沿用该枪实例的涂装。
 
-本轮角色为男漂泊者、少女坎特蕾拉、莉莉、弗洛洛和女管理员。对局中以头顶 ID 辨认存活队友。侧面和背面沿用同一标记，完全被场景遮挡时收起。弗洛洛使用后来提供的修模绑骨版 PMX。十二把枪和一把绯纹刺刀各有独立模型。沙鹰、AK、M4A1、M4A4 沿用提供的模型，M4A1 白模配枪灰材质，M4A4 恢复了 Temukau 涂装。两把图片参考枪保留了原建模稿，试玩采用高细节的 SSG 08 和 AWP 外观，分别配蓝色与橄榄色材质。可编辑的展示模型位于 [ArtSource/Weapons](ArtSource/Weapons)。六把后补枪的对应型号、默认皮肤与样例来源见[枪械美术记录](ArtSource/Weapons/试玩涂装.md)。
+余烬（Ember，攻方）使用弗洛洛、黑色 Miku 和莱万汀。苍盾（Aegis，守方）使用莫宁、男漂泊者和莉莉。角色美术目录采用 `Faction_Character` 格式。装备页分别保存双方选装，半场按实际阵营换装。对局中以头顶 ID 辨认存活队友。侧面和背面沿用同一标记，完全被场景遮挡时收起。弗洛洛使用后来提供的修模绑骨版 PMX。十二把枪和一把绯纹刺刀各有独立模型。沙鹰、AK、M4A1、M4A4 沿用提供的模型，M4A1 白模配枪灰材质，M4A4 恢复了 Temukau 涂装。两把图片参考枪保留了原建模稿，试玩采用高细节的 SSG 08 和 AWP 外观，分别配蓝色与橄榄色材质。可编辑的展示模型位于 [ArtSource/Weapons](ArtSource/Weapons)。六把后补枪的对应型号、默认皮肤与样例来源见[枪械美术记录](ArtSource/Weapons/试玩涂装.md)。
 
-美术菜单可重拍立绘与库存缩略图，并从地图外观、物理网格重新烘焙点位与导航。地图的天空、远景、雷达、实际材质和本地来源见[美术记录](ArtSource/Weapons/试玩涂装.md)。有裙摆的角色可以在服装资源上覆盖待机动画。随附四套裙装分别烘焙了站姿与蹲姿的裙摆校正。服装贴图使用原模型 UV，男漂泊者、弗洛洛和女管理员的部分身体与衣料材质已接入原作切线法线。角色近看缺少衣料或缝线细节时，可提供同一 UV 的高分辨率原色、切线法线和粗糙度图。
+美术菜单可重拍立绘与库存缩略图，并从地图外观、物理网格重新烘焙点位与导航。地图的天空、远景、雷达、实际材质和本地来源见[美术记录](ArtSource/Weapons/试玩涂装.md)。有裙摆的角色可以在服装资源上覆盖待机动画。随附裙装保留各自的站姿、蹲姿和适用的裙摆校正。服装贴图使用原模型 UV，男漂泊者、弗洛洛、莫宁和莱万汀的部分身体与衣料材质已接入原作切线法线。角色近看缺少衣料或缝线细节时，可提供同一 UV 的高分辨率原色、切线法线和粗糙度图。
 
-自定义服饰可指定整体通用模型，也可逐角色绑定第一、第三人称蒙皮配件。Blender 转换脚本位于 [ArtSource/Blender](ArtSource/Blender)，支持 Blender 4.3 和 mmd_tools。随模型提供的署名、使用和分发说明已随项目保留。[男漂泊者](ArtSource/Rover-原作者说明.txt) · [少女坎特蕾拉](ArtSource/Cantarella-原作者说明.txt) · [弗洛洛](ArtSource/Flor-原作者说明.txt) · [女管理员](ArtSource/Endmin-原作者说明.txt)
+自定义服饰可指定整体通用模型，也可逐角色绑定第一、第三人称蒙皮配件。Blender 转换脚本位于 [ArtSource/Blender](ArtSource/Blender)，支持 Blender 4.3 和 mmd_tools。随模型提供的署名、使用和分发说明已随项目保留。[男漂泊者](ArtSource/Rover-原作者说明.txt) · [少女坎特蕾拉](ArtSource/Cantarella-原作者说明.txt) · [弗洛洛](ArtSource/Flor-原作者说明.txt) · [当前阵营与素材使用说明](ArtSource/角色素材说明.md)
 
 ## 后续开发接入点
 
@@ -58,6 +58,7 @@ WASD 移动，Shift 静步，左 Ctrl / C 下蹲，空格跳跃。滚轮循环�
 | --- | --- |
 | [ISeatDriver、ISeatPort、IMatchWorld](Assets/AnimeCS/Runtime/Match/SeatContracts.cs) | 玩家与 Bot 使用相同的逐 tick 意图和席位视图。新输入来源可用 LocalGame.SetSeatDriver 接入。物理命中、位置和合法目击由裁判侧的场景适配器提供。 |
 | [LocalMatch](Assets/AnimeCS/Runtime/Match/LocalMatch.cs) 与 [MatchRules](Assets/AnimeCS/Runtime/Match/MatchRules.cs) | 以 50 Hz 推进比赛，统一处理计时、优先级、比分、预算和装备。每局生成独立的收支与保留物记录，赛后可从 LocalGame.PostMatchReports 取得。 |
+| [席位网络接入](Assets/AnimeCS/Runtime/Match/SeatDatagrams.cs) | Windows 玩家可用 `-seat-host 127.0.0.1:27840` 开启一个调试席位，`SeatDatagramClient` 发送操作并接收自己的权威快照。输入按轮次和序号校验，位置按厘米压缩，快照以 25 Hz 传送。 |
 | [ContentCatalog](Assets/AnimeCS/Runtime/Content/ContentCatalog.cs) | 把稳定 ID 解析为强类型资源。切换启动地图、默认角色、默认服装或初始手枪可使用资源管理器的「目录设置」。 |
 | [WardrobeProfile](Assets/AnimeCS/Runtime/Profile/WardrobeProfile.cs) | 管理持有权、当前穿戴、两个预设。衣柜界面可调用 LocalGame.ReadWardrobe 和 SaveWardrobe，下次开赛会锁定新搭配。 |
 | [ObjectiveBot](Assets/AnimeCS/Runtime/Play/SeatDrivers.cs) | 基础 Bot 根据地图途经点和自身合法目击行动。完整团队报点、协作调档与挑战难度单场学习是后续玩法工作。 |

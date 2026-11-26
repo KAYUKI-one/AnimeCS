@@ -13,8 +13,9 @@ from mathutils import Matrix, Quaternion, Vector
 sys.path.insert(0, str(Path(__file__).parent))
 from motion import author_actions, pose, garment_stances
 from drape import mark_surfaces, bake_clearance
+from cast_roster import folders as cast_folders, playable
 
-names = {"Rover": "男漂泊", "Cantarella": "坎特", "Lily": "护士服", "Flor": "修模绑骨后）_by_鸣潮_4ce938", "Endmin": "女管理员"}
+names = {"Rover": "男漂泊", "Cantarella": "坎特", "Lily": "护士服", "Flor": "修模绑骨后）_by_鸣潮_4ce938", "BlackMiku":"黑色礼服miku", "Laevatain":"莱万汀", "Mornye":"莫宁"}
 source, destination, *selected = sys.argv[sys.argv.index("--") + 1:]
 source, destination = Path(source), Path(destination)
 body_only="--body-only" in selected
@@ -56,14 +57,27 @@ def flor_color(name):
 
 def materials(label, body, folder):
     slots, discard, mapping, new = list(body.data.materials), set(), {}, []
+    records = []
     for idx, mat in enumerate(slots):
         name = mat.name.lower()
-        if ("+" in name or name.startswith(("emo", "heart", "star", "cheek", "><", "mi_star"))
+        if label=="Laevatain" and name in {"m_actor_laevat_cloth_03","m_eyeshadow_common_01","m_hairshadow_common_01"}:
+            discard.add(idx)
+            continue
+        if ("+" in name or name.startswith(("emo", "heart", "star", "cheek", "><", "mi_star","expressions"))
                 or name in {"hi", "eye hi2", "f-eye hi", "f-eye hi2", "eye_hi", "facial","表情","面具影","目影","目hl"}):
             discard.add(idx)
             continue
         node = mat.node_tree.nodes.get("mmd_base_tex") if mat.use_nodes else None
         image = getattr(node, "image", None)
+        # PMX texture paths are relative to the package, sometimes one directory out of date.
+        if image and not image.size[0]:
+            srcname = Path(bpy.path.abspath(image.filepath)).name
+            candidates = list(file.parent.parent.rglob(srcname)) if label == "Mornye" else list(file.parent.rglob(srcname))
+            if candidates:
+                image.filepath = str(candidates[0])
+                image.reload()
+        if label == "BlackMiku" and mat.name == "头纱" and (not image or not image.size[0]):
+            image = bpy.data.images.load(str(file.parent/"data"/"mantilla.png"), check_existing=True)
         if image and image.size[0] > 0:
             key = image.name
             if key not in mapping:
@@ -77,12 +91,16 @@ def materials(label, body, folder):
                     image.file_format = "PNG"
                     image.save()
         else:
-            key = flor_color(mat.name) if label == "Flor" else "E8DFDC"
+            rgb = getattr(mat.mmd_material,"diffuse_color",(0.81,0.77,0.75))
+            if label=="BlackMiku" and mat.name in ("zip","00011111"): rgb=(.11,.10,.12) if mat.name=="zip" else (.027,.021,.031)
+            key = flor_color(mat.name) if label == "Flor" else "".join("%02X" % min(255,round(max(0,c)**(1/2.2)*255)) for c in rgb[:3])
             mat_name = label + "_" + key
         if key not in mapping:
             mapping[key] = len(new)
             new.append(bpy.data.materials.new(mat_name))
+        records.append((new[mapping[key]].name, mat.name, image.name if image else "", str(round(mat.mmd_material.alpha,3))))
         slots[idx] = mapping[key]
+    (folder / (label+".tsv")).write_text("\n".join("\t".join(r) for r in records),encoding="utf8")
     trim(body, lambda f: f.material_index in discard)
     old = [p.material_index for p in body.data.polygons]
     body.data.materials.clear()
@@ -92,7 +110,7 @@ def materials(label, body, folder):
         p.material_index = slots[idx]
 
 def panel_bone(name):
-    return re.search(r"スカート|skirt|^dress|^belt_[a-e]_|^piaodai",name,re.IGNORECASE) is not None
+    return re.search(r"スカート|skirt|裙|^dress|^belt_[a-e]_|^piaodai",name,re.IGNORECASE) is not None
 
 def smooth(low, high, n):
     t=max(0., min(1., (n-low)/(high-low)))
@@ -123,7 +141,8 @@ def convert(label, file):
     old = mesh.find_armature()
     verts = [mesh.matrix_world @ v.co for v in mesh.data.vertices]
     bottom, top = min(v.z for v in verts), max(v.z for v in verts)
-    hips = old.matrix_world @ old.data.bones["腰"].head_local
+    pelvis = old.data.bones.get("腰") or old.data.bones["下半身"]
+    hips = old.matrix_world @ pelvis.head_local
     scale = 1.76 / (top-bottom)
     xform = Matrix.Scale(scale, 4) @ Matrix.Translation((-hips.x, -hips.y, -bottom))
     bone_xform = xform @ old.matrix_world
@@ -133,7 +152,7 @@ def convert(label, file):
         if orig is None: return
         points[new] = (parent, bone_xform @ orig.head_local, bone_xform @ orig.tail_local)
         aliases[source_name] = new
-    bone("Hips","腰")
+    bone("Hips",pelvis.name)
     aliases["下半身"] = "Hips"
     spines = sorted([b for b in old.data.bones if re.fullmatch("上半身[0-9]*",b.name)], key=lambda b:(bone_xform @ b.head_local).z)
     parent = "Hips"
@@ -182,15 +201,16 @@ def convert(label, file):
     body.name = label + "Body"
     groups = [target(g.name) if g.name in old.data.bones else None for g in body.vertex_groups]
     fabric = [label in garment_stances and g.name in old.data.bones and panel_bone(g.name) for g in body.vertex_groups]
+    veil = {v for p in body.data.polygons if label=="BlackMiku" and body.data.materials[p.material_index].name=="头纱" for v in p.vertices}
     if label in garment_stances:
-        mark_surfaces(body, points, groups, fabric)
+        mark_surfaces(body, points, groups, fabric, veil)
     weights = []
     for v in body.data.vertices:
         w = {}
         for g in v.groups:
             key = groups[g.group]
             if key is None or g.weight <= 0: continue
-            amount=drape_weights(v.co,points,g.weight,w,.15 if label=='Cantarella' else 1.) if fabric[g.group] else g.weight
+            amount=drape_weights(v.co,points,g.weight,w,.15 if label=='Cantarella' else 1.) if fabric[g.group] and v.index not in veil else g.weight
             w[key] = w.get(key,0.) + amount
         weights.append(sorted(w.items(), key=lambda t:-t[1])[:4] or [("Hips",1.)])
     body.vertex_groups.clear()
@@ -199,12 +219,8 @@ def convert(label, file):
         total = sum(a for _,a in w)
         for name,a in w:
             if a>0: vg[name].add([idx],a/total,"REPLACE")
-    folder = destination/"Characters"/label
+    folder = destination/"Characters"/cast_folders[label]
     folder.mkdir(parents=True, exist_ok=True)
-    if label == "Endmin":
-        # The wearable face prop is separate from the character's neutral body.
-        mask_slot=next(i for i,m in enumerate(body.data.materials) if m.name=="面具")
-        trim(body,lambda f:f.material_index==mask_slot)
     materials(label, body, folder)
     rig = bpy.data.objects.new("Skeleton",bpy.data.armatures.new("Biped"))
     bpy.context.collection.objects.link(rig)
@@ -267,8 +283,8 @@ def convert(label, file):
     export(folder/(label+".fbx"),[rig,body],label=="Rover")
     print("CAST", label, len(body.data.vertices), len(baked.vertices), len(points), flush=True)
 
-for label in selected or names:
+for label in selected or playable:
     folders = [d for d in source.iterdir() if d.is_dir() and names[label] in d.name]
     files = [file for folder in folders for file in folder.rglob("*.pmx")]
-    file = files[0] if files else next(folders[0].rglob("*.blend"))
+    file = next(f for f in files if "veil" in f.stem) if label == "BlackMiku" else files[0] if files else next(folders[0].rglob("*.blend"))
     convert(label,file)

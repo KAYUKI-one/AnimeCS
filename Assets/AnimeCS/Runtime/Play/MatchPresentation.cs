@@ -14,10 +14,13 @@ namespace AnimeCS.Play
         public AnimeCS.Content.WeaponDefinition lobbyWeapon;
         [Range(20f,55f)] public float lobbyFieldOfView = 29f;
         [Header("日光环境")] public Material daylightSky;
+        public UnityEngine.Rendering.VolumeProfile daylightGrade;
         [ColorUsage(false)] public Color skyLight = new Color(.76f,.81f,.86f), horizonLight=new Color(.53f,.56f,.60f), groundLight=new Color(.35f,.32f,.29f);
         [Range(.2f,3)] public float sunIntensity=1.36f;
         [Header("交火反馈")]
         [Range(0,1)] public float handlingMotion = 1;
+        public bool hitConfirm = true;
+        [Range(0,2)] public float cameraKickDegrees=.58f;
         public bool tracers = true, surfaceMarks = true, hitReaction = true;
         public Material tracerMaterial, impactMaterial;
         [InspectorName("枪口火光材质")] public Material muzzleMaterial;

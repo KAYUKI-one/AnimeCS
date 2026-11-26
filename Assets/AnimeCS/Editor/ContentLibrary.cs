@@ -39,7 +39,7 @@ namespace AnimeCS.Editor
             AssetDatabase.CreateFolder(parent, folder.Substring(split + 1));
         }
 
-        public static ContentDefinition Create(ContentCatalog catalog, ContentKind kind, string label, Object source = null)
+        public static ContentDefinition Create(ContentCatalog catalog, ContentKind kind, string label, Object source = null, Side? faction=null)
         {
             if (catalog == null) throw new ArgumentNullException(nameof(catalog));
             if (source != null) SourceField(kind, source);
@@ -53,6 +53,7 @@ namespace AnimeCS.Editor
             var serialized = new SerializedObject(entry);
             serialized.FindProperty("_id").stringValue = kind.ToString().ToLowerInvariant() + "." + Guid.NewGuid().ToString("N");
             serialized.FindProperty("_displayName").stringValue = clean;
+            if(entry is CharacterDefinition && faction.HasValue)serialized.FindProperty("_faction").enumValueIndex=(int)faction.Value;
             if (entry is OutfitDefinition) serialized.FindProperty("_character").objectReferenceValue = catalog.Character;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             AssetDatabase.CreateAsset(entry, AssetDatabase.GenerateUniqueAssetPath(folder + "/" + clean + ".asset"));
@@ -142,6 +143,7 @@ namespace AnimeCS.Editor
             {
                 bool sceneSource = field == "_scene";
                 data.FindProperty(sceneSource ? "_geometry" : "_scene").objectReferenceValue = null;
+                data.FindProperty("_lightingScenePath").stringValue = "";
                 data.FindProperty("_scenePath").stringValue = sceneSource ? AssetDatabase.GetAssetPath(source) : "";
             }
             data.ApplyModifiedProperties();
@@ -162,7 +164,7 @@ namespace AnimeCS.Editor
             return toMount.MultiplyPoint3x4(marker.position);
         }
 
-        public static ContentDefinition Import(ContentCatalog catalog, ContentKind kind, Object source)
+        public static ContentDefinition Import(ContentCatalog catalog, ContentKind kind, Object source, Side? faction=null)
         {
             if (source is ContentDefinition definition)
             {
@@ -174,7 +176,7 @@ namespace AnimeCS.Editor
             foreach (var entry in catalog.Entries)
                 if (entry != null && entry.Kind == kind && new SerializedObject(entry).FindProperty(field).objectReferenceValue == source)
                     return entry;
-            return Create(catalog, kind, source.name, source);
+            return Create(catalog, kind, source.name, source, faction);
         }
 
         [Serializable] private class GltfDependency { public string uri; }
@@ -196,7 +198,7 @@ namespace AnimeCS.Editor
             return result.ToList();
         }
 
-        public static Object ImportFile(ContentKind kind, string path)
+        public static Object ImportFile(ContentKind kind, string path, Side? faction=null,string englishName=null)
         {
             string full = Path.GetFullPath(path);
             if (!File.Exists(full)) throw new FileNotFoundException("源文件不存在。", full);
@@ -228,6 +230,13 @@ namespace AnimeCS.Editor
                 hash=BitConverter.ToString(checksum.GetHashAndReset()).Replace("-","").Substring(0,16);
             }
             string folder = "Assets/AnimeCS/Imported/" + Folders[(int)kind] + "/" + hash;
+            if(kind==ContentKind.Character && faction.HasValue)
+            {
+                string key=string.IsNullOrWhiteSpace(englishName)?Path.GetFileNameWithoutExtension(full):englishName.Trim();
+                if(!System.Text.RegularExpressions.Regex.IsMatch(key,@"^[A-Za-z][A-Za-z0-9]*$"))
+                    throw new ArgumentException("请填写角色英文名，例如 BlackMiku。");
+                folder="Assets/AnimeCS/Art/Characters/"+(faction==Side.Attack?"Ember_":"Aegis_")+key+"/"+hash;
+            }
             EnsureFolder(folder);
             foreach(var file in files)
             {

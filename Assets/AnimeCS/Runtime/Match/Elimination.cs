@@ -34,6 +34,7 @@ namespace AnimeCS.Match
         {
             var target=_seats[victim];
             if (amount<=0 || _damage[victim]>=target.Health) return;
+            _seats[attacker].LastConfirmationTick=_tick;
             _damage[victim]+=amount; target.LastHitZone=zone;
             if (_damage[victim]>=target.Health)
                 _lethalHit[victim]=new Elimination(_tick,_round,attacker,victim,_seats[attacker].DisplayId,target.DisplayId,

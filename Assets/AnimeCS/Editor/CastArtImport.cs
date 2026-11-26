@@ -15,16 +15,17 @@ namespace AnimeCS.Editor
     {
         private const string Art = "Assets/AnimeCS/Art";
         private const string MotionPath = Art + "/Characters/Locomotion.controller";
-        private static readonly string[] Cast = { "Rover", "Cantarella", "Lily", "Flor", "Endmin" };
-        private static readonly string[] Labels = { "男漂泊者", "少女坎特蕾拉", "莉莉 · 护士服", "弗洛洛", "女管理员" };
-        private static string BodyPath(string name) => $"{Art}/Characters/{name}/{name}.fbx";
+        private static readonly string[] Cast = { "Rover", "Lily", "Mornye", "Flor", "BlackMiku", "Laevatain" };
+        private static readonly string[] Labels = { "男漂泊者", "莉莉 · 护士服", "莫宁", "弗洛洛", "黑色 Miku", "莱万汀" };
+        private static bool Attacks(string name) => name=="Flor" || name=="BlackMiku" || name=="Laevatain";
+        private static string BodyPath(string name) => $"{Art}/Characters/{(Attacks(name)?"Ember":"Aegis")}_{(name=="Flor"?"Phrolova":name)}/{name}.fbx";
 
         [MenuItem("AnimeCS/美术/同步随附角色与展示枪模")]
         public static void Synchronize()
         {
             var catalog = ContentLibrary.Catalog;
             var outfits = new List<OutfitDefinition>();
-            foreach(string oldId in new[]{"character.operator","outfit.station","outfit.nightshift"})
+            foreach(string oldId in new[]{"character.operator","outfit.station","outfit.nightshift","character.cantarella","outfit.cantarella"})
             {var old=catalog.Find<ContentDefinition>(oldId);if(!old)continue;var entry=new SerializedObject(old);entry.FindProperty("_archived").boolValue=true;entry.ApplyModifiedPropertiesWithoutUndo();}
             foreach (var name in Cast)
             {
@@ -53,6 +54,7 @@ namespace AnimeCS.Editor
                 string name = Cast[i], key = name.ToLowerInvariant();
                 var body = Definition<CharacterDefinition>(catalog, "Characters", name, "character." + key, Labels[i]);
                 var serialized = new SerializedObject(body);
+                serialized.FindProperty("_faction").enumValueIndex=(int)(Attacks(name)?Side.Attack:Side.Defend);
                 Set(serialized, "_model", Load<GameObject>(BodyPath(name)));
                 Set(serialized, "_controller", controller);
                 var picture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/AnimeCS/UI/Portraits/" + name + ".png");
@@ -66,7 +68,7 @@ namespace AnimeCS.Editor
                     Set(serialized, "_defendInsignia", standard.Insignia(Side.Defend));
                 }
                 AssignTeamMarks(name, serialized);
-                serialized.FindProperty("_headwearOffset").vector3Value=Vector3.up*(name switch {"Lily"=>.082f,"Endmin"=>.068f,"Flor"=>.045f,_=>.064f});
+                serialized.FindProperty("_headwearOffset").vector3Value=Vector3.up*(name switch {"Lily"=>.082f,"BlackMiku"=>.048f,"Flor"=>.045f,_=>.064f});
                 serialized.ApplyModifiedPropertiesWithoutUndo();
                 var outfit = Definition<OutfitDefinition>(catalog, "Outfits", name, "outfit." + key, Labels[i]);
                 serialized = new SerializedObject(outfit);
@@ -77,11 +79,14 @@ namespace AnimeCS.Editor
                 serialized.FindProperty("_included").boolValue = true;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
                 GarmentStances.Bind(outfit);
+                CastEyeCalibration.Bind(outfit);
                 outfits.Add(outfit);
             }
             var data = new SerializedObject(catalog);
             Set(data, "_character", outfits[0].Character);
             Set(data, "_outfit", outfits[0]);
+            foreach(var extra in catalog.SeatOutfits)
+                if(extra && !extra.Archived && extra.Character && !extra.Character.Archived && !outfits.Contains(extra))outfits.Add(extra);
             var pool = data.FindProperty("_seatOutfits");
             pool.arraySize = outfits.Count;
             for (int i = 0; i < outfits.Count; i++) pool.GetArrayElementAtIndex(i).objectReferenceValue = outfits[i];
@@ -146,7 +151,7 @@ namespace AnimeCS.Editor
             knifeData.FindProperty("_grip").vector3Value=new Vector3(-.013f,.014f,-.017f);
             knifeData.ApplyModifiedPropertiesWithoutUndo();
             var knifeCatalog=new SerializedObject(catalog);Set(knifeCatalog,"_knife",knife);knifeCatalog.ApplyModifiedPropertiesWithoutUndo();
-            WearableBake.Bake(catalog,outfits);
+            WearableBake.Bake(catalog,outfits.Take(Cast.Length).ToList());
             string stage = Art + "/Lobby/Concourse.fbx";
             Remap(stage, false);
             var style = Load<AnimeCS.Play.MatchPresentation>("Assets/AnimeCS/UI/Competitive.asset");
@@ -224,6 +229,7 @@ namespace AnimeCS.Editor
                     }
                     AssetDatabase.CreateAsset(m, matPath);
                 }
+                if (character && folder.Contains("/Characters/")) CharacterShading.Apply(original.name,m);
                 if (character) BindCharacterNormal(folder, original.name, m);
                 var diffuse = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/" + original.name + ".png");
                 if (diffuse && m.GetTexture("_BaseMap") != diffuse) { m.SetTexture("_BaseMap", diffuse); EditorUtility.SetDirty(m); }

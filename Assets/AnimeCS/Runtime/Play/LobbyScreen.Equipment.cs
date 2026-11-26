@@ -59,8 +59,14 @@ namespace AnimeCS.Play
             var bag=Row();bag.name="backpack-items";
             if (_equipment==0)
             {
-                foreach(var f in _catalog.Entries.OfType<OutfitDefinition>().Where(o=>Owned(o)))
-                    Tile(bag,f,_draft.outfitId==f.Id,()=>{_draft.outfitId=f.Id;Preview();},f.Character?.Icon);
+                var faction=CurrentCharacter ? CurrentCharacter.Faction : Side.Attack;
+                var tabs=new VisualElement();tabs.AddToClassList("choice-row");_content.Insert(_content.IndexOf(bag),tabs);
+                foreach (Side side in new[]{Side.Attack,Side.Defend})
+                    Choice(tabs,CharacterDefinition.FactionName(side),faction==side,()=>{
+                        var selected=_catalog.OutfitForSide(side,_draft.OutfitFor(side)); if(selected)_draft.Select(selected); Preview();
+                    },side==Side.Attack?"faction-attack":"faction-defend");
+                foreach(var f in _catalog.Entries.OfType<OutfitDefinition>().Where(o=>Owned(o) && o.Character && o.Character.Faction==faction))
+                    Tile(bag,f,_draft.outfitId==f.Id,()=>{_draft.Select(f);Preview();},f.Character.Icon);
             }
             else if(_equipment<=3)
             {

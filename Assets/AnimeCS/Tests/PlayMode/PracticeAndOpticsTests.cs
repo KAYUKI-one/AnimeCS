@@ -15,11 +15,15 @@ namespace AnimeCS.Tests
 {
     public sealed class PracticeAndOpticsTests
     {
+        private const string AttackOpening = "余烬 · 先攻";
+        private const string DefendOpening = "苍盾 · 先守";
+
         [UnityTest] public IEnumerator RangeOpensFromLobbyAndChangesItsTargetsAndEquipment()
         {
             yield return SceneManager.LoadSceneAsync("Assets/AnimeCS/Scenes/LocalMatch.unity");
             var game=Object.FindAnyObjectByType<LocalGame>();
             while(!game.InLobby) yield return null;
+            string bombScenePath = game.SelectedMap.PlayScenePath;
             var root=Object.FindAnyObjectByType<UIDocument>().rootVisualElement;
             void Click(string name)
             {
@@ -28,9 +32,19 @@ namespace AnimeCS.Tests
             }
             Click("mode"); Click("mode-practice"); yield return null;
             Assert.That(game.SelectedMap.Practice,Is.True);
-            Assert.That(root.Q("sheet-content").Query<Button>().ToList().Any(b=>b.text=="先攻" || b.text=="先守"),Is.False);
+            var openingChoices = root.Q("sheet-content").Query<Button>().ToList().Select(button => button.text);
+            Assert.That(openingChoices, Does.Not.Contain(AttackOpening));
+            Assert.That(openingChoices, Does.Not.Contain(DefendOpening));
             Click("start");for(int i=0;i<150 && !game.Ready;i++)yield return null;
             Assert.That(game.MatchState.Phase,Is.EqualTo(RoundPhase.Practice));yield return null;
+            string practiceScenePath = game.SelectedMap.PlayScenePath;
+            Assert.That(game.SelectedMap.Id, Is.EqualTo("map.practice"));
+            Assert.That(practiceScenePath, Is.Not.EqualTo(bombScenePath));
+            Assert.That(SceneManager.GetActiveScene().path, Is.EqualTo(practiceScenePath));
+            Assert.That(SceneManager.GetSceneByPath(bombScenePath).isLoaded, Is.False);
+            var practiceProbes = LightmapSettings.lightProbes;
+            Assert.That(practiceProbes, Is.Not.Null);
+            Assert.That(practiceProbes.count, Is.GreaterThan(1));
             const BindingFlags flags=BindingFlags.Instance|BindingFlags.NonPublic;
             var match=(LocalMatch)typeof(LocalGame).GetField("_match",flags).GetValue(game);
             var catalog=(ContentCatalog)typeof(LocalGame).GetField("_catalog",flags).GetValue(game);
@@ -54,11 +68,19 @@ namespace AnimeCS.Tests
             Click("target-motion");Click("close-shop");
             game.ReturnToLobby();Click("mode");Click("mode-bots");
             yield return null; Assert.That(game.SelectedMap.Practice,Is.False);
-            Assert.That(root.Q("sheet-content").Query<Button>().ToList().Any(b=>b.text=="先守"),Is.True);
+            for (int i = 0; i < 150 && SceneManager.GetActiveScene().path != bombScenePath; i++) yield return null;
+            Assert.That(SceneManager.GetActiveScene().path, Is.EqualTo(bombScenePath));
+            Assert.That(SceneManager.GetSceneByPath(practiceScenePath).isLoaded, Is.False);
+            var bombProbes = LightmapSettings.lightProbes;
+            Assert.That(bombProbes, Is.Not.Null);
+            Assert.That(bombProbes.count, Is.GreaterThan(1));
+            openingChoices = root.Q("sheet-content").Query<Button>().ToList().Select(button => button.text);
+            Assert.That(openingChoices, Does.Contain(AttackOpening));
+            Assert.That(openingChoices, Does.Contain(DefendOpening));
             IEnumerator Ticks(int n){int end=match.Public.Tick+n;while(match.Public.Tick<end)yield return null;}
         }
 
-        [UnityTest] public IEnumerator OpposingRigsShareTheEyePlaneAndFlashFollowsTheWorldWeapon()
+        [UnityTest] public IEnumerator BothFactionsShareTheEyePlaneAndFlashFollowsTheWorldWeapon()
         {
             yield return SceneManager.LoadSceneAsync("Assets/AnimeCS/Scenes/LocalMatch.unity");
             var game=Object.FindAnyObjectByType<LocalGame>();while(!game.InLobby)yield return null;
@@ -75,18 +97,25 @@ namespace AnimeCS.Tests
             var main=Camera.main;int fp=1<<LayerMask.NameToLayer("First Person");
             var overlay=(Camera)typeof(LocalGame).GetField("_viewCamera",flags).GetValue(game);
             Assert.That(main.cullingMask & fp,Is.Zero);Assert.That(overlay.cullingMask,Is.EqualTo(fp));
-            var ids=new HashSet<string>();
             foreach(bool crouch in new[]{false,true})
             {
+                var attackIds = new HashSet<string>();
+                var defendIds = new HashSet<string>();
                 for(int i=0;i<drivers.Length;i++){drivers[i].crouch=crouch;drivers[i].yaw=i*23;drivers[i].pitch=crouch?18:-12;}
                 int end=match.Public.Tick+40;while(match.Public.Tick<end)yield return null;
                 yield return new WaitForEndOfFrame();
                 float expected=crouch?1.16f:1.62f;
                 Assert.That(main.transform.position.y-actors[0].Visuals.position.y,Is.EqualTo(expected).Within(.004));
-                for(int i=5;i<10;i++)
+                // Seat zero uses the first-person camera. The other four attack seats
+                // and five defend seats cover all six third-person rigs.
+                for(int i=1;i<LocalMatch.Seats;i++)
                 {
+                    var view = match.BindSeat(i).Read();
                     var rig=actors[i].Visuals.GetComponentInChildren<Animator>();
-                    var character=catalog.Find<OutfitDefinition>(match.RosterOutfit(i)).Character;ids.Add(character.Id);
+                    var character=catalog.Find<OutfitDefinition>(view.OutfitId).Character;
+                    Assert.That(rig, Is.Not.Null, character.Id);
+                    Assert.That(character.Faction, Is.EqualTo(view.Side), $"Seat {i}");
+                    (view.Side == Side.Attack ? attackIds : defendIds).Add(character.Id);
                     var face=rig.GetBoneTransform(HumanBodyBones.Head).TransformPoint(character.FaceAnchor);
                     Assert.That(face.y-actors[i].Visuals.position.y,Is.EqualTo(expected).Within(.008),character.Id);
                     var renderer=rig.GetComponentInChildren<SkinnedMeshRenderer>();
@@ -101,15 +130,16 @@ namespace AnimeCS.Tests
                         {
                             if(feet[weights[v].boneIndex0]) sole=Mathf.Min(sole,toWorld.MultiplyPoint3x4(vertices[v]).y);
                         }
-                        if(match.BindSeat(i).Read().Motion.Grounded)
+                        if(view.Motion.Grounded)
                             Assert.That(sole,Is.EqualTo(actors[i].Visuals.position.y-actors[i].GroundSkin).Within(.045f),character.Id+" sole / crouch="+crouch);
                     }
                     finally {Object.Destroy(baked);}
                     var hit=actors[i].HeadHitbox;
                     Assert.That(hit.transform.TransformPoint(hit.center).y-actors[i].transform.position.y,Is.EqualTo(expected+.006).Within(.001));
                 }
+                Assert.That(attackIds, Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain" }));
+                Assert.That(defendIds, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily" }));
             }
-            Assert.That(ids.Count,Is.EqualTo(3));
             // Attack pistol has a visible flash. Shoot away from other actors so the driver remains alive.
             yield return null; yield return null;
             drivers[0].pitch=72;drivers[1].pitch=72;

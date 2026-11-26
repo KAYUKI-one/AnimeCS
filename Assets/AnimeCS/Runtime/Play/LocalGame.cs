@@ -39,7 +39,15 @@ namespace AnimeCS.Play
         private int _cameraMask;
         private float _matchFov;
         private Camera _viewCamera;
+        private SeatDatagramHost _remote;
+        private int _remoteSeat=5;
         private bool _discardFrameTime;
+        public System.Net.IPEndPoint OpenSeatLink(System.Net.IPEndPoint endpoint,int seat=5)
+        {
+            if(seat<1 || seat>=LocalMatch.Seats)throw new ArgumentOutOfRangeException(nameof(seat));
+            var socket=new SeatDatagramHost(endpoint);_remote?.Dispose();_remote=socket;_remoteSeat=seat;
+            return _remote.LocalEndpoint;
+        }
         private double _time;
         private Scene _loadedMap;
         private GameObject _mapRoot;
@@ -47,7 +55,7 @@ namespace AnimeCS.Play
         private bool _changingMap, _queuedStart;
         private MapDefinition _requestedMap, _lastBombMap;
         public MapDefinition SelectedMap => _requestedMap ? _requestedMap : _catalog.Map;
-        public MatchMode Mode => SelectedMap.Practice ? MatchMode.AimPractice : MatchMode.BotMatch;
+        public MatchMode Mode => SelectedMap.Practice ? MatchMode.AimPractice : _remote!=null ? MatchMode.Online : MatchMode.BotMatch;
         internal MapDefinition LastBombMap => _lastBombMap;
         private GameObject _objective, _heldObjective;
         private readonly List<GameObject> _kitModels = new List<GameObject>();
@@ -130,10 +138,26 @@ namespace AnimeCS.Play
             ApplyDaylight();
             yield return LoadMap(_catalog.Map);
             InitializeMatch();
+            var args=Environment.GetCommandLineArgs();int address=Array.IndexOf(args,"-seat-host");
+            if(address>=0 && address+1<args.Length)
+            {
+                string value=args[address+1];int colon=value.LastIndexOf(':');
+                if(colon>0 && System.Net.IPAddress.TryParse(value.Substring(0,colon).Trim('[',']'),out var ip) &&
+                    int.TryParse(value.Substring(colon+1),out int port) && port>0 && port<=65535)
+                { OpenSeatLink(new System.Net.IPEndPoint(ip,port));Restart(); }
+            }
         }
 
+        private UnityEngine.Rendering.Universal.UniversalAdditionalCameraData _baseData;
         private void ApplyDaylight()
         {
+            _baseData=_camera.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+            if(_presentation.daylightGrade)
+            {
+                var grade=gameObject.AddComponent<UnityEngine.Rendering.Volume>();
+                grade.isGlobal=true;grade.priority=10;grade.sharedProfile=_presentation.daylightGrade;
+                if(_baseData)_baseData.renderPostProcessing=true;
+            }
             if (!_presentation.daylightSky) return;
             RenderSettings.skybox=_presentation.daylightSky;
             RenderSettings.ambientMode=UnityEngine.Rendering.AmbientMode.Trilight;
@@ -169,7 +193,11 @@ namespace AnimeCS.Play
             _changingMap=true;
             if(_navigation.valid)_navigation.Remove();
             if(_mapRoot){_mapRoot.SetActive(false);Destroy(_mapRoot);}
-            if(_loadedMap.IsValid() && _loadedMap.isLoaded)yield return SceneManager.UnloadSceneAsync(_loadedMap);
+            if(_loadedMap.IsValid() && _loadedMap.isLoaded)
+            {
+                if(SceneManager.GetActiveScene()==_loadedMap)SceneManager.SetActiveScene(gameObject.scene);
+                yield return SceneManager.UnloadSceneAsync(_loadedMap);
+            }
             _loadedMap=default;_world.Dispose();_catalog.SelectMap(map);
             yield return LoadMap(map);
             _world=new ArenaWorld(_actors,map,transform,_presentation);_lobby.RefreshMap();
@@ -182,16 +210,26 @@ namespace AnimeCS.Play
         {
             if (map.SpawnCount(Side.Attack) != LocalMatch.TeamSize || map.SpawnCount(Side.Defend) != LocalMatch.TeamSize)
                 throw new InvalidOperationException("地图需要攻守各五个出生位。");
-            if (!string.IsNullOrEmpty(map.ScenePath))
+            var scenePath=map.PlayScenePath;
+            if (!string.IsNullOrEmpty(scenePath))
             {
-                if (!Application.CanStreamedLevelBeLoaded(map.ScenePath))
-                    throw new InvalidOperationException("请在资源管理器中将这张场景地图设为启动地图：" + map.ScenePath);
-                yield return SceneManager.LoadSceneAsync(map.ScenePath, LoadSceneMode.Additive);
-                _loadedMap = SceneManager.GetSceneByPath(map.ScenePath);
+                if (!Application.CanStreamedLevelBeLoaded(scenePath))
+                    throw new InvalidOperationException("请在资源管理器中将这张场景地图设为启动地图：" + scenePath);
+                yield return SceneManager.LoadSceneAsync(scenePath, LoadSceneMode.Additive);
+                _loadedMap = SceneManager.GetSceneByPath(scenePath);
+                bool baked=string.IsNullOrEmpty(map.ScenePath);
+                var sceneSun=RenderSettings.sun;
                 foreach (var mapRoot in _loadedMap.GetRootGameObjects())
                 {
+                    if (mapRoot.name=="Bake sunlight" && mapRoot.TryGetComponent<Light>(out var bakedSun)) bakedSun.enabled=false;
                     foreach (var camera in mapRoot.GetComponentsInChildren<Camera>(true)) camera.enabled = false;
                     foreach (var listener in mapRoot.GetComponentsInChildren<AudioListener>(true)) listener.enabled = false;
+                }
+                if(baked)
+                {
+                    SceneManager.SetActiveScene(_loadedMap);
+                    RenderSettings.sun=sceneSun;
+                    LightProbes.Tetrahedralize();
                 }
             }
             else if (map.Geometry != null)
@@ -253,7 +291,7 @@ namespace AnimeCS.Play
             _viewCamera.cullingMask = 1 << layer; _viewCamera.useOcclusionCulling = false;
             var overlay = go.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             overlay.renderType = UnityEngine.Rendering.Universal.CameraRenderType.Overlay;
-            overlay.renderShadows = false; overlay.renderPostProcessing = false;
+            overlay.renderShadows = false; overlay.renderPostProcessing = _presentation.daylightGrade;
             var basis = _camera.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             if (basis && basis.cameraStack != null) basis.cameraStack.Add(_viewCamera);
             _viewCamera.enabled = false;
@@ -288,6 +326,7 @@ namespace AnimeCS.Play
             foreach (var obj in _kitModels) obj.SetActive(false);
             _audio.Stop(); _camera.cullingMask=_cameraMask;
             if (_viewCamera) _viewCamera.enabled=false;
+            if (_baseData) _baseData.renderPostProcessing=_presentation.daylightGrade;
             foreach (var avatar in _avatars) avatar.HideView();
             _lobbyHost.style.display=DisplayStyle.Flex; _hudHost.style.display=DisplayStyle.None;
             Cursor.lockState=CursorLockMode.None; Cursor.visible=true;
@@ -329,6 +368,11 @@ namespace AnimeCS.Play
             bool playing = !_match.IsPaused && self.Match.Phase != RoundPhase.Finished;
             bool look=playing && _focused && (!_keyboard.Shopping || _keyboard.ShopLook);
             _keyboard.Sample(playing && self.Health > 0 && _focused,look,self.Magnification);
+            if(_drivers[0]==_keyboard && self.CanStartShot && _keyboard.PredictPress)
+            {
+                var gun=_catalog.Find<WeaponDefinition>(self.WeaponId);
+                _avatars[0].PredictTrigger(self.Match.Round,self.Match.Tick+1);_audio.Predict(self,gun && gun.Suppressed);
+            }
             if (_match.IsPaused || _match.Public.Phase == RoundPhase.Finished) return;
             const double fixedStep = 1d / MatchRules.TickRate;
             // Loading and focus changes can yield a frame several seconds long. Keep only the playable catch-up window.
@@ -337,12 +381,15 @@ namespace AnimeCS.Play
             for (int steps = 0; _time >= fixedStep && steps < 8; steps++)
             {
                 _time -= fixedStep;
+                _remote?.Poll(_ports[_remoteSeat].Read());
                 for (int i = 0; i < _drivers.Length; i++)
                 {
                     var view = _ports[i].Read();
-                    _ports[i].Submit(view.Match.Tick + 1, _drivers[i].Decide(view));
+                    var driver=i==_remoteSeat && _remote!=null && _remote.Connected ? _remote.Input : _drivers[i];
+                    _ports[i].Submit(view.Match.Tick + 1, driver.Decide(view));
                 }
                 _match.Step();
+                if(_remote!=null && (_match.Public.Tick&1)==0)_remote.Publish(_ports[_remoteSeat].Read());
             }
             Draw();
         }
@@ -357,10 +404,14 @@ namespace AnimeCS.Play
             float power = publicOnly ? 1f : Mathf.Max(1f,watched.Magnification);
             _camera.fieldOfView = 2f*Mathf.Atan(Mathf.Tan(_matchFov*Mathf.Deg2Rad*.5f)/power)*Mathf.Rad2Deg;
             if (_viewCamera) { _viewCamera.enabled=!publicOnly && watched.ScopeLevel==0; _viewCamera.fieldOfView=_camera.fieldOfView; }
+            if (_baseData) _baseData.renderPostProcessing=_presentation.daylightGrade && (!_viewCamera || !_viewCamera.isActiveAndEnabled);
             if (!publicOnly)
             {
                 var actor = _actors[watched.Seat];
                 bool mouseLook = watched.Seat == 0 && _drivers[0] == _keyboard && !self.Match.Paused && self.Match.Phase != RoundPhase.Finished;
+                float elapsed=(watched.Match.Tick+alpha-watched.LastShotTick)*SeatMovement.StepTime;
+                float kick=1-Mathf.Clamp01(elapsed/.12f);
+                _keyboard.SetViewKick(mouseLook && watched.Held!=HeldSlot.Knife ? _presentation.cameraKickDegrees*kick*kick/Mathf.Max(1f,watched.Magnification):0);
                 _camera.transform.SetPositionAndRotation(actor.RenderEye(alpha), Quaternion.Euler(
                     mouseLook ? -_keyboard.ViewPitch : -watched.Pitch, mouseLook ? _keyboard.ViewYaw : watched.Yaw, 0));
             }
@@ -380,7 +431,7 @@ namespace AnimeCS.Play
             DrawEquipment(watched, publicOnly);
             _hud.Present(self, watched, _ports);
             UpdatePointer();
-            _audio.Present(watched);
+            _audio.Present(watched,_world);
         }
 
         private void UpdatePointer()
@@ -448,6 +499,7 @@ namespace AnimeCS.Play
         {
             if(_navigation.valid)_navigation.Remove();
             if(_catalog && _catalog.name.EndsWith("(Clone)"))Destroy(_catalog);
+            _remote?.Dispose();
             GraphicsOptions?.Dispose();
             _keyboard?.Dispose();
             _audio?.Dispose();

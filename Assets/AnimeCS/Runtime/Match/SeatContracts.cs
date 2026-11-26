@@ -20,6 +20,9 @@ namespace AnimeCS.Match
         public float Yaw, Pitch;
         public bool Fire, Reload, SwitchWeapon, Interact, DropObjective, Walk, ThrowUtility, Jump, Crouch;
         public bool DropHeld, Inspect, Zoom, LowerScope;
+        public bool FirePressed;
+        // Set by the host input adapter, from its measured RTT and the last acknowledged snapshot.
+        internal int? ObservedTick;
         public int Cycle;
         public BuySlot Buy;
         public HeldSlot Select;
@@ -52,9 +55,9 @@ namespace AnimeCS.Match
         public Vector3 Position;
         public float Yaw, Pitch, InteractionFraction;
         public MotionContact Motion;
-        public int LastHitTick, LastShotTick, ScopeLevel;
+        public int LastHitTick, LastShotTick, LastConfirmationTick, ScopeLevel;
         public float Magnification, ScopeStability;
-        public bool Bolting;
+        public bool Bolting, CanStartShot;
         public HitZone LastHitZone;
         public bool Armor, Helmet, HasObjective, HasKit, CanBuy;
         public HeldSlot Held;
@@ -115,6 +118,12 @@ namespace AnimeCS.Match
     }
 
     /// <summary>Trusted geometry adapter. Only the referee calls it; a seat never receives the world.</summary>
+    public interface IHistoricalMatchWorld
+    {
+        void CaptureHitboxes(int tick);
+        ArenaHit? TraceAt(int seat, Vector2 offset, bool suppressed, int currentTick, int viewTick);
+    }
+
     public interface IMatchWorld
     {
         void Spawn(int seat, Vector3 position, float yaw);

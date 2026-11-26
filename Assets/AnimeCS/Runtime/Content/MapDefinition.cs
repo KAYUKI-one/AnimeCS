@@ -46,6 +46,8 @@ namespace AnimeCS.Content
             return new Vector2(.5f+local.x/Mathf.Max(1,_radarExtent.x),.5f-local.z/Mathf.Max(1,_radarExtent.y));
         }
         public string ScenePath => _scenePath;
+        [SerializeField,HideInInspector] private string _lightingScenePath;
+        public string PlayScenePath => string.IsNullOrEmpty(_scenePath)?_lightingScenePath:_scenePath;
         public Vector3 SitePosition(Site site) => site == Site.B ? _siteB : _siteA;
         public float Radius => _siteRadius;
         [SerializeField, Min(1), InspectorName("出生购买区半径")] private float _buyRadius = 5;

@@ -46,6 +46,8 @@ namespace AnimeCS.Tests
             Assert.That(page.worldBound.xMin,Is.EqualTo(rail.worldBound.xMax).Within(2));
             Assert.That(page.Q(className:"wardrobe-tabs"),Is.Null);
             Assert.That(page.Query<Button>(className:"item-tile").ToList().Count,Is.GreaterThan(15));
+            Assert.That(page.Q<Button>("character.endmin"), Is.Null);
+            Assert.That(page.Q<Button>("outfit.endmin"), Is.Null);
             Press("weapon.street20"); yield return null;
             Assert.That(page.ClassListContains("inspect-page"),Is.True);
             Assert.That(Camera.main.transform.Find("库存检视"),Is.Not.Null);
@@ -58,6 +60,13 @@ namespace AnimeCS.Tests
             Assert.That(mounts.worldBound.xMax,Is.LessThanOrEqualTo(stage.worldBound.xMin+2));
             Assert.That(bag.worldBound.xMin,Is.GreaterThanOrEqualTo(stage.worldBound.xMax-2));
             Assert.That(rail.worldBound.width/root.worldBound.width,Is.LessThan(.13f));
+            Press("faction-attack"); yield return null;
+            Assert.That(page.Q("backpack-items").Query<Button>(className:"item-tile").ToList()
+                .Select(button => button.name), Is.EquivalentTo(new[] { "outfit.flor", "outfit.blackmiku", "outfit.laevatain" }));
+            Press("faction-defend"); yield return null;
+            Assert.That(page.Q("backpack-items").Query<Button>(className:"item-tile").ToList()
+                .Select(button => button.name), Is.EquivalentTo(new[] { "outfit.mornye", "outfit.rover", "outfit.lily" }));
+            Press("faction-attack"); yield return null;
             Press("equip-slot-1"); yield return null;
             Assert.That(page.Q("backpack-items").Q<Button>("weapon.ember47"),Is.Not.Null);
             Press("weapon.ember47");yield return null;
@@ -70,6 +79,11 @@ namespace AnimeCS.Tests
             Press("close"); Press("start");
             yield return null;
             Assert.That(game.Ready, Is.True);
+            Assert.That(game.SelectedMap.Id, Is.EqualTo("map.dust2"));
+            Assert.That(SceneManager.GetActiveScene().path, Is.EqualTo(game.SelectedMap.PlayScenePath));
+            var probes = LightmapSettings.lightProbes;
+            Assert.That(probes, Is.Not.Null);
+            Assert.That(probes.count, Is.GreaterThan(1));
             Assert.That(party.gameObject.activeInHierarchy,Is.False);
             Assert.That(Object.FindObjectsByType<ArenaPawn>().Length, Is.EqualTo(10));
             Assert.That(game.Player.Read().Credits, Is.EqualTo(900));

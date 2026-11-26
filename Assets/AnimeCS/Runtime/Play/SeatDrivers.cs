@@ -29,7 +29,10 @@ namespace AnimeCS.Play
         private float _yaw, _pitch;
         public float Sensitivity { get; set; } = .1f;
         public float ViewYaw => _yaw;
-        public float ViewPitch => _pitch;
+        private float _viewKick;
+        internal void SetViewKick(float degrees) => _viewKick=degrees;
+        public float ViewPitch => Mathf.Clamp(_pitch+_viewKick,-82,82);
+        internal bool PredictPress=>_active && !_shopping && !_blockFire && _clicked && !_reload && !_drop && !_switch && !_utility && !_use.IsPressed() && _slot==HeldSlot.Current && _cycle==0;
 
         public KeyboardSeat(InputActionAsset actions)
         {
@@ -131,7 +134,7 @@ namespace AnimeCS.Play
         {
             SyncRound(view);
             var input = _orders.Count > 0 ? _orders.Dequeue() : default;
-            input.Yaw = _yaw; input.Pitch = _pitch;
+            input.Yaw = _yaw; input.Pitch = ViewPitch;
             if (!_active || view.Health <= 0 || view.Match.Paused || view.Match.Phase == RoundPhase.Finished) { ClearEdges(); return input; }
             var local = _move.ReadValue<Vector2>();
             var world = Quaternion.Euler(0, _yaw, 0) * new Vector3(local.x, 0, local.y);
@@ -139,6 +142,7 @@ namespace AnimeCS.Play
             var pulse = Quaternion.Euler(0, _yaw, 0) * new Vector3(_movePulse.x, 0, _movePulse.y);
             input.BrakeTap = new Vector2(pulse.x, pulse.z);
             input.Jump = _jumped; input.Crouch = _crouch.IsPressed();
+            input.FirePressed = !_blockFire && _clicked;
             input.Fire = !_blockFire && (_fire.IsPressed() || _clicked); input.Interact = _use.IsPressed(); input.Walk = _walk.IsPressed();
             input.Select=_slot;input.SwitchWeapon = _switch; input.DropHeld = _drop; input.Inspect = _inspect; input.Cycle = _cycle; input.Reload = _reload;
             input.Zoom = _zoom && !Shopping; input.LowerScope = Shopping;

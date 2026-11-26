@@ -16,6 +16,12 @@ namespace AnimeCS.Play
 
     internal sealed class LobbyPreview
     {
+        private OutfitDefinition PreviewOutfit(LobbyMember member)
+        {
+            var item=_catalog.Find<OutfitDefinition>(member.outfitId);
+            return item && !item.Archived && item.Character && !item.Character.Archived ? item : _catalog.Outfit;
+        }
+
         private readonly GameObject _stage;
         private readonly Transform _members;
         private readonly Camera _camera;
@@ -85,7 +91,7 @@ namespace AnimeCS.Play
             var self=_party[0];var member=self.member;
             if(_sleeves && _sample.Equals(member))return;
             AppearancePresenter.Retire(_sleeves);
-            _sample=member;var outfit=_catalog.Find<OutfitDefinition>(member.outfitId) ?? _catalog.Outfit;
+            _sample=member;var outfit=PreviewOutfit(member);
             _sleeves=AppearancePresenter.NewRoot("衣柜第一人称",_camera.transform);
             var model=AppearancePresenter.AddVisual(outfit.ViewRig,_sleeves.transform,Vector3.down*1.60f);
             _hands=model ? new CharacterRig(model,outfit.Character) : null;
@@ -177,7 +183,7 @@ namespace AnimeCS.Play
 
         private Avatar Build(LobbyMember member)
         {
-            var outfit = _catalog.Find<OutfitDefinition>(member.outfitId) ?? _catalog.Outfit;
+            var outfit = PreviewOutfit(member);
             var character = outfit.Character ? outfit.Character : _catalog.Character;
             var gun = _catalog.Find<WeaponDefinition>(member.weaponId) ?? _style.lobbyWeapon;
             var root = AppearancePresenter.NewRoot(outfit.DisplayName,_members);

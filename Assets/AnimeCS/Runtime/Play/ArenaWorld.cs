@@ -5,9 +5,10 @@ using UnityEngine;
 
 namespace AnimeCS.Play
 {
-    internal sealed class ArenaWorld : IMatchWorld, IMatchSignals, IMeleeWorld, IDropWorld, IDeviceFeedback
+    internal sealed class ArenaWorld : IMatchWorld, IHistoricalMatchWorld, IMatchSignals, IMeleeWorld, IDropWorld, IDeviceFeedback
     {
         private readonly ArenaPawn[] _actors;
+        private readonly HitboxHistory _history;
         private readonly Vector3?[] _muzzles;
         private Vector3? _localView;
         private struct Shot { public int seat; public Vector3 end,normal; public bool trail,wall; }
@@ -20,13 +21,16 @@ namespace AnimeCS.Play
         private static readonly float[] SightHeights = { 1.26f, 1.65f, 0.83f };
         public ArenaWorld(ArenaPawn[] actors, MapDefinition map, Transform root, MatchPresentation style = null)
         {
+            _history = new HitboxHistory(MatchRules.TickRate,actors.Length,actors[0].HeadHitbox.radius,((CapsuleCollider)actors[0].Body).radius);
             _actors = actors; _muzzles = new Vector3?[actors.Length];
             for (int i=0;i<actors.Length;i++) { _bodies.Add(actors[i].Body,i); _bodies.Add(actors[i].HeadHitbox,i); }
             _signals = new ArenaSignals(actors, map, root, _bodies);
             if (style) _shots = new ShotFeedback(style,root);
         }
+        public int LatestSound(int seat)=>_signals.LatestSound(seat);
+        public bool TrySound(int seat,int seq,out SoundClue clue)=>_signals.TrySound(seat,seq,out clue);
         public void Dispose(){_signals.ResetRound();_shots?.Dispose();}
-        public void ResetRound() { _signals.ResetRound(); _shots?.Reset(); _localView=null; _pendingShots.Clear(); System.Array.Clear(_muzzles,0,_muzzles.Length); }
+        public void ResetRound() { for(int i=0;i<_actors.Length;i++) _history.Invalidate(i); _signals.ResetRound(); _shots?.Reset(); _localView=null; _pendingShots.Clear(); System.Array.Clear(_muzzles,0,_muzzles.Length); }
         public void DeviceSound(Vector3 point,bool expired) =>
             _signals.Emit(point+Vector3.up*.18f,expired ? SoundKind.DeviceBurst : SoundKind.DevicePulse,expired ? 125f : 26f);
         public void SetMuzzle(int seat, Vector3? muzzle) => _muzzles[seat]=muzzle;
@@ -50,7 +54,7 @@ namespace AnimeCS.Play
         public void Spawn(int seat, Vector3 position, float yaw) => _actors[seat].Spawn(position, yaw);
         public MotionContact Move(int seat, Vector2 velocity, float yaw, float pitch, bool jump, bool crouch) =>
             _actors[seat].Move(velocity, yaw, pitch, jump, crouch);
-        public void SetAlive(int seat, bool alive) => _actors[seat].SetAlive(alive);
+        public void SetAlive(int seat, bool alive) { if(!alive) _history.Invalidate(seat); _actors[seat].SetAlive(alive); }
         public Vector3 Position(int seat) => _actors[seat].transform.position;
         public Vector3 LastGround(int seat) => _actors[seat].LastGround;
         public void SyncMovement() => Physics.SyncTransforms();
@@ -238,6 +242,32 @@ namespace AnimeCS.Play
             var actor=_actors[seat];var ray=Quaternion.Euler(-actor.Pitch,actor.Yaw,0)*Vector3.forward;
             return FirstHit(actor.Eye,ray,1.45f,actor,out var hit) && _bodies.TryGetValue(hit.collider,out int other)
                 ? new ArenaHit(other,HitZone.Chest,hit.distance) : null;
+        }
+
+        public void CaptureHitboxes(int tick)
+        {
+            for(int i=0;i<_actors.Length;i++)
+            {
+                var actor=_actors[i];var capsule=(CapsuleCollider)actor.Body;var head=actor.HeadHitbox;
+                _history.Record(tick,i,head.transform.TransformPoint(head.center),capsule.transform.TransformPoint(capsule.center),capsule.height,actor.Alive);
+            }
+        }
+
+        public ArenaHit? TraceAt(int seat,Vector2 offset,bool suppressed,int currentTick,int viewTick)
+        {
+            var actor=_actors[seat];
+            var ray=new Ray(actor.Eye,Quaternion.Euler(-actor.Pitch-offset.y,actor.Yaw+offset.x,0)*Vector3.forward);
+            bool wall=Physics.Raycast(ray,out var obstruction,500f,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore);
+            bool pawn=_history.Trace(currentTick,viewTick,seat,ray,wall?obstruction.distance:500f,out int target,out bool head,out float distance);
+            var end=pawn?ray.GetPoint(distance):wall?obstruction.point:ray.GetPoint(50);
+            if(_shots!=null)_pendingShots.Add(new Shot{seat=seat,end=end,normal=wall&&!pawn?obstruction.normal:Vector3.up,
+                trail=!suppressed&&!_signals.Occludes(ray.origin,end),wall=wall&&!pawn});
+            if(!pawn)return null;
+            int sample=_history.ClampedTick(currentTick,viewTick);
+            float height=_history.HeightAt(sample,target);
+            float baseY=_history.BodyAt(sample,target).y-height*.5f;
+            float relative=(end.y-baseY)*SeatMovement.StandingHeight/(height+.074f+SeatMovement.StandingHeight-SeatMovement.EyeHeight(0));
+            return new ArenaHit(target,head?HitZone.Head:relative>=1.05f?HitZone.Chest:relative>=.7f?HitZone.Abdomen:HitZone.Legs,distance);
         }
 
         public ArenaHit? Trace(int seat, Vector2 angularOffset, bool suppressed)

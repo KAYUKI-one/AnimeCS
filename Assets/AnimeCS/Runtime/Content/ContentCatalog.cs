@@ -22,6 +22,24 @@ namespace AnimeCS.Content
         public CharacterDefinition Character => _character;
         public OutfitDefinition Outfit => _outfit;
         public IReadOnlyList<OutfitDefinition> SeatOutfits => _seatOutfits;
+        public OutfitDefinition OutfitForSide(Side side, string preferred=null, int index=0)
+        {
+            var chosen=Find<OutfitDefinition>(preferred);
+            if(chosen && !chosen.Archived && chosen.Character && !chosen.Character.Archived && chosen.Character.Faction==side) return chosen;
+            OutfitDefinition first = null;
+            int count = 0;
+            foreach (var outfit in _seatOutfits)
+            {
+                if (!outfit || outfit.Archived || !outfit.Character || outfit.Character.Archived || outfit.Character.Faction != side) continue;
+                first ??= outfit;
+                count++;
+            }
+            if (count == 0) return null;
+            int slot = Mathf.Max(0,index) % count;
+            foreach (var outfit in _seatOutfits)
+                if (outfit && !outfit.Archived && outfit.Character && !outfit.Character.Archived && outfit.Character.Faction == side && slot-- == 0) return outfit;
+            return first;
+        }
         public WeaponDefinition StartingPistol(Side side) => side == Side.Attack ? _attackPistol : _defendPistol;
 
         public T Find<T>(string id) where T : ContentDefinition

@@ -16,6 +16,16 @@ namespace AnimeCS.Play
             public int Thrown, Landed = -1, Pulse;
         }
         private readonly List<Effect> _effects = new List<Effect>(10);
+        private const int SoundCapacity=32;
+        private readonly SoundClue[,] _events=new SoundClue[LocalMatch.Seats,SoundCapacity];
+        private readonly int[] _sequence=new int[LocalMatch.Seats], _roundStart=new int[LocalMatch.Seats];
+        public int LatestSound(int seat)=>_sequence[seat];
+        public bool TrySound(int seat,int seq,out SoundClue clue)
+        {
+            clue=default;
+            if(seq<=_roundStart[seat] || seq>_sequence[seat] || seq<=_sequence[seat]-SoundCapacity)return false;
+            clue=_events[seat,(seq-1)%SoundCapacity];return true;
+        }
         private readonly SoundClue?[] _heard = new SoundClue?[LocalMatch.Seats];
         private readonly int[] _blindUntil = new int[LocalMatch.Seats];
         private readonly RaycastHit[] _walls = new RaycastHit[32];
@@ -33,6 +43,7 @@ namespace AnimeCS.Play
         public void ResetRound()
         {
             foreach (var effect in _effects) Remove(effect);
+            Array.Copy(_sequence,_roundStart,_sequence.Length);
             _effects.Clear(); Array.Clear(_heard, 0, _heard.Length); Array.Clear(_blindUntil, 0, _blindUntil.Length);
         }
 
@@ -142,11 +153,12 @@ namespace AnimeCS.Play
                 float reach = radius;
                 for (int k = 0; k < count; k++) if (!_bodies.ContainsKey(_walls[k].collider)) reach *= 0.5f;
                 if (delta.sqrMagnitude > reach * reach) continue;
-                var previous = _heard[i];
-                if (previous.HasValue && previous.Value.Tick == _tick && previous.Value.Own && previous.Value.Kind == SoundKind.Gun) continue;
-                _heard[i] = new SoundClue { Kind = kind, Own = i == sourceSeat, Suppressed = suppressed, Region = _map.NearestRegion(source),
+                var clue = new SoundClue { Kind = kind, Own = i == sourceSeat, Suppressed = suppressed, Region = _map.NearestRegion(source),
                     Bearing = Mathf.RoundToInt(Mathf.Repeat(Mathf.Atan2(delta.x, delta.z) * Mathf.Rad2Deg, 360f) / 45f) % 8,
                     Tick = _tick, Expires = _tick + 3 * MatchRules.TickRate };
+                _events[i,_sequence[i]++%SoundCapacity]=clue;
+                var previous=_heard[i];
+                if(!previous.HasValue || previous.Value.Tick!=_tick || !previous.Value.Own || previous.Value.Kind!=SoundKind.Gun)_heard[i]=clue;
             }
         }
         private static void Remove(Effect e) { AppearancePresenter.Retire(e.Visual); AppearancePresenter.Retire(e.Cloud); }

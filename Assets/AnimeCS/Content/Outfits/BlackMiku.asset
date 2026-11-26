@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2f829e6e69564d42a5cfe1203321163, type: 3}
+  m_Name: BlackMiku
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.OutfitDefinition
+  _id: outfit.blackmiku
+  _displayName: "\u9ED1\u8272 Miku"
+  _thumbnail: {fileID: 0}
+  _glyph: {fileID: 0}
+  _archived: 0
+  _character: {fileID: 11400000, guid: 39a5a6ec63229ea439baf992b86de5df, type: 2}
+  _model: {fileID: 0}
+  _arms: {fileID: 919132149155446097, guid: 15212df49f9ce79419c09936efc113d8, type: 3}
+  _sidearmArms: {fileID: 919132149155446097, guid: c2886d50ca7678c4298b4889e05e4796, type: 3}
+  _viewRig: {fileID: 919132149155446097, guid: 72ea14182aad65e43969d30c1f78c2d0, type: 3}
+  _included: 1
+  _bodyRegions:
+  - source: {fileID: -4281727267085200562, guid: 1c912782df4ae62458b418fc8337e76e, type: 3}
+    partitioned: {fileID: 4300000, guid: 98c0fac89487b6240a07390c3332e9b4, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 4ee395b884484254d9d1307329d15599, type: 2}
+    - {fileID: 2100000, guid: 4ee395b884484254d9d1307329d15599, type: 2}
+    - {fileID: 2100000, guid: 4ee395b884484254d9d1307329d15599, type: 2}
+    - {fileID: 2100000, guid: 4ee395b884484254d9d1307329d15599, type: 2}
+    - {fileID: 2100000, guid: 4ee395b884484254d9d1307329d15599, type: 2}
+    - {fileID: 2100000, guid: 14657fb07a0d47046b49e3a185a2ecdd, type: 2}
+    - {fileID: 2100000, guid: f492568795f8e5c4cae08f613803e9a5, type: 2}
+    - {fileID: 2100000, guid: d391491db81d5c0449f238a9f9d945d9, type: 2}
+    - {fileID: 2100000, guid: d391491db81d5c0449f238a9f9d945d9, type: 2}
+    - {fileID: 2100000, guid: 6bbbb8e25e3fa164bac436da8f9066df, type: 2}
+    - {fileID: 2100000, guid: 6bbbb8e25e3fa164bac436da8f9066df, type: 2}
+    - {fileID: 2100000, guid: d985b41e445ba6443b39f16e5f1a5cb6, type: 2}
+    - {fileID: 2100000, guid: d985b41e445ba6443b39f16e5f1a5cb6, type: 2}
+    - {fileID: 2100000, guid: e2fe5a901aafd904780d1568781638fe, type: 2}
+    - {fileID: 2100000, guid: e2fe5a901aafd904780d1568781638fe, type: 2}
+    - {fileID: 2100000, guid: aecc05f76e80cba4f9e65c6d5a9ed29d, type: 2}
+    - {fileID: 2100000, guid: a83319c968e7414449cced86bea47fda, type: 2}
+    - {fileID: 2100000, guid: 1e35d204e0660b64b9a60d24777ef0b6, type: 2}
+    - {fileID: 2100000, guid: bb837cffae8cfd7478853f1ce687f32c, type: 2}
+    - {fileID: 2100000, guid: bb837cffae8cfd7478853f1ce687f32c, type: 2}
+    - {fileID: 2100000, guid: 449eb064e241025428d8d46dcc93d614, type: 2}
+    - {fileID: 2100000, guid: 449eb064e241025428d8d46dcc93d614, type: 2}
+    - {fileID: 2100000, guid: 36f17aa0c589a604fbbe5da136ecae92, type: 2}
+    - {fileID: 2100000, guid: 1d7351f03bb0aec4daa5e3934623aa07, type: 2}
+    - {fileID: 2100000, guid: 1d7351f03bb0aec4daa5e3934623aa07, type: 2}
+    - {fileID: 2100000, guid: e8c452d602237a14aa4881748ed8c064, type: 2}
+    - {fileID: 2100000, guid: 412191606760145458468649c66cfec6, type: 2}
+    - {fileID: 2100000, guid: ec7bee4bbc065a741bb663709f1b44d9, type: 2}
+    - {fileID: 2100000, guid: ec7bee4bbc065a741bb663709f1b44d9, type: 2}
+    - {fileID: 2100000, guid: e0d68897a8a35af4a9a4689832e5be48, type: 2}
+    - {fileID: 2100000, guid: 94d502ad8d429284d872633aad92d59f, type: 2}
+    - {fileID: 2100000, guid: 94d502ad8d429284d872633aad92d59f, type: 2}
+    - {fileID: 2100000, guid: 050dfd7a15e27da489b49efd6ca3e4d8, type: 2}
+    - {fileID: 2100000, guid: 5a66e8ffabf8fe3468a7c1f19e9bdfcb, type: 2}
+    - {fileID: 2100000, guid: 1d0fda1a6103612428b6095b303a4a81, type: 2}
+    - {fileID: 2100000, guid: bc3654fae3eabb04189d41e9855904ea, type: 2}
+    - {fileID: 2100000, guid: 12831acf54446604dba8f797442272fa, type: 2}
+    - {fileID: 2100000, guid: 048c4be47ee24bc499e2599f9a627412, type: 2}
+    - {fileID: 2100000, guid: 9532b8e25aaa61d4a9544e9081212a31, type: 2}
+    - {fileID: 2100000, guid: 2e91296d55d75a443bc21924119515d1, type: 2}
+    - {fileID: 2100000, guid: 0b9e6f0957db32d4f9dc5a653e08ff97, type: 2}
+    - {fileID: 2100000, guid: 6fa27b86a0732824195760fc25913da4, type: 2}
+    slots: ffffffff01000000020000000300000004000000ffffffffffffffff03000000040000000100000003000000010000000300000001000000030000000100000003000000030000000100000003000000ffffffff01000000ffffffffffffffff010000000100000001000000010000000300000003000000010000000300000001000000010000000100000001000000ffffffffffffffffffffffffffffffffffffffffffffffff
+  _viewRegions:
+  - source: {fileID: 69869252670107163, guid: 72ea14182aad65e43969d30c1f78c2d0, type: 3}
+    partitioned: {fileID: 4300000, guid: e81ea2c7c32503946a8330ffedc776c2, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 4ee395b884484254d9d1307329d15599, type: 2}
+    - {fileID: 2100000, guid: 4ee395b884484254d9d1307329d15599, type: 2}
+    - {fileID: 2100000, guid: 050dfd7a15e27da489b49efd6ca3e4d8, type: 2}
+    - {fileID: 2100000, guid: 5a66e8ffabf8fe3468a7c1f19e9bdfcb, type: 2}
+    slots: 01000000020000000100000001000000
+  _hiddenRegion: {fileID: 2100000, guid: 95cc80d7c57e58c489b4230fb9af32f3, type: 2}
+  _stanceController: {fileID: 22100000, guid: ca7692adc6ab10d47a3f8981269b7fa2, type: 2}

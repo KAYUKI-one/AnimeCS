@@ -94,6 +94,10 @@ Button:hover { background-color:rgb(81,91,87); }
 .score-core { min-width:62px; margin:0 3px; align-items:center; background-color:rgba(19,24,23,.78); }.clock { font-size:17px; -unity-font-style:bold; }.score-line { justify-content:center; }.score-ours,.score-theirs { font-size:18px; -unity-font-style:bold; }.score-ours{color:rgb(152,218,227);}.score-theirs{color:rgb(246,217,137);}.score-dash{margin:0 4px;}
 .phase,.action,.event,.region,.equipment-stack Label,.credits,.vitals Label { -unity-text-outline-width:1px; -unity-text-outline-color:rgba(15,22,22,.9); }
 .phase { font-size:13px; color:rgb(244,231,181); }.reticle { position:absolute; left:50%;top:50%;width:0;height:0; }
+#hit-confirm {position:absolute;left:50%;top:50%;width:0;height:0;display:none;}
+#hit-confirm VisualElement {position:absolute;width:5px;height:1.5px;background-color:rgb(248,240,213);}
+.hit-nw {left:-9px;top:-7px;rotate:45deg;}.hit-se {left:4px;top:6px;rotate:45deg;}
+.hit-ne {left:4px;top:-7px;rotate:-45deg;}.hit-sw {left:-9px;top:6px;rotate:-45deg;}
 .reticle VisualElement {background-color:rgb(157,238,160);position:absolute;}
 .ret-l { left:-8px; top:-1px; width:5px; height:2px; }.ret-r {left:3px;top:-1px;width:5px;height:2px;}
 .ret-t {top:-8px;left:-1px;width:2px;height:5px;}.ret-b {top:3px;left:-1px;width:2px;height:5px;}

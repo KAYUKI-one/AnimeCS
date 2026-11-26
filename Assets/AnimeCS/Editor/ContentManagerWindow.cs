@@ -23,6 +23,9 @@ namespace AnimeCS.Editor
         private readonly List<Button> _tabs = new List<Button>();
         private ScrollView _details;
         private Label _status;
+        private VisualElement _castImport;
+        private TextField _castName;
+        private Side _castSide;
         private bool _handles, _refreshing;
 
         [MenuItem("AnimeCS/资源管理器", priority = 1)]
@@ -79,8 +82,12 @@ namespace AnimeCS.Editor
                 _handles = false; DrawDetails(); SceneView.RepaintAll();
             };
             left.Add(_list);
+            _castImport=new VisualElement();left.Add(_castImport);
+            var faction=new PopupField<string>("阵营",new List<string>{"余烬 · Ember","苍盾 · Aegis"},(int)_castSide);
+            faction.RegisterValueChangedCallback(e=>_castSide=(Side)faction.index);_castImport.Add(faction);
+            _castName=new TextField("角色英文名");_castImport.Add(_castName);
             var actions = Row(left, "actions");
-            AddButton(actions, "新建条目", () => Run(() => SelectEntry(ContentLibrary.Create(_catalog, _kind, "新" + ContentLibrary.Labels[(int)_kind]))));
+            AddButton(actions, "新建条目", () => Run(() => SelectEntry(ContentLibrary.Create(_catalog, _kind, "新" + ContentLibrary.Labels[(int)_kind],faction:_kind==ContentKind.Character?_castSide:(Side?)null))));
             AddButton(actions, "从磁盘导入", () => PickFile(false));
             var drop = new Label("拖入素材以登记 · 支持多选"); drop.AddToClassList("drop"); left.Add(drop);
             DropZone(drop, false);
@@ -96,6 +103,7 @@ namespace AnimeCS.Editor
             _refreshing = true;
             try
             {
+                _castImport.style.display=_kind==ContentKind.Character?DisplayStyle.Flex:DisplayStyle.None;
                 _shown.Clear();
                 if (_catalog != null)
                     _shown.AddRange(_catalog.Entries.Where(e => e != null && e.Kind == _kind &&
@@ -162,6 +170,7 @@ namespace AnimeCS.Editor
             }));
             if (entry is MapDefinition map)
             {
+                if(map.Geometry) AddButton(actions,"烘焙地图光照",()=>Run(()=>MapLightBaker.Bake(map)));
                 AddButton(actions, "打开地图素材", () => Run(() =>
                 {
                     Object source = !string.IsNullOrEmpty(map.ScenePath) ? AssetDatabase.LoadAssetAtPath<SceneAsset>(map.ScenePath) : map.Geometry;
@@ -207,7 +216,7 @@ namespace AnimeCS.Editor
         private void PickFile(bool bind)
         {
             string path = EditorUtility.OpenFilePanel(bind ? "绑定到当前条目" : "导入并登记新素材", "", "");
-            if (!string.IsNullOrEmpty(path)) Run(() => ImportOne(ContentLibrary.ImportFile(_kind, path), bind));
+            if (!string.IsNullOrEmpty(path)) Run(() => ImportOne(DiskAsset(path,bind), bind));
         }
 
         private void DropZone(VisualElement target, bool bind)
@@ -225,15 +234,18 @@ namespace AnimeCS.Editor
                     try { ImportOne(load(), bind); count++; } catch (Exception ex) { errors.Add(ex.Message); }
                 }
                 if (objects.Length > 0) foreach (var obj in objects) Process(() => obj);
-                else foreach (string path in paths) Process(() => ContentLibrary.ImportFile(_kind, path));
+                else foreach (string path in paths) Process(() => DiskAsset(path,bind));
                 Status($"已处理 {count} 项" + (errors.Count > 0 ? "\n" + string.Join("\n", errors) : ""), errors.Count > 0);
             });
         }
 
+        private Object DiskAsset(string path,bool bind)=>ContentLibrary.ImportFile(_kind,path,
+            _kind==ContentKind.Character?(bind && _selected is CharacterDefinition c?c.Faction:_castSide):(Side?)null,_castName.value);
+
         private void ImportOne(Object source, bool bind)
         {
             if (bind) { ContentLibrary.Bind(_selected, source); Refresh(); }
-            else SelectEntry(ContentLibrary.Import(_catalog, _kind, source));
+            else SelectEntry(ContentLibrary.Import(_catalog, _kind, source,_kind==ContentKind.Character?_castSide:(Side?)null));
             Status("已保存 · " + _selected.DisplayName);
         }
 

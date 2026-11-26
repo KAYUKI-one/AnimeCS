@@ -15,6 +15,8 @@ MonoBehaviour:
   _id: map.dust2
   _displayName: "\u7099\u70ED\u6C99\u57CE II"
   _thumbnail: {fileID: 0}
+  _glyph: {fileID: 0}
+  _archived: 0
   _geometry: {fileID: 2514204062195424206, guid: f259f5c3ff69f14468c7d449630255a6, type: 3}
   _radar: {fileID: 2800000, guid: a3776ace25b3cd44f86d2dbc24b5d325, type: 3}
   _radarCenter: {x: -25.04948, y: -5.669281}
@@ -106,8 +108,11 @@ MonoBehaviour:
   - {x: -56.099995, y: 0.022000313, z: -35.2}
   - {x: -65.399994, y: 0.07199955, z: -38.3}
   - {x: -68.072, y: 0.17335741, z: -39.014}
+  _practice: 0
   _navigation: {fileID: 23800000, guid: 4211580cad87c31408ba38ca99f7e998, type: 2}
   _radarYaw: 90
+  _lightingScenePath: Assets/AnimeCS/Art/MapLighting/DustII/DustII.unity
+  _buyRadius: 5
   _attackYaw:
   - -107
   - -37

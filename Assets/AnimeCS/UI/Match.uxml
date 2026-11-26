@@ -5,6 +5,7 @@
         <ui:VisualElement class="radar-anchor" picking-mode="Ignore"><ui:VisualElement name="radar" class="radar"><ui:VisualElement name="map-art" class="fill radar-art" picking-mode="Ignore" /></ui:VisualElement><ui:Label name="region" class="region" /></ui:VisualElement>
         <ui:VisualElement class="score-anchor" picking-mode="Ignore"><ui:VisualElement class="score-row"><ui:VisualElement name="team" class="team" /><ui:VisualElement class="score-core"><ui:Label name="clock" class="clock" /><ui:VisualElement class="score-line"><ui:Label name="our-score" class="score-ours"/><ui:Label class="score-dash" text="–"/><ui:Label name="their-score" class="score-theirs"/></ui:VisualElement></ui:VisualElement><ui:VisualElement name="rivals" class="team" /></ui:VisualElement><ui:Label name="phase" class="phase" /></ui:VisualElement>
         <ui:VisualElement name="kill-feed" class="kill-feed" picking-mode="Ignore" />
+        <ui:VisualElement name="hit-confirm" picking-mode="Ignore"><ui:VisualElement class="hit-nw"/><ui:VisualElement class="hit-ne"/><ui:VisualElement class="hit-sw"/><ui:VisualElement class="hit-se"/></ui:VisualElement>
         <ui:VisualElement name="reticle" class="reticle" picking-mode="Ignore"><ui:VisualElement class="ret-l"/><ui:VisualElement class="ret-r"/><ui:VisualElement class="ret-t"/><ui:VisualElement class="ret-b"/></ui:VisualElement>
         <ui:Label name="event" class="event" picking-mode="Ignore"/>
         <ui:Label name="credits" class="credits" picking-mode="Ignore"/>

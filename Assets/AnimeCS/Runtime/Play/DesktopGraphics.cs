@@ -47,6 +47,8 @@ namespace AnimeCS.Play
             Current=new PictureQuality(Mathf.Clamp(value.Scale,75,200),samples,shadow);
             _pipeline.renderScale=Current.Scale*.01f; _pipeline.msaaSampleCount=samples;
             _pipeline.mainLightShadowmapResolution=shadow;
+            _pipeline.shadowCascadeCount=shadow<=2048?2:shadow<=4096?3:4;
+            _pipeline.cascade3Split=new Vector2(.12f,.40f);
             _pipeline.shadowDistance=shadow>=8192?Mathf.Max(_shadowDistance,95):shadow<Default.Shadow?Mathf.Min(_shadowDistance,50):_shadowDistance;
             if (!save) return;
             PlayerPrefs.SetInt(ScaleKey,Current.Scale);PlayerPrefs.SetInt(SamplesKey,samples);PlayerPrefs.SetInt(ShadowKey,shadow);PlayerPrefs.Save();

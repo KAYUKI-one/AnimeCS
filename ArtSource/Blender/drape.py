@@ -8,13 +8,14 @@ from mathutils.kdtree import KDTree
 from motion import pose
 
 
-def mark_surfaces(body, points, groups, fabric):
+def mark_surfaces(body, points, groups, fabric, skip=()):
     # Classify from the source garment groups before their weights are folded onto the game rig.
     mesh = body.data
     hip = (points["LeftUpperLeg"][1].z + points["RightUpperLeg"][1].z) * .5
     cloth = np.zeros(len(mesh.vertices))
     leg = np.zeros_like(cloth)
     for v in mesh.vertices:
+        if v.index in skip: continue
         for g in v.groups:
             if fabric[g.group]:
                 cloth[v.index] += g.weight
@@ -78,7 +79,7 @@ def bake_clearance(label, body, rig):
     # Loose hems near a bent knee follow the closest point on the original leg, including the
     # original clearance. Use a smooth falloff across wide pleats and preserve the waistband.
     bindings = []
-    if label in ("Cantarella", "Endmin"):
+    if label in ("Cantarella", "BlackMiku", "Mornye"):
         for vi in cloth_ids:
             _, _, li, distance = rest_limb.find_nearest(Vector(original[vi]))
             if li is None or distance > .17:
@@ -185,7 +186,7 @@ def bake_clearance(label, body, rig):
                         hit, _, _, length = limbs.ray_cast(Vector(centre + d * .32), Vector(-d), .35)
                         return .007 if hit is None else max(.006, .32 - length + .006)
                     clearance = distance_out(direction)
-                    if action == "DuckIdle" and label in ("Endmin", "Cantarella"):
+                    if action == "DuckIdle" and label in ("BlackMiku","Mornye","Cantarella"):
                         _, surface_normal, _, _ = limbs.find_nearest(Vector(centre))
                         if surface_normal is not None:
                             normal = np.asarray(surface_normal)

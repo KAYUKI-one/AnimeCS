@@ -63,7 +63,7 @@ namespace AnimeCS.Editor
                 finally { graph.Destroy();preview.Cleanup(); }
             }
             AssetDatabase.Refresh();
-            foreach(var guid in AssetDatabase.FindAssets("t:Texture2D",new[]{"Assets/AnimeCS/UI"}))
+            foreach(var guid in AssetDatabase.FindAssets("t:Texture2D",new[]{folder}))
             {
                 var path=AssetDatabase.GUIDToAssetPath(guid);
                 var importer=(TextureImporter)AssetImporter.GetAtPath(path);
@@ -72,6 +72,14 @@ namespace AnimeCS.Editor
                 importer.mipmapEnabled=false; importer.textureCompression=TextureImporterCompression.Uncompressed;
                 importer.wrapMode=TextureWrapMode.Clamp;importer.SaveAndReimport();
             }
+            foreach(var fit in catalog.SeatOutfits)
+            {
+                var data=new SerializedObject(fit.Character);string file=folder+"/"+fit.Character.name;
+                data.FindProperty("_portrait").objectReferenceValue=AssetDatabase.LoadAssetAtPath<Texture2D>(file+".png");
+                data.FindProperty("_icon").objectReferenceValue=AssetDatabase.LoadAssetAtPath<Texture2D>(file+"Icon.png");
+                data.ApplyModifiedPropertiesWithoutUndo();
+            }
+            AssetDatabase.SaveAssets();
         }
     }
 }

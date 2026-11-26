@@ -14,6 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.MapDefinition
   _id: map.broadcast-station
   _displayName: "\u4E91\u4E0A\u8F6C\u64AD\u7AD9"
+  _thumbnail: {fileID: 0}
+  _glyph: {fileID: 0}
+  _archived: 0
   _geometry: {fileID: 840084850441563627, guid: e69116ce92eab164bbb6fac8da21ca6f, type: 3}
   _radar: {fileID: 2800000, guid: 0ca710a2a2aa0c444acedd9225ead4c7, type: 3}
   _radarCenter: {x: 0, y: 0}
@@ -56,3 +59,10 @@ MonoBehaviour:
   - {x: -25, y: 0, z: 33}
   _defendRouteB:
   - {x: 25, y: 0, z: 33}
+  _practice: 0
+  _navigation: {fileID: 0}
+  _radarYaw: 0
+  _lightingScenePath: Assets/AnimeCS/Art/MapLighting/BroadcastStation/BroadcastStation.unity
+  _buyRadius: 5
+  _attackYaw: []
+  _defendYaw: []

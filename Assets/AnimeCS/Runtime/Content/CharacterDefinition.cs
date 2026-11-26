@@ -12,6 +12,9 @@ namespace AnimeCS.Content
         [SerializeField, InspectorName("动画控制器（可选）")] private RuntimeAnimatorController _controller;
         [SerializeField, InspectorName("持枪挂点路径（可选）")] private string _weaponSocket;
         public override ContentKind Kind => ContentKind.Character;
+        [SerializeField, InspectorName("所属阵营")] private Side _faction;
+        public Side Faction => _faction;
+        public static string FactionName(Side side) => side == Side.Attack ? "余烬" : "苍盾";
         public GameObject Model => _model;
         public Texture2D Portrait => _portrait;
         public Texture2D Icon => _icon ? _icon : _portrait;

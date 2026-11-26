@@ -5,7 +5,8 @@ from mathutils import Matrix, Quaternion, Vector
 
 # World-space foot spread, stagger, idle hip dip and lateral weight shift in metres.
 garment_stances = {"Cantarella": (.012,.023,-.022,.010), "Lily": (.032,.034,-.033,-.012),
-                   "Flor": (.024,.038,-.027,.014), "Endmin": (.048,.044,-.045,-.008)}
+                   "Flor": (.024,.038,-.027,.014), "BlackMiku": (.026,.030,-.026,-.008),
+                   "Mornye": (.020,.032,-.027,.010), "Laevatain": (.040,.040,-.038,-.009)}
 
 def pose(rig, action, fraction, frame=None, garment=None):
     rest = rig.data.bones
@@ -30,6 +31,7 @@ def pose(rig, action, fraction, frame=None, garment=None):
         if b.parent is None: return b.head_local+shift
         return heads[b.parent.name]+rotations[b.parent.name]@(b.head_local-b.parent.head_local)
     def set_bone(name, world=None, target=None, tip=None):
+        if name not in rest: return
         b = rest[name]
         p = rig.pose.bones[name]
         parent = rotations[b.parent.name] if b.parent else Quaternion()
@@ -108,7 +110,7 @@ def pose(rig, action, fraction, frame=None, garment=None):
             target.z += (.23 if sign==1 else .11) if action!="Fall" else (.11 if sign==1 else .06)
         knee_out = .09
         if crouch and stance:
-            knee_out = {"Cantarella": .65, "Endmin": .47}.get(garment, knee_out)
+            knee_out = {"Cantarella": .65, "BlackMiku": .50, "Mornye": .46}.get(garment, knee_out)
         two_bone(upper,lower,foot,target,Vector((sign*knee_out,-1,0)))
         set_bone(foot,Quaternion((1,0,0),.18*math.sin(phase) if stride else -.09 if jump else 0))
         set_bone(toes)

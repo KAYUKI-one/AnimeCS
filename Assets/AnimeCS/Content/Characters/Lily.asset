@@ -24,6 +24,7 @@ MonoBehaviour:
   _defendInsignia: {fileID: 7896036870659375440, guid: d5613d97183cf3b4cb9a51a0f4aa09ca, type: 3}
   _controller: {fileID: 9100000, guid: dda641f82b1570747be311378167f262, type: 2}
   _weaponSocket: 
+  _faction: 1
   _headwearOffset: {x: 0, y: 0.082, z: 0}
   _faceAnchor: {x: 0, y: 0.05996, z: 0.06696}
   _standingEyes: 1.5103

@@ -74,14 +74,17 @@ namespace AnimeCS.Tests
 
         [Test] public void RangeIssuesBothFactionsAndRepopulatesHeadshotTargetsWithoutEnding()
         {
-            _match=new LocalMatch(_catalog,_rules,_arena,17,FirstSide.Defend,WardrobeProfile.Create(_catalog),MatchMode.AimPractice);
+            var profile = WardrobeProfile.Create(_catalog);
+            profile.current.attackOutfitId = "outfit.laevatain";
+            profile.current.outfitId = profile.current.defendOutfitId = "outfit.lily";
+            _match=new LocalMatch(_catalog,_rules,_arena,17,FirstSide.Defend,profile,MatchMode.AimPractice);
             _seats=Enumerable.Range(0,10).Select(_match.BindSeat).ToArray();
             var player=_seats[0]; Assert.That(player.Read().HasObjective,Is.False);
             Assert.That(player.Read().Side, Is.EqualTo(Side.Attack));
+            Assert.That(CharacterAt(player.Read()), Is.EqualTo("character.laevatain"));
             Assert.That(_arena.Alive.Count(x=>x),Is.EqualTo(6));
             var targets = CharactersOnSide(Side.Defend, aliveOnly: true);
-            Assert.That(targets.Count, Is.EqualTo(3));
-            Assert.That(targets, Does.Not.Contain(CharacterAt(player.Read())));
+            Assert.That(targets, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily" }));
             _arena.Points[0]=new Vector3(999,0,999);int opening=player.Read().Credits;
             foreach(var gun in _catalog.Entries.OfType<WeaponDefinition>().Where(x=>!x.Archived))
             {
@@ -312,15 +315,21 @@ namespace AnimeCS.Tests
         [TestCase(13, 0)] [TestCase(13, 11)] [TestCase(13, 12)]
         public void MatchEndsOnlyAtThirteenAndResetsSideBudgets(int wins, int losses)
         {
+            var profile = WardrobeProfile.Create(_catalog);
+            profile.current.outfitId = profile.current.attackOutfitId = "outfit.blackmiku";
+            profile.current.defendOutfitId = "outfit.lily";
+            _match = new LocalMatch(_catalog, _rules, _arena, 29, FirstSide.Attack, profile);
+            _seats = Enumerable.Range(0, LocalMatch.Seats).Select(_match.BindSeat).ToArray();
             var attackers = CharactersOnSide(Side.Attack);
             var defenders = CharactersOnSide(Side.Defend);
-            Assert.That(attackers.Count, Is.EqualTo(3));
-            Assert.That(defenders.Count, Is.EqualTo(3));
-            Assert.That(attackers.Overlaps(defenders), Is.False);
+            Assert.That(attackers, Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain" }));
+            Assert.That(defenders, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily" }));
             int attackCount = 0;
             for (int round = 1; round <= wins + losses; round++)
             {
                 Assert.That(_match.Public.Round, Is.EqualTo(round));
+                var player = _seats[0].Read();
+                Assert.That(player.OutfitId, Is.EqualTo(profile.current.OutfitFor(player.Side)), $"Round {round}");
                 Assert.That(CharactersOnSide(Side.Attack), Is.EquivalentTo(attackers), $"Round {round}");
                 Assert.That(CharactersOnSide(Side.Defend), Is.EquivalentTo(defenders), $"Round {round}");
                 if (_seats[0].Read().Side == Side.Attack && round <= 24) attackCount++;
@@ -349,6 +358,7 @@ namespace AnimeCS.Tests
             Assert.That(outfit.Archived, Is.False);
             Assert.That(outfit.Character, Is.Not.Null, outfit.Id);
             Assert.That(outfit.Character.Archived, Is.False);
+            Assert.That(outfit.Character.Faction, Is.EqualTo(seat.Side), $"Seat {seat.Seat}");
             return outfit.Character.Id;
         }
 
@@ -522,4 +532,31 @@ namespace AnimeCS.Tests
             Assert.That(_seats[0].Read().Motion.Velocity.x,Is.GreaterThan(0));Assert.That(_seats[5].Read().Health,Is.Zero);
             Assert.That(_seats[5].Read().Credits,Is.EqualTo(balance));Assert.That(_match.Public.Winner,Is.EqualTo(Side.Defend));
             Until(RoundPhase.Buy); Assert.That(report.Receipts[5].Survived,Is.False);
-            Assert.That(_mat
+            Assert.That(_match.Reports.Count,Is.EqualTo(1));Assert.That(_match.Public.Score1,Is.EqualTo(1));
+        }
+
+        [Test] public void WheelSkipsEmptySlotsAndReloadIsInterruptedBySwitch()
+        {
+            _rules.contestSeconds=4; Until(RoundPhase.Contest);
+            Input(0,new SeatIntent{Fire=true});_match.Step();
+            int rounds=_seats[0].Read().Magazine;
+            Input(0,new SeatIntent{Reload=true});_match.Step();
+            Assert.That(_seats[0].Read().ReloadEnd,Is.GreaterThan(_match.Public.Tick));
+            Input(0,new SeatIntent{Cycle=1});_match.Step();
+            Assert.That(_seats[0].Read().Held,Is.EqualTo(HeldSlot.Knife));Assert.That(_seats[0].Read().ReloadEnd,Is.Zero);
+            Input(0,new SeatIntent{Cycle=-1});_match.Step();Assert.That(_seats[0].Read().Magazine,Is.EqualTo(rounds));
+            for (int i=0;i<20;i++) _match.Step();Input(0,new SeatIntent{Inspect=true});_match.Step();
+            Assert.That(_seats[0].Read().InspectTick,Is.EqualTo(_match.Public.Tick));
+            Input(0,new SeatIntent{Fire=true});_match.Step();Assert.That(_seats[0].Read().InspectTick,Is.LessThan(0));
+        }
+
+        [TestCase("weapon.ember47", 108)] [TestCase("weapon.fold44", 89)] [TestCase("weapon.watch41s", 98)]
+        public void DamageUsesThePublishedFormulaAndFloor(string id, int damage)
+        {
+            var weapon = _catalog.Find<WeaponDefinition>(id);
+            Assert.That(weapon.DamageAt(15, HitZone.Head, true), Is.EqualTo(damage));
+            Assert.That(weapon.DamageAt(15, HitZone.Legs, true), Is.EqualTo(weapon.DamageAt(15, HitZone.Legs, false)));
+            Assert.That(weapon.IsSteady(weapon.RunSpeed * 0.34f, true), Is.True);
+        }
+    }
+}

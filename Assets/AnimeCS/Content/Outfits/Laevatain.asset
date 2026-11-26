@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2f829e6e69564d42a5cfe1203321163, type: 3}
+  m_Name: Laevatain
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.OutfitDefinition
+  _id: outfit.laevatain
+  _displayName: "\u83B1\u4E07\u6C40"
+  _thumbnail: {fileID: 0}
+  _glyph: {fileID: 0}
+  _archived: 0
+  _character: {fileID: 11400000, guid: 10b1cac9d18c6e34f9ab869b8b238792, type: 2}
+  _model: {fileID: 0}
+  _arms: {fileID: 919132149155446097, guid: 6f65fefa373b01d4c8186cd8faf05220, type: 3}
+  _sidearmArms: {fileID: 919132149155446097, guid: 9453d532667c1254b93aca04eb6e95bf, type: 3}
+  _viewRig: {fileID: 919132149155446097, guid: ef11936d7921a784596303fd06390e53, type: 3}
+  _included: 1
+  _bodyRegions:
+  - source: {fileID: 7426929773553543812, guid: a646751f122dce64fa0a852701a40512, type: 3}
+    partitioned: {fileID: 4300000, guid: ce2aaa72edd408348ad6d0c4f4c13e21, type: 2}
+    materials:
+    - {fileID: 2100000, guid: b6fc990b3db702d4cbdecaec1d32835f, type: 2}
+    - {fileID: 2100000, guid: 7f54e425abf337c419f91de7418cf9de, type: 2}
+    - {fileID: 2100000, guid: 6d1bb9a895c9f004fbd8725d2d49d918, type: 2}
+    - {fileID: 2100000, guid: 6d1bb9a895c9f004fbd8725d2d49d918, type: 2}
+    - {fileID: 2100000, guid: 6d1bb9a895c9f004fbd8725d2d49d918, type: 2}
+    - {fileID: 2100000, guid: 6d1bb9a895c9f004fbd8725d2d49d918, type: 2}
+    - {fileID: 2100000, guid: 3845661e6e82a7443a8c2dea3c4cbbb4, type: 2}
+    - {fileID: 2100000, guid: 3845661e6e82a7443a8c2dea3c4cbbb4, type: 2}
+    - {fileID: 2100000, guid: 3845661e6e82a7443a8c2dea3c4cbbb4, type: 2}
+    - {fileID: 2100000, guid: e3aa3039dc9c42b4f970f5707fbe10d3, type: 2}
+    - {fileID: 2100000, guid: e3aa3039dc9c42b4f970f5707fbe10d3, type: 2}
+    - {fileID: 2100000, guid: e3aa3039dc9c42b4f970f5707fbe10d3, type: 2}
+    - {fileID: 2100000, guid: a2127a4d0142f1949983e1561fd09728, type: 2}
+    slots: ffffffffffffffffffffffff010000000200000003000000ffffffff0100000002000000010000000300000004000000ffffffff
+  _viewRegions:
+  - source: {fileID: 7986760452662843428, guid: ef11936d7921a784596303fd06390e53, type: 3}
+    partitioned: {fileID: 4300000, guid: 22da9ecf1671a864785416165a8addd4, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 6d1bb9a895c9f004fbd8725d2d49d918, type: 2}
+    - {fileID: 2100000, guid: 6d1bb9a895c9f004fbd8725d2d49d918, type: 2}
+    - {fileID: 2100000, guid: 3845661e6e82a7443a8c2dea3c4cbbb4, type: 2}
+    - {fileID: 2100000, guid: 3845661e6e82a7443a8c2dea3c4cbbb4, type: 2}
+    slots: 01000000020000000100000002000000
+  _hiddenRegion: {fileID: 2100000, guid: 95cc80d7c57e58c489b4230fb9af32f3, type: 2}
+  _stanceController: {fileID: 22100000, guid: 570690610d84a59448beb75c5df4cb68, type: 2}

@@ -65,6 +65,7 @@ namespace AnimeCS.Match
                     _signals?.Emit(i, SoundKind.Step, 14f);
             }
             _world.SyncMovement();
+            if(_world is IHistoricalMatchWorld history) history.CaptureHitboxes(_tick);
             for (int i = 0; i < Seats; i++) if (_seats[i].Health > 0) HandleWeapon(i, frozen);
             ApplyDamage();
         }
@@ -177,7 +178,7 @@ namespace AnimeCS.Match
                 s.ReloadStart = _tick; s.InspectTick = -100000;
                 s.ReloadAt = _tick + MatchRules.Ticks(gun.Definition.ReloadSeconds);
             }
-            bool press = input.Fire && (!s.FiredLastTick || gun.Definition.Automatic);
+            bool press = input.Fire && (input.FirePressed || !s.FiredLastTick || gun.Definition.Automatic);
             s.FiredLastTick = input.Fire;
             if (!press || gun.Magazine == 0 || s.ReloadAt != 0 || _tick < s.NextShot) return;
             if (_tick - s.NextShot > MatchRules.Ticks(0.3f)) s.Burst = 0;
@@ -190,18 +191,16 @@ namespace AnimeCS.Match
             if (lens != null)
                 spread = lens.Spread(s.Motion.Velocity.magnitude / gun.Definition.RunSpeed, s.Motion.Crouch,
                     s.Motion.Grounded, s.Scope.Stability(lens, _tick));
-            float phase = (float)_spread.NextDouble() * Mathf.PI * 2;
-            float sample = (float)_spread.NextDouble();
-            float radius = (lens != null ? sample : Mathf.Sqrt(sample)) * spread;
+            var offset = ShotPattern.Sample(Seed,i,++s.ShotSequence,spread,lens!=null);
             if (lens != null) s.Scope.Bolt(gun.Magazine > 0);
-            var offset = new Vector2(Mathf.Cos(phase), Mathf.Sin(phase)) * radius;
             if (gun.Definition.Automatic)
             {
                 offset.y += Mathf.Min(7, s.Burst) * 0.22f;
                 if (s.Burst >= 4) offset.x += Mathf.Sin((s.Burst - 4) * 0.65f) * 0.65f;
             }
             s.Burst++;
-            var trace = _world.Trace(i, offset, gun.Definition.Suppressed);
+            var trace = input.ObservedTick.HasValue && _world is IHistoricalMatchWorld history ?
+                history.TraceAt(i,offset,gun.Definition.Suppressed,_tick,input.ObservedTick.Value) : _world.Trace(i, offset, gun.Definition.Suppressed);
             if (!trace.HasValue) return;
             var hit = trace.Value;
             if ((uint)hit.Seat >= Seats || hit.Seat / TeamSize == i / TeamSize || _seats[hit.Seat].Health == 0) return;

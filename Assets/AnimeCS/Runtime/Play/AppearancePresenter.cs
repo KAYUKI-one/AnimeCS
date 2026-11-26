@@ -49,6 +49,8 @@ namespace AnimeCS.Play
         private Vector3 _tip;
         private GameObject _viewFlash, _worldFlash;
         private bool _flashVisible;
+        private int _predictedRound=-1,_predictedTick=-1;
+        internal void PredictTrigger(int round,int tick){_predictedRound=round;_predictedTick=tick;}
         private Quaternion _aim;
         private Transform _mark, _stature;
         private float _stanceEyes, _feetWeight;
@@ -161,7 +163,9 @@ namespace AnimeCS.Play
             _flashVisible=_equipped && !_equipped.Suppressed && _equipped.Class!=WeaponClass.Knife && view.Health>0 &&
                 view.LastShotTick>=0 && view.Match.Tick+alpha-view.LastShotTick<2.5f;
             if (_worldFlash) _worldFlash.SetActive(_flashVisible);
-            if (_viewFlash) _viewFlash.SetActive(_flashVisible);
+            bool predicted=_watch && view.Health>0 && _predictedRound==view.Match.Round && _predictedTick==view.Match.Tick+1;
+            if (_viewFlash) _viewFlash.SetActive(_flashVisible || predicted && _equipped && !_equipped.Suppressed);
+            if(predicted) _viewAction.Offset+=Vector3.back*.014f;
             if (_watch && _equipped && view.Health > 0)
             {
                 float reach = _equipped.Class==WeaponClass.Pistol || _equipped.Class==WeaponClass.Knife ? .61f : .92f;

@@ -23,11 +23,26 @@ namespace AnimeCS.Play
         private readonly bool[] _generated = new bool[7];
         private int _seat = -1, _lastEvent = -1;
         private bool _paused;
+        private int _sequence,_confirmation=-100000;
+        private readonly AudioClip _ping;
+        private readonly bool _confirm;
         public float Volume { get => _source.volume; set => _source.volume=value; }
-        public void Stop() { _source.Stop(); _lastEvent=-1; _seat=-1; }
+        private int _predictedRound=-1,_predictedTick=-1,_predictedSeat=-1;
+        public void Predict(in SeatView view,bool suppressed)
+        {
+            int next=view.Match.Tick+1;
+            if(_predictedRound==view.Match.Round && _predictedTick==next && _predictedSeat==view.Seat)return;
+            _predictedRound=view.Match.Round; _predictedTick=next; _predictedSeat=view.Seat;
+            Play(new SoundClue{Kind=SoundKind.Gun,Own=true,Suppressed=suppressed},view.Yaw);
+        }
+        public void Stop() { _source.Stop(); _lastEvent=-1; _seat=-1;_predictedTick=-1; }
 
         public SeatAudio(AudioSource source, MatchAudioClips bank, MatchPresentation preset)
         {
+            _confirm=preset && preset.hitConfirm;
+            var ping=new float[850];
+            for(int i=0;i<ping.Length;i++){float t=i/22050f;ping[i]=Mathf.Exp(-95*t)*(.17f*Mathf.Sin(7200*t)+.12f*Mathf.Sin(10300*t));}
+            _ping=AudioClip.Create("Hit confirmation",ping.Length,1,22050,false);_ping.SetData(ping,0);
             _source = source; source.playOnAwake = false; source.spatialBlend = 0;
             _clips = new[] { bank.step, preset && preset.shotSound ? preset.shotSound : bank.shot, bank.utility, bank.echoTail, bank.objective, bank.devicePulse, bank.deviceBurst };
             _quiet = preset ? preset.suppressedSound : null;
@@ -53,23 +68,41 @@ namespace AnimeCS.Play
             }
         }
 
-        public void Present(in SeatView view)
+        public void Present(in SeatView view,ArenaWorld world=null)
         {
             if (view.Match.Paused != _paused)
             {
                 _paused = view.Match.Paused;
                 if (_paused) _source.Pause(); else _source.UnPause();
             }
-            if (view.Seat != _seat) { _source.Stop(); _seat = view.Seat; _lastEvent = -1; }
-            if (_paused || !view.Heard.HasValue) return;
+            if (view.Seat != _seat) { _source.Stop(); _seat = view.Seat; _lastEvent = -1; _sequence=0;_confirmation=-100000; }
+            if(_paused || view.Seat<0)return;
+            if(_confirm && view.LastConfirmationTick>=0 && view.LastConfirmationTick!=_confirmation && view.Match.Tick-view.LastConfirmationTick<6)
+            { _confirmation=view.LastConfirmationTick;_source.panStereo=0;_source.PlayOneShot(_ping,.52f); }
+            if(world!=null)
+            {
+                int latest=world.LatestSound(_seat);
+                _sequence=Mathf.Clamp(_sequence,latest-32,latest);
+                while(_sequence<latest)
+                    if(world.TrySound(_seat,++_sequence,out var next) && view.Match.Tick-next.Tick<=8 &&
+                        !(next.Own && next.Kind==SoundKind.Gun && next.Tick==_predictedTick && view.Match.Round==_predictedRound && _seat==_predictedSeat))
+                        Play(next,view.Yaw);
+                return;
+            }
+            if (!view.Heard.HasValue) return;
             var clue = view.Heard.Value;
             if (clue.Tick == _lastEvent || view.Match.Tick - clue.Tick > 4) return;
             _lastEvent = clue.Tick;
-            _source.panStereo = clue.Own ? 0 : Mathf.Sin((clue.Bearing * 45f - view.Yaw) * Mathf.Deg2Rad) * 0.7f;
+            Play(clue,view.Yaw);
+        }
+        private void Play(SoundClue clue,float yaw)
+        {
+            _source.panStereo = clue.Own ? 0 : Mathf.Sin((clue.Bearing * 45f - yaw) * Mathf.Deg2Rad) * 0.7f;
             _source.PlayOneShot(clue.Kind == SoundKind.Gun && clue.Suppressed && _quiet ? _quiet : _clips[(int)clue.Kind], 0.5f);
         }
         public void Dispose()
         {
+            UnityEngine.Object.Destroy(_ping);
             for (int i = 0; i < _clips.Length; i++) if (_generated[i]) UnityEngine.Object.Destroy(_clips[i]);
         }
     }

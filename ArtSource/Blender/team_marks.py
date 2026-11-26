@@ -7,6 +7,8 @@ import bpy
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
+sys.path.insert(0,str(Path(__file__).parent))
+from cast_roster import playable, folders
 art = Path(sys.argv[sys.argv.index("--") + 1])
 folder = art / "Wearables" / "TeamMarks"
 folder.mkdir(parents=True, exist_ok=True)
@@ -14,7 +16,7 @@ folder.mkdir(parents=True, exist_ok=True)
 
 def fit_character(name):
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.fbx(filepath=str(art / "Characters" / name / (name + ".fbx")),
+    bpy.ops.import_scene.fbx(filepath=str(art / "Characters" / folders[name] / (name + ".fbx")),
                             use_anim=False, ignore_leaf_bones=False)
     body = max((o for o in bpy.context.scene.objects if o.type == "MESH"), key=lambda o: len(o.data.vertices))
     rig = body.find_armature()
@@ -69,7 +71,7 @@ def fit_character(name):
                 a = start + j*(cols+1)+i
                 faces.append((a, a+1, a+cols+2, a+cols+1))
 
-    chest = bone("UpperChest")
+    chest = bone("UpperChest" if "UpperChest" in rig.data.bones else "Chest")
     torso = region(("Spine", "Chest", "UpperChest", "LeftShoulder", "RightShoulder"))
     for side, horizontal, width, height in ((-1,.071,.043,.078), (1,0,.070,.093)):
         anchor = chest + Vector((horizontal, 0, -.012 if side == 1 else -.05))
@@ -121,5 +123,5 @@ def fit_character(name):
     print("INSIGNIA", name, len(faces), flush=True)
 
 
-for character in ("Rover", "Flor", "Lily", "Endmin", "Cantarella"):
+for character in sys.argv[sys.argv.index("--")+2:] or playable:
     fit_character(character)

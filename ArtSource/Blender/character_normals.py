@@ -1,5 +1,6 @@
 """Build Unity tangent-space normals from matching authored RG maps. Requires Pillow and NumPy."""
 from pathlib import Path
+from cast_roster import folders
 import hashlib
 import sys
 import numpy as np
@@ -18,13 +19,11 @@ def convert(source, target, flip_green):
 
 def sync(source, destination):
     # Match the original albedo bytes before deriving the normal name. Eye/face atlases may share dimensions.
-    for name, fragment, flip in (("Rover","男漂",True),("Flor","4ce938",True),("Endmin","女管理员",False)):
+    for name, fragment, flip in (("Rover","男漂",True),("Flor","4ce938",True),("Mornye","莫宁",True),("Laevatain","莱万汀",False)):
         folder = next(p for p in source.iterdir() if p.is_dir() and fragment in p.name)
         originals = {hashlib.sha256(p.read_bytes()).digest(): p for p in folder.rglob("*_D.png")}
         normals = {p.stem:p for p in folder.rglob("*_N.png")}
-        for diffuse in (destination/name).glob(name+"_T[0-9][0-9].png"):
-            if not diffuse.with_suffix(".mat").exists():
-                continue
+        for diffuse in (destination/folders[name]).glob(name+"_T[0-9][0-9].png"):
             original = originals.get(hashlib.sha256(diffuse.read_bytes()).digest())
             normal = normals.get(original.stem[:-2]+"_N") if original else None
             if normal:

@@ -100,6 +100,7 @@ namespace AnimeCS.Editor
             if (catalog.Outfit != null && catalog.Outfit.Character != catalog.Character) yield return "默认服装与默认角色不匹配。";
             foreach (Side side in Enum.GetValues(typeof(Side)))
             {
+                if (!catalog.OutfitForSide(side)) yield return CharacterDefinition.FactionName(side)+"需要至少一套可用的对局角色。";
                 var pistol = catalog.StartingPistol(side);
                 if (pistol != null && (pistol.Class != WeaponClass.Pistol || pistol.Price != 0 || !pistol.CanBuy(side)))
                     yield return "免费起始手枪的类型、阵营或价格配置有误。";
@@ -113,9 +114,9 @@ namespace AnimeCS.Editor
             foreach (var entry in catalog.Entries) if (entry is MapDefinition map) Sync(map);
             string[] problems = ValidateCatalog(catalog, false).ToArray();
             if (problems.Length > 0) throw new BuildFailedException(string.Join("\n", problems));
-            if (catalog.Map != null && !string.IsNullOrEmpty(catalog.Map.ScenePath) &&
-                !EditorBuildSettings.scenes.Any(s => s.enabled && s.path == catalog.Map.ScenePath))
-                throw new BuildFailedException("启动地图场景未加入当前构建，请在资源管理器重新选择「设为启动地图」。");
+            foreach(var map in catalog.Entries.OfType<MapDefinition>())
+                if(!map.Archived && !string.IsNullOrEmpty(map.PlayScenePath) && !EditorBuildSettings.scenes.Any(scene=>scene.enabled && scene.path==map.PlayScenePath))
+                    throw new BuildFailedException(map.DisplayName+" 的场景未加入当前构建，请重新绑定或烘焙地图。");
         }
     }
 

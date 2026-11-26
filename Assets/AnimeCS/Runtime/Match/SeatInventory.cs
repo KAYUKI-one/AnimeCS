@@ -33,8 +33,21 @@ namespace AnimeCS.Match
         public UtilityDefinition Utility;
         public bool Armor, Helmet, Kit, CarriesObjective;
         public int Wallet;
-        public WornItems Worn => _appearance.worn;
-        public string OutfitId => _appearance.outfitId;
+        private string _outfitId;
+        private WornItems _worn;
+        public WornItems Worn => _worn;
+        public string OutfitId => _outfitId;
+        public void Dress(OutfitDefinition outfit)
+        {
+            _outfitId = outfit.Id;
+            _worn = default;
+            foreach (WearSlot slot in System.Enum.GetValues(typeof(WearSlot)))
+            {
+                var item=_catalog.Find<WearableDefinition>(_appearance.worn.Get(slot));
+                if (item && item.Fits(outfit.Character)) _worn.Set(slot,item.Id);
+            }
+        }
+        public string PreferredOutfit(Side side) => _appearance.OutfitFor(side);
         public WeaponInstance Active => _held switch
         { HeldSlot.Primary => Primary, HeldSlot.Sidearm => Sidearm, HeldSlot.Knife => Knife, _ => null };
         public PurchaseDraft Draft => new PurchaseDraft

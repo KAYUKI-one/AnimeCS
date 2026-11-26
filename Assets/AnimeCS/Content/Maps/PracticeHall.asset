@@ -48,6 +48,7 @@ MonoBehaviour:
   _practice: 1
   _navigation: {fileID: 0}
   _radarYaw: 0
+  _lightingScenePath: Assets/AnimeCS/Art/MapLighting/PracticeHall/PracticeHall.unity
   _buyRadius: 5
   _attackYaw: []
   _defendYaw: []
