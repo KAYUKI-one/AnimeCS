@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7fff61ee11344cb45bf23527179d1f1b, type: 3}
+  m_Name: Echo
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.UtilityDefinition
+  _id: utility.echo
+  _displayName: "\u56DE\u58F0\u7247"
+  _thumbnail: {fileID: 2800000, guid: 5faa818ff86a5fb44b6609b946704f54, type: 3}
+  _glyph: {fileID: 2800000, guid: a24dfc0a96615924b8008ab75d1c7305, type: 3}
+  _archived: 0
+  _effect: 2
+  _price: 200
+  _model: {fileID: 2036539472784053685, guid: 6786ccc802bacdc4993f82772c87a40c, type: 3}
+  _delay: 0.4
+  _radius: 14
+  _duration: 0.9
+  _cloud: {fileID: 0}

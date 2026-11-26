@@ -1,0 +1,203 @@
+using AnimeCS.Content;
+using AnimeCS.Profile;
+
+namespace AnimeCS.Match
+{
+    public sealed class WeaponInstance
+    {
+        public WeaponDefinition Definition { get; }
+        public string SkinId { get; }
+        public int Magazine { get; internal set; }
+        public int Reserve { get; internal set; }
+        internal WeaponInstance(WeaponDefinition definition, string skin)
+        {
+            Definition = definition;
+            SkinId = skin;
+            Magazine = definition.Magazine;
+            Reserve = definition.Reserve;
+        }
+    }
+
+    internal sealed class SeatInventory
+    {
+        private readonly ContentCatalog _catalog;
+        private readonly WardrobeLoadout _appearance;
+        private WeaponInstance _primary, _sidearm, _pendingPrimary, _pendingSidearm;
+        private UtilityDefinition _pendingUtility;
+        private bool _pendingArmor, _pendingHelmet, _pendingKit;
+        private HeldSlot _previous, _held;
+        public WeaponInstance Primary => _pendingPrimary ?? _primary;
+        public WeaponInstance Sidearm => _pendingSidearm ?? _sidearm;
+        public WeaponInstance Knife { get; private set; }
+        public HeldSlot Held => _held;
+        public UtilityDefinition Utility;
+        public bool Armor, Helmet, Kit, CarriesObjective;
+        public int Wallet;
+        public WornItems Worn => _appearance.worn;
+        public string OutfitId => _appearance.outfitId;
+        public WeaponInstance Active => _held switch
+        { HeldSlot.Primary => Primary, HeldSlot.Sidearm => Sidearm, HeldSlot.Knife => Knife, _ => null };
+        public PurchaseDraft Draft => new PurchaseDraft
+        {
+            Primary = _pendingPrimary?.Definition.Id, Sidearm = _pendingSidearm?.Definition.Id,
+            Utility = _pendingUtility ? _pendingUtility.Id : null, Armor = _pendingArmor, Helmet = _pendingHelmet, Kit = _pendingKit
+        };
+        public int Available(MatchRules rules) => Wallet - (_pendingPrimary?.Definition.Price ?? 0)
+            - (_pendingSidearm?.Definition.Price ?? 0) - (_pendingUtility ? _pendingUtility.Price : 0)
+            - (_pendingArmor ? rules.armorPrice : 0) - (_pendingHelmet ? rules.helmetPrice : 0) - (_pendingKit ? rules.kitPrice : 0);
+
+        public SeatInventory(ContentCatalog catalog, WardrobeLoadout appearance)
+        { _catalog = catalog; _appearance = appearance; }
+
+        private bool Has(HeldSlot slot) => slot switch
+        {
+            HeldSlot.Primary => Primary != null, HeldSlot.Sidearm => Sidearm != null,
+            HeldSlot.Knife => Knife != null, HeldSlot.Objective => CarriesObjective, _ => false
+        };
+
+        public bool Select(HeldSlot next, bool previous = false)
+        {
+            if (previous) next = Has(_previous) ? _previous : Fallback();
+            if (!Has(next) || next == _held) return false;
+            _previous = _held; _held = next;
+            return true;
+        }
+
+        private HeldSlot Fallback() => Primary != null ? HeldSlot.Primary : Sidearm != null ? HeldSlot.Sidearm :
+            Knife != null ? HeldSlot.Knife : CarriesObjective ? HeldSlot.Objective : HeldSlot.Current;
+
+        public bool Cycle(int direction)
+        {
+            if (direction == 0) return false;
+            const int count = (int)HeldSlot.Objective;
+            int current = (int)_held - 1;
+            for (int i = 1; i <= count; i++)
+            {
+                var slot = (HeldSlot)(1 + (current + System.Math.Sign(direction) * i + count) % count);
+                if (Has(slot)) return Select(slot);
+            }
+            return false;
+        }
+
+        public void RemoveObjective()
+        {
+            CarriesObjective = false;
+            if (_held == HeldSlot.Objective) _held = Fallback();
+        }
+
+        public WeaponInstance Take(HeldSlot slot)
+        {
+            WeaponInstance value;
+            if (slot == HeldSlot.Primary) { value = _primary; _primary = null; }
+            else if (slot == HeldSlot.Sidearm) { value = _sidearm; _sidearm = null; }
+            else return null;
+            if (_held == slot) _held = Fallback();
+            return value;
+        }
+
+        public void Equip(WeaponInstance gun)
+        {
+            var slot = gun.Definition.Class == WeaponClass.Pistol ? HeldSlot.Sidearm : HeldSlot.Primary;
+            if (slot == HeldSlot.Sidearm) _sidearm = gun; else _primary = gun;
+            Select(slot);
+        }
+
+        public void BeginRound(Side side, bool clearEquipment)
+        {
+            ClearOrder();
+            if (clearEquipment)
+            {
+                _primary = _sidearm = null;
+                Armor = Helmet = Kit = false; Utility = null;
+            }
+            if (side != Side.Defend) Kit = false;
+            var knife=_catalog.Find<WeaponDefinition>(_appearance.knifeId);
+            if (!knife || knife.Class!=WeaponClass.Knife) knife=_catalog.Knife;
+            if (knife) Knife ??= Issue(knife);
+            _sidearm ??= Issue(_catalog.StartingPistol(side));
+            _sidearm.Reserve = _sidearm.Definition.Reserve;
+            if (_primary != null) _primary.Reserve = _primary.Definition.Reserve;
+            _held = Fallback(); _previous = _held == HeldSlot.Primary ? HeldSlot.Sidearm : HeldSlot.Knife;
+        }
+
+        public bool Train(SeatIntent intent)
+        {
+            if (intent.CancelPurchase || intent.Buy==BuySlot.None) return false;
+            if (intent.Buy==BuySlot.Armor) { Armor=true; return false; }
+            if (intent.Buy==BuySlot.Helmet) { Helmet=true; return false; }
+            if (intent.Buy==BuySlot.Kit) { Kit=true; return false; }
+            if (intent.Buy==BuySlot.Utility)
+            {
+                var utility=_catalog.Find<UtilityDefinition>(intent.ItemId);
+                if (utility && !utility.Archived) Utility=utility;
+                return false;
+            }
+            var gun=_catalog.Find<WeaponDefinition>(intent.ItemId);
+            if (!gun || gun.Archived) return false;
+            if (gun.Class==WeaponClass.Knife)
+            {
+                if (intent.Buy!=BuySlot.Knife) return false;
+                Knife=Issue(gun); Select(HeldSlot.Knife); return true;
+            }
+            if (intent.Buy!=(gun.Class==WeaponClass.Pistol ? BuySlot.Sidearm : BuySlot.Primary)) return false;
+            Equip(Issue(gun));
+            return true;
+        }
+
+        public void Order(SeatIntent intent, Side side, MatchRules rules)
+        {
+            if (intent.Buy == BuySlot.None) return;
+            int available = Available(rules);
+            if (intent.Buy == BuySlot.Armor || intent.Buy == BuySlot.Helmet || intent.Buy == BuySlot.Kit)
+            {
+                if (intent.Buy == BuySlot.Armor)
+                    _pendingArmor = !intent.CancelPurchase && !Armor && (_pendingArmor || available >= rules.armorPrice);
+                else if (intent.Buy == BuySlot.Helmet)
+                    _pendingHelmet = !intent.CancelPurchase && !Helmet && (_pendingHelmet || available >= rules.helmetPrice);
+                else
+                    _pendingKit = !intent.CancelPurchase && side == Side.Defend && !Kit && (_pendingKit || available >= rules.kitPrice);
+                return;
+            }
+            if (intent.Buy == BuySlot.Utility)
+            {
+                if (intent.CancelPurchase) { _pendingUtility = null; return; }
+                var value = _catalog.Find<UtilityDefinition>(intent.ItemId);
+                if (value && value != Utility && value.Price <= available + (_pendingUtility ? _pendingUtility.Price : 0))
+                    _pendingUtility = value;
+                return;
+            }
+            if (intent.Buy != BuySlot.Primary && intent.Buy != BuySlot.Sidearm) return;
+            bool primary = intent.Buy == BuySlot.Primary;
+            ref var pending = ref (primary ? ref _pendingPrimary : ref _pendingSidearm);
+            if (intent.CancelPurchase)
+            {
+                pending = null;
+                if (!Has(_held)) _held = Fallback();
+                return;
+            }
+            var gun = _catalog.Find<WeaponDefinition>(intent.ItemId);
+            if (!gun || gun.Price <= 0 || !gun.CanBuy(side) || (gun.Class == WeaponClass.Pistol) == primary ||
+                gun == (primary ? Primary : Sidearm)?.Definition || gun.Price > available + (pending?.Definition.Price ?? 0)) return;
+            pending = Issue(gun);
+            Select(primary ? HeldSlot.Primary : HeldSlot.Sidearm);
+        }
+
+        public void Commit(MatchRules rules)
+        {
+            Wallet = Available(rules);
+            if (_pendingPrimary != null) _primary = _pendingPrimary;
+            if (_pendingSidearm != null) _sidearm = _pendingSidearm;
+            if (_pendingUtility) Utility = _pendingUtility;
+            Armor |= _pendingArmor; Helmet |= _pendingHelmet; Kit |= _pendingKit;
+            ClearOrder();
+        }
+
+        private WeaponInstance Issue(WeaponDefinition gun) => new WeaponInstance(gun, _appearance.SkinFor(gun.Id));
+        private void ClearOrder()
+        {
+            _pendingPrimary = _pendingSidearm = null;
+            _pendingUtility = null;
+            _pendingArmor = _pendingHelmet = _pendingKit = false;
+        }
+    }
+}

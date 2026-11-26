@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d5b5c3df167d664d8d40e6c8c5f875e, type: 3}
+  m_Name: whitefalcon12s
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponDefinition
+  _id: weapon.whitefalcon12s
+  _displayName: "\u767D\u96BC-12S"
+  _thumbnail: {fileID: 2800000, guid: 7bb09f220c953154ba93e994c8df39d4, type: 3}
+  _glyph: {fileID: 2800000, guid: c64663fea7298b7429aa47b784c75d18, type: 3}
+  _archived: 0
+  _worldModel: {fileID: 919132149155446097, guid: f5df8b2bbc2ed754d8f1bef3a2895180, type: 3}
+  _viewModel: {fileID: 0}
+  _defaultSkin: {fileID: 11400000, guid: 32af2b8b08faef248874042b9b3b05f1, type: 2}
+  _worldOffset: {x: 0, y: 0, z: 0}
+  _worldAngles: {x: 0, y: 0, z: 0}
+  _viewOffset: {x: 0, y: 0, z: 0}
+  _viewAngles: {x: 0, y: 0, z: 0}
+  _grip: {x: 0.024, y: -0.015, z: 0.022}
+  _support: {x: -0.03, y: -0.027, z: 0.034}
+  _shoulderPad: {x: 0, y: 0, z: 0}
+  _uprightSupport: 0
+  _muzzle: {x: 0.00045094918, y: 0.074776255, z: 0.35441992}
+  _viewMuzzle: {x: 0, y: 0, z: 0}
+  _class: 0
+  _availability: 2
+  _price: 0
+  _damage: 35
+  _penetration: 0.505
+  _falloff: 0.91
+  _rpm: 352
+  _magazine: 12
+  _reserve: 24
+  _reload: 2.2
+  _runSpeed: 6
+  _suppressed: 1
+  _handlingModel: {fileID: 919132149155446097, guid: 8634122e9e5f1aa40ae5195c27ab83e7, type: 3}

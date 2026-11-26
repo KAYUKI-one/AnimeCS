@@ -1,0 +1,28 @@
+using UnityEngine;
+
+namespace AnimeCS.Content
+{
+    public sealed class CharacterDefinition : ContentDefinition
+    {
+        [SerializeField, InspectorName("基础角色模型")] private GameObject _model;
+        [SerializeField, InspectorName("角色立绘")] private Texture2D _portrait;
+        [SerializeField, InspectorName("比分栏头像")] private Texture2D _icon;
+        [SerializeField, InspectorName("攻方肩背标识")] private GameObject _attackInsignia;
+        [SerializeField, InspectorName("守方肩背标识")] private GameObject _defendInsignia;
+        [SerializeField, InspectorName("动画控制器（可选）")] private RuntimeAnimatorController _controller;
+        [SerializeField, InspectorName("持枪挂点路径（可选）")] private string _weaponSocket;
+        public override ContentKind Kind => ContentKind.Character;
+        public GameObject Model => _model;
+        public Texture2D Portrait => _portrait;
+        public Texture2D Icon => _icon ? _icon : _portrait;
+        [SerializeField, InspectorName("头饰在头骨上的偏移")] private Vector3 _headwearOffset;
+        public Vector3 HeadwearOffset=>_headwearOffset;
+        [SerializeField, InspectorName("眼间点（头骨本地坐标，可选）")] private Vector3 _faceAnchor;
+        [SerializeField, Min(0), InspectorName("待机时眼间点离地高度（米，可选）")] private float _standingEyes;
+        public Vector3 FaceAnchor=>_faceAnchor;
+        public float StandingEyes=>_standingEyes;
+        public GameObject Insignia(Side side) => side == Side.Attack ? _attackInsignia : _defendInsignia;
+        public RuntimeAnimatorController Controller => _controller;
+        public string WeaponSocket => _weaponSocket;
+    }
+}

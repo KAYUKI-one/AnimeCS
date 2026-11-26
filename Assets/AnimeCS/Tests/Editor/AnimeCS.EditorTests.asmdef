@@ -1,0 +1,6 @@
+{
+  "name": "AnimeCS.EditorTests",
+  "references": ["AnimeCS.Runtime", "AnimeCS.Editor"],
+  "optionalUnityReferences": ["TestAssemblies"],
+  "includePlatforms": ["Editor"]
+}

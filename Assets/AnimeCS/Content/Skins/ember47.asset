@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f66550ea1707cd74d878cf97f8490109, type: 3}
+  m_Name: ember47
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponSkinDefinition
+  _id: skin.ember47.station
+  _displayName: "\u70BD\u7130-47 \xB7 \u73CA\u745A"
+  _thumbnail: {fileID: 2800000, guid: 390dbfee3b08a004383d9b147b92888f, type: 3}
+  _weapon: {fileID: 11400000, guid: 84b24e25ab2905b4d82ac2809ca1b845, type: 2}
+  _material: {fileID: 2100000, guid: 2420a408a4c32ca49a9860920b006d8f, type: 2}
+  _texture: {fileID: 0}
+  _materialSlot: 0

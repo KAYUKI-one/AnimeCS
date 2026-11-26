@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f66550ea1707cd74d878cf97f8490109, type: 3}
+  m_Name: fold44
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponSkinDefinition
+  _id: skin.fold44.station
+  _displayName: "\u6298\u7EBF-44 \xB7 \u975B\u84DD"
+  _thumbnail: {fileID: 2800000, guid: 03c0b63c4116b294b807fde450ec0c56, type: 3}
+  _weapon: {fileID: 11400000, guid: efaf2cc50cabe634e9adcae18ee47c1e, type: 2}
+  _material: {fileID: 2100000, guid: bad41f38b72fdf84ab7ee75307d06414, type: 2}
+  _texture: {fileID: 0}
+  _materialSlot: 0

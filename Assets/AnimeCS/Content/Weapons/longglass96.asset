@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d5b5c3df167d664d8d40e6c8c5f875e, type: 3}
+  m_Name: longglass96
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponDefinition
+  _id: weapon.longglass96
+  _displayName: "\u957F\u955C-96"
+  _thumbnail: {fileID: 2800000, guid: 60cca2256bf632c498af6da8b5b529d8, type: 3}
+  _glyph: {fileID: 2800000, guid: 5b7aad69d6361354cbdb90f9da6cda7d, type: 3}
+  _archived: 0
+  _worldModel: {fileID: 919132149155446097, guid: 5ea507599fa4376468da7cb388a2ef01, type: 3}
+  _viewModel: {fileID: 0}
+  _defaultSkin: {fileID: 0}
+  _worldOffset: {x: 0, y: 0, z: 0}
+  _worldAngles: {x: 0, y: 0, z: 0}
+  _viewOffset: {x: 0, y: 0, z: 0}
+  _viewAngles: {x: 0, y: 0, z: 0}
+  _grip: {x: 0.031, y: -0.026, z: -0.018}
+  _support: {x: 0.031, y: 0.003, z: 0.208}
+  _shoulderPad: {x: 0, y: -0.01, z: -0.319}
+  _uprightSupport: 0
+  _muzzle: {x: 0.00000006891787, y: 0.06245309, z: 0.8599498}
+  _viewMuzzle: {x: 0, y: 0, z: 0}
+  _class: 4
+  _availability: 0
+  _price: 4750
+  _damage: 115
+  _penetration: 0.975
+  _falloff: 0.99
+  _rpm: 41
+  _magazine: 5
+  _reserve: 30
+  _reload: 3.7
+  _optics:
+    lowPower: 1.5
+    highPower: 2.5
+    acquireSeconds: 0.15
+    speedFraction: 0.5
+    hipDegrees: 4.62
+    scopedDegrees: 0.1
+    runPenalty: 10.1
+    airPenalty: 9.9
+  _runSpeed: 5
+  _suppressed: 0
+  _handlingModel: {fileID: 919132149155446097, guid: 7b0789bf21d45124496f7a57d74409a3, type: 3}

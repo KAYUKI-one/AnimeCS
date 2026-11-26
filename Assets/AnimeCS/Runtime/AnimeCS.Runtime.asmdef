@@ -1,0 +1,5 @@
+{
+  "name": "AnimeCS.Runtime",
+  "rootNamespace": "AnimeCS",
+  "references": ["Unity.InputSystem", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime"]
+}

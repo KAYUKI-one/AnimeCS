@@ -1,0 +1,5 @@
+{
+  "name": "AnimeCS.PlayTests",
+  "references": ["AnimeCS.Runtime", "Unity.InputSystem", "Unity.RenderPipelines.Universal.Runtime"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

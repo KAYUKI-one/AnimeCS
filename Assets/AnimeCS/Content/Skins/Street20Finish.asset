@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f66550ea1707cd74d878cf97f8490109, type: 3}
+  m_Name: Street20Finish
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponSkinDefinition
+  _id: skin.street20.showcase
+  _displayName: Vogue
+  _thumbnail: {fileID: 2800000, guid: e437b658213b8ca46b2f88de0c2e3ccc, type: 3}
+  _weapon: {fileID: 11400000, guid: c6229a5749d5fd04c859e42d06731efe, type: 2}
+  _material: {fileID: 2100000, guid: 28d488a874555a841a62e330be9a2560, type: 2}
+  _texture: {fileID: 0}
+  _materialSlot: 0

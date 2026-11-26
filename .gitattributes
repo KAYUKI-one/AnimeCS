@@ -167,5 +167,8 @@ Packages/packages-lock.json linguist-generated
 # Spine export file for Unity
 *.skel.bytes            lfs
 
+# Native mesh buffer for the local Dust II sample
+Assets/AnimeCS/Art/Maps/DustII/DustII.bin lfs
+
 # Exceptions for .asset files such as lightning pre-baking
 LightingData.asset     binary

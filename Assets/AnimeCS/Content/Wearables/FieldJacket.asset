@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e57999c9f002a714fa01017f4d890fdd, type: 3}
+  m_Name: FieldJacket
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WearableDefinition
+  _id: wear.fieldjacket
+  _displayName: "\u96FE\u84DD\u8BAD\u7EC3\u4E0A\u8863"
+  _thumbnail: {fileID: 2800000, guid: 7d286e24cbc249c44a41056e80e4e93b, type: 3}
+  _slot: 1
+  _character: {fileID: 0}
+  _model: {fileID: 0}
+  _viewModel: {fileID: 0}
+  _material: {fileID: 2100000, guid: 70939accd18a57947a8a286e4ddb84b5, type: 2}
+  _included: 1

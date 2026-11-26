@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d5b5c3df167d664d8d40e6c8c5f875e, type: 3}
+  m_Name: heavy50
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponDefinition
+  _id: weapon.heavy50
+  _displayName: "\u91CD\u54CD-50"
+  _thumbnail: {fileID: 2800000, guid: 15313d836a68dd74aa8ae91eca32413e, type: 3}
+  _glyph: {fileID: 2800000, guid: abae9827414b46b4381b10407a9ed4bf, type: 3}
+  _archived: 0
+  _worldModel: {fileID: 919132149155446097, guid: 5c5c4bf074f00f94a9b529855d4939b2, type: 3}
+  _viewModel: {fileID: 0}
+  _defaultSkin: {fileID: 0}
+  _worldOffset: {x: 0, y: 0, z: 0}
+  _worldAngles: {x: 0, y: 0, z: 0}
+  _viewOffset: {x: 0, y: 0, z: 0}
+  _viewAngles: {x: 0, y: 0, z: 0}
+  _grip: {x: 0.024, y: -0.013, z: 0.045}
+  _support: {x: -0.03, y: -0.028, z: 0.056}
+  _shoulderPad: {x: 0, y: 0, z: 0}
+  _uprightSupport: 0
+  _muzzle: {x: 0.000000020954758, y: 0.07780634, z: 0.23199995}
+  _viewMuzzle: {x: 0, y: 0, z: 0}
+  _class: 0
+  _availability: 0
+  _price: 700
+  _damage: 53
+  _penetration: 0.932
+  _falloff: 0.81
+  _rpm: 267
+  _magazine: 7
+  _reserve: 35
+  _reload: 2.2
+  _runSpeed: 6
+  _suppressed: 0
+  _handlingModel: {fileID: 919132149155446097, guid: fb7c09c5a9171f34591e4f88f0280db0, type: 3}

@@ -1,0 +1,17 @@
+.top, .tabs, .actions, .bind { flex-direction: row; align-items: center; flex-wrap: wrap; }
+.top { padding: 12px 12px 6px 12px; }
+.title { font-size: 17px; -unity-font-style: bold; margin-bottom: 6px; }
+.top > .title { flex-grow: 1; }
+.asset-heading { flex-direction: row; align-items: center; justify-content: space-between; }
+.preview { width: 52px; height: 52px; margin-right: 4px; }
+.tabs { padding: 4px 12px 8px 12px; border-bottom-width: 1px; border-bottom-color: rgba(128, 128, 128, 0.45); }
+.tabs > Button { min-width: 60px; height: 26px; }
+.tabs > .active { border-bottom-width: 3px; border-bottom-color: rgb(47, 173, 166); -unity-font-style: bold; }
+.rail, .details { padding: 10px; min-width: 160px; }
+.rail { overflow: hidden; }
+.rail ToolbarSearchField { min-width: 0; max-width: 100%; width: auto; align-self: stretch; flex-shrink: 1; margin-bottom: 8px; }
+.rail ListView Label { -unity-text-align: middle-left; padding-left: 8px; }
+.actions, .bind { margin-top: 6px; margin-bottom: 6px; }
+.drop { border-width: 1px; border-color: rgba(110, 150, 150, 0.6); border-radius: 4px; margin: 5px 1px; padding: 8px; white-space: normal; -unity-text-align: middle-center; }
+.status { white-space: normal; max-height: 110px; padding-left: 12px; margin-top: 3px; margin-bottom: 3px; }
+.error { color: rgb(221, 138, 69); }

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d5b5c3df167d664d8d40e6c8c5f875e, type: 3}
+  m_Name: watch41s
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponDefinition
+  _id: weapon.watch41s
+  _displayName: "\u5B88\u671B-41S"
+  _thumbnail: {fileID: 2800000, guid: ca1c6e97bedda924da57cbe91b7ce9ca, type: 3}
+  _glyph: {fileID: 2800000, guid: b1ebf8dc207ee5f4e9eb095a3d5cec8a, type: 3}
+  _archived: 0
+  _worldModel: {fileID: 919132149155446097, guid: 7c8b39d0371c4d4459a109d6107bcd79, type: 3}
+  _viewModel: {fileID: 0}
+  _defaultSkin: {fileID: 0}
+  _worldOffset: {x: 0, y: 0, z: 0}
+  _worldAngles: {x: 0, y: 0, z: 0}
+  _viewOffset: {x: 0, y: 0, z: 0}
+  _viewAngles: {x: 0, y: 0, z: 0}
+  _grip: {x: 0.021, y: -0.007, z: -0.024}
+  _support: {x: 0.026, y: 0.075, z: 0.156}
+  _shoulderPad: {x: 0, y: 0.07, z: -0.26}
+  _uprightSupport: 0
+  _muzzle: {x: -0.000016612932, y: 0.09973125, z: 0.6159999}
+  _viewMuzzle: {x: 0, y: 0, z: 0}
+  _class: 2
+  _availability: 2
+  _price: 2900
+  _damage: 38
+  _penetration: 0.7
+  _falloff: 0.94
+  _rpm: 600
+  _magazine: 20
+  _reserve: 80
+  _reload: 3.1
+  _runSpeed: 5.5
+  _suppressed: 1
+  _handlingModel: {fileID: 919132149155446097, guid: 557ff55a2e69e4a478a4db35c84958b0, type: 3}

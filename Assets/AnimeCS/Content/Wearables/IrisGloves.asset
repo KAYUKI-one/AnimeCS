@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e57999c9f002a714fa01017f4d890fdd, type: 3}
+  m_Name: IrisGloves
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WearableDefinition
+  _id: wear.irisgloves
+  _displayName: "\u9E22\u7D2B\u7F16\u7EC7\u624B\u5957"
+  _thumbnail: {fileID: 2800000, guid: d0b8937368ffa8c40a3842a6da93b05a, type: 3}
+  _slot: 2
+  _character: {fileID: 0}
+  _model: {fileID: 0}
+  _viewModel: {fileID: 0}
+  _material: {fileID: 2100000, guid: aca78f4efe357b246bf19fcf52ba0484, type: 2}
+  _included: 1
+  _fits:
+  - character: {fileID: 11400000, guid: dd19b401d68736749b2a2131983df047, type: 2}
+    model: {fileID: 919132149155446097, guid: c4951078174c98b4d89c8359cb57ce73, type: 3}
+    viewModel: {fileID: 919132149155446097, guid: c4951078174c98b4d89c8359cb57ce73, type: 3}
+  - character: {fileID: 11400000, guid: 06a44ac11b57d1245aea8686024f55af, type: 2}
+    model: {fileID: 919132149155446097, guid: 465e67dc9855716458c57737f335e7f2, type: 3}
+    viewModel: {fileID: 919132149155446097, guid: 465e67dc9855716458c57737f335e7f2, type: 3}
+  - character: {fileID: 11400000, guid: 07f2f71461b64cc42b3b2c3321a3e860, type: 2}
+    model: {fileID: 919132149155446097, guid: 564a435d790f1a24baf96a21e2c5c918, type: 3}
+    viewModel: {fileID: 919132149155446097, guid: 564a435d790f1a24baf96a21e2c5c918, type: 3}
+  - character: {fileID: 11400000, guid: 10f7e19b689ab5e498d7ed4c98c5c3c1, type: 2}
+    model: {fileID: 919132149155446097, guid: 509a1dd762874144b8b95f1e03aa3cde, type: 3}
+    viewModel: {fileID: 919132149155446097, guid: 509a1dd762874144b8b95f1e03aa3cde, type: 3}
+  - character: {fileID: 11400000, guid: 76f02b6e9ccee6e4b9a95d412924a2bd, type: 2}
+    model: {fileID: 919132149155446097, guid: 34fe47393de947e40b21c8a2aae416c6, type: 3}
+    viewModel: {fileID: 919132149155446097, guid: 34fe47393de947e40b21c8a2aae416c6, type: 3}

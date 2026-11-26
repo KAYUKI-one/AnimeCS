@@ -1,0 +1,19 @@
+.hud { flex-grow: 1; align-items: center; color: rgb(236,241,242); font-size: 16px; }
+.obscured { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: rgb(119,131,136); }
+.obscured.flash { background-color: rgb(249,247,235); }
+.scoreboard, .menu, .shop, .readout { background-color: rgba(13,23,35,0.93); border-radius: 5px; padding: 10px 18px; }
+.scoreboard { flex-direction: row; align-items: center; margin-top: 16px; }
+.score { font-size: 21px; -unity-font-style: bold; }
+.phase { color: rgb(122,226,205); margin: 0 20px; }
+.clock { font-size: 22px; -unity-font-style: bold; }
+.crosshair { position: absolute; top: 50%; left: 50%; translate: -50% -50%; font-size: 22px; }
+.readout { position: absolute; bottom: 14px; left: 18px; right: 18px; }
+.hint { font-size: 13px; color: rgb(172,193,202); }
+.shop, .menu { position: absolute; top: 47%; left: 50%; translate: -50% -50%; width: 480px; }
+.menu { width: 260px; }
+.heading { font-size: 20px; -unity-font-style: bold; margin-bottom: 8px; }
+.offers { flex-direction: row; flex-wrap: wrap; }
+.hud Button { min-height: 31px; padding: 3px 9px; margin: 3px; background-color: rgb(40,64,76); color: rgb(241,246,246); border-width: 0; border-radius: 3px; }
+.hud Button:hover { background-color: rgb(52,96,107); }
+.hud Button:disabled { background-color: rgb(35,43,53); color: rgb(139,151,160); }
+.hud Button.chosen { background-color: rgb(36,86,80); color: rgb(158,239,216); }

@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d65fc406864287e4a925dbf8417fd5f7, type: 3}
+  m_Name: BroadcastStation
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.MapDefinition
+  _id: map.broadcast-station
+  _displayName: "\u4E91\u4E0A\u8F6C\u64AD\u7AD9"
+  _geometry: {fileID: 840084850441563627, guid: e69116ce92eab164bbb6fac8da21ca6f, type: 3}
+  _radar: {fileID: 2800000, guid: 0ca710a2a2aa0c444acedd9225ead4c7, type: 3}
+  _radarCenter: {x: 0, y: 0}
+  _radarExtent: {x: 120, y: 120}
+  _scene: {fileID: 0}
+  _scenePath: 
+  _attackSpawns:
+  - {x: -5, y: 0.1, z: -42}
+  - {x: -2.5, y: 0.1, z: -42}
+  - {x: 0, y: 0.1, z: -42}
+  - {x: 2.5, y: 0.1, z: -42}
+  - {x: 5, y: 0.1, z: -42}
+  _defendSpawns:
+  - {x: -5, y: 0.1, z: 43}
+  - {x: -2.5, y: 0.1, z: 43}
+  - {x: 0, y: 0.1, z: 43}
+  - {x: 2.5, y: 0.1, z: 43}
+  - {x: 5, y: 0.1, z: 43}
+  _siteA: {x: -25, y: 0, z: 10}
+  _siteB: {x: 25, y: 0, z: 10}
+  _siteRadius: 4
+  _regions:
+  - Name: "\u5C55\u53F0 A"
+    Center: {x: -25, y: 0, z: 10}
+  - Name: "\u5F55\u97F3\u68DA B"
+    Center: {x: 25, y: 0, z: 10}
+  - Name: "\u5C55\u5ECA"
+    Center: {x: -25, y: 0, z: -12}
+  - Name: "\u540E\u53F0"
+    Center: {x: 25, y: 0, z: -12}
+  - Name: "\u5BFC\u64AD\u5385"
+    Center: {x: 0, y: 0, z: -8}
+  - Name: "\u8FDE\u6865"
+    Center: {x: 0, y: 0, z: 32}
+  _attackRouteA:
+  - {x: -25, y: 0, z: -31}
+  _attackRouteB:
+  - {x: 25, y: 0, z: -31}
+  _defendRouteA:
+  - {x: -25, y: 0, z: 33}
+  _defendRouteB:
+  - {x: 25, y: 0, z: 33}

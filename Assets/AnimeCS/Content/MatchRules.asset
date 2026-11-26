@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb83ba86383a35541821ea804f3be262, type: 3}
+  m_Name: MatchRules
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Match.MatchRules
+  movement:
+    accelerateSeconds: 0.17
+    counterStopSeconds: 0.09
+    coastToSteadySeconds: 0.2
+    settleOnReverse: 1
+    walkFraction: 0.51
+    duckFraction: 0.34
+    airAcceleration: 1.65
+    airProjection: 0.18
+    airCap: 1.22
+    jumpSpeed: 5.65
+    gravity: 21
+    crouchSeconds: 0.16
+    standSeconds: 0.22
+  winsRequired: 13
+  buySeconds: 15
+  contestSeconds: 115
+  plantedSeconds: 40
+  settlementSeconds: 7
+  plantSeconds: 3.2
+  defuseSeconds: 10
+  kitDefuseSeconds: 5
+  liveBuySeconds: 20
+  kitPrice: 400
+  deviceRadius: 24
+  openingCredits: 900
+  deciderCredits: 4000
+  walletCap: 10000
+  winIncome: 2700
+  firstLossIncome: 1900
+  lossIncome: 2400
+  plantIncome: 300
+  armorPrice: 400
+  helmetPrice: 200
+  hitSpeedFactor: 0.48
+  hitHoldSeconds: 0.1
+  hitRecoverySeconds: 0.27

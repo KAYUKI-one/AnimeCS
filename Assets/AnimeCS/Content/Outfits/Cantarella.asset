@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2f829e6e69564d42a5cfe1203321163, type: 3}
+  m_Name: Cantarella
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.OutfitDefinition
+  _id: outfit.cantarella
+  _displayName: "\u5C11\u5973\u574E\u7279\u857E\u62C9"
+  _thumbnail: {fileID: 0}
+  _glyph: {fileID: 0}
+  _archived: 0
+  _character: {fileID: 11400000, guid: 06a44ac11b57d1245aea8686024f55af, type: 2}
+  _model: {fileID: 0}
+  _arms: {fileID: 919132149155446097, guid: aca044b2b8e41944bab2435cf9cf32ce, type: 3}
+  _sidearmArms: {fileID: 919132149155446097, guid: 80b8a222c99dd964db60f3164a09ff96, type: 3}
+  _viewRig: {fileID: 919132149155446097, guid: ce5b31447de01ab4e82ec10ceb7470ef, type: 3}
+  _included: 1
+  _bodyRegions:
+  - source: {fileID: 4639412199168586816, guid: cfa2c993f242c3141b96991fdfb8a9e6, type: 3}
+    partitioned: {fileID: 4300000, guid: 933356d42872603499b6bf505b655cb1, type: 2}
+    materials:
+    - {fileID: 2100000, guid: a7e11b2bff0b7d24381fa71afcfc7fd5, type: 2}
+    - {fileID: 2100000, guid: 57812b3fa38869943a67563c4ac0872c, type: 2}
+    - {fileID: 2100000, guid: 4ff8bd4a2ca358e46a85b6385a34afba, type: 2}
+    - {fileID: 2100000, guid: 4ff8bd4a2ca358e46a85b6385a34afba, type: 2}
+    - {fileID: 2100000, guid: 4ff8bd4a2ca358e46a85b6385a34afba, type: 2}
+    - {fileID: 2100000, guid: 7d4d66a59a71f0d4b82e525836e8331b, type: 2}
+    - {fileID: 2100000, guid: 7d4d66a59a71f0d4b82e525836e8331b, type: 2}
+    - {fileID: 2100000, guid: 7d4d66a59a71f0d4b82e525836e8331b, type: 2}
+    - {fileID: 2100000, guid: e615f78417188114ca62ba22e385f543, type: 2}
+    - {fileID: 2100000, guid: c0fb03f5c2b539041af421159f8005f4, type: 2}
+    - {fileID: 2100000, guid: 9fbd22ac41e16ed4ba67dad51d06b6b8, type: 2}
+    slots: ffffffffffffffff010000000300000004000000ffffffff0100000002000000ffffffffffffffff01000000
+  _viewRegions:
+  - source: {fileID: 3652829194554619790, guid: ce5b31447de01ab4e82ec10ceb7470ef, type: 3}
+    partitioned: {fileID: 4300000, guid: 87858aa8ba2ab0240b7308348c96651e, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 7d4d66a59a71f0d4b82e525836e8331b, type: 2}
+    - {fileID: 2100000, guid: 7d4d66a59a71f0d4b82e525836e8331b, type: 2}
+    - {fileID: 2100000, guid: 9fbd22ac41e16ed4ba67dad51d06b6b8, type: 2}
+    slots: 010000000200000001000000
+  _hiddenRegion: {fileID: 2100000, guid: 95cc80d7c57e58c489b4230fb9af32f3, type: 2}
+  _stanceController: {fileID: 22100000, guid: 3be4342bc8877d446bf9ff3a267b5352, type: 2}

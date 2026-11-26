@@ -1,0 +1,30 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:VisualElement name="lobby" class="screen lobby">
+        <ui:VisualElement name="stage-view" class="fill" />
+        <ui:VisualElement name="home-heading" class="lobby-stage" picking-mode="Ignore">
+            <ui:Label text="AnimeCS" class="wordmark" />
+            <ui:Label name="map-title" class="stage-caption" />
+        </ui:VisualElement>
+        <ui:VisualElement name="sheet" class="lobby-page">
+            <ui:VisualElement class="sheet-heading page-heading"><ui:Label name="sheet-title" class="section-heading" /><ui:Button name="close" text="返回大厅" class="quiet-button" /></ui:VisualElement>
+            <ui:VisualElement name="page-body" class="page-body">
+                <ui:VisualElement class="loadout-pane">
+                    <ui:ScrollView name="loadout-slots" class="loadout-slots"/>
+                    <ui:VisualElement name="loadout-actions" class="loadout-controls"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="inspection-stage" class="inspection-stage"><ui:Label text="拖动旋转" class="turn-hint" picking-mode="Ignore" /></ui:VisualElement>
+                <ui:ScrollView name="sheet-content" class="sheet-content" />
+                <ui:Label name="inspect-caption" class="inspect-caption" text="拖动模型旋转" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="nav-rail">
+            <ui:Button name="settings" text="设置" class="settings nav" />
+            <ui:VisualElement class="nav-group">
+                <ui:Button name="inventory" text="库存" class="nav" />
+                <ui:Button name="equipment" text="装备" class="nav" />
+                <ui:Button name="mode" text="模式选择" class="nav" />
+                <ui:Button name="start" text="开始游戏" class="nav start" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

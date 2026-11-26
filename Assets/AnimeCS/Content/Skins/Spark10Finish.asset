@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f66550ea1707cd74d878cf97f8490109, type: 3}
+  m_Name: Spark10Finish
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponSkinDefinition
+  _id: skin.spark10.showcase
+  _displayName: Disco Tech
+  _thumbnail: {fileID: 2800000, guid: 5fb60127bfdb40946a69555a1435e398, type: 3}
+  _weapon: {fileID: 11400000, guid: 84ccc4f5c201cb14899a78dfd9fbcbe8, type: 2}
+  _material: {fileID: 2100000, guid: 8a87e42baf830254dac1999d59e0fa5f, type: 2}
+  _texture: {fileID: 0}
+  _materialSlot: 0

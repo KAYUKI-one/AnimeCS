@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f66550ea1707cd74d878cf97f8490109, type: 3}
+  m_Name: Dash9Finish
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponSkinDefinition
+  _id: skin.dash9.showcase
+  _displayName: Fuel Injector
+  _thumbnail: {fileID: 2800000, guid: 9d11ef05e0819c94898041c83fc73906, type: 3}
+  _weapon: {fileID: 11400000, guid: 8b89d64e53a034341bd011fc5230f5b0, type: 2}
+  _material: {fileID: 2100000, guid: 8fb4ae513326076418b54784272b9026, type: 2}
+  _texture: {fileID: 0}
+  _materialSlot: 0

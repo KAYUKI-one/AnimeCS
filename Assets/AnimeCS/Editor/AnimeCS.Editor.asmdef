@@ -1,0 +1,6 @@
+{
+  "name": "AnimeCS.Editor",
+  "rootNamespace": "AnimeCS.Editor",
+  "references": ["AnimeCS.Runtime"],
+  "includePlatforms": ["Editor"]
+}

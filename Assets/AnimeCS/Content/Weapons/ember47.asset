@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d5b5c3df167d664d8d40e6c8c5f875e, type: 3}
+  m_Name: ember47
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponDefinition
+  _id: weapon.ember47
+  _displayName: "\u70BD\u7130-47"
+  _thumbnail: {fileID: 2800000, guid: f31421c1b923043498f29bd207178330, type: 3}
+  _glyph: {fileID: 2800000, guid: b392fc2221487a741893139b72b2146c, type: 3}
+  _archived: 0
+  _worldModel: {fileID: 919132149155446097, guid: 7f5342ca68305814d8fad4401f5f220a, type: 3}
+  _viewModel: {fileID: 0}
+  _defaultSkin: {fileID: 0}
+  _worldOffset: {x: 0, y: 0, z: 0}
+  _worldAngles: {x: 0, y: 0, z: 0}
+  _viewOffset: {x: 0, y: 0, z: 0}
+  _viewAngles: {x: 0, y: 0, z: 0}
+  _grip: {x: 0.022, y: 0.01, z: 0.022}
+  _support: {x: 0.022, y: 0.075, z: 0.236}
+  _shoulderPad: {x: 0, y: 0.055, z: -0.255}
+  _uprightSupport: 0
+  _muzzle: {x: -0.006710292, y: 0.11391933, z: 0.6019999}
+  _viewMuzzle: {x: 0, y: 0, z: 0}
+  _class: 2
+  _availability: 1
+  _price: 2700
+  _damage: 36
+  _penetration: 0.775
+  _falloff: 0.98
+  _rpm: 600
+  _magazine: 30
+  _reserve: 90
+  _reload: 2.5
+  _runSpeed: 5.5
+  _suppressed: 0
+  _handlingModel: {fileID: 919132149155446097, guid: 8893647855780144e9641fa8d60a42e9, type: 3}

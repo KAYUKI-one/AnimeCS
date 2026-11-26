@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2f829e6e69564d42a5cfe1203321163, type: 3}
+  m_Name: Rover
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.OutfitDefinition
+  _id: outfit.rover
+  _displayName: "\u7537\u6F02\u6CCA\u8005"
+  _character: {fileID: 11400000, guid: dd19b401d68736749b2a2131983df047, type: 2}
+  _model: {fileID: 0}
+  _arms: {fileID: 919132149155446097, guid: f594efa123ba6a64c98bcd0ee57eb2a9, type: 3}
+  _sidearmArms: {fileID: 919132149155446097, guid: 64d7accb9067bba4fbe16478a2a83cb9, type: 3}
+  _viewRig: {fileID: 919132149155446097, guid: 095324f0c7cdc7f4cba7bccc451b016d, type: 3}
+  _included: 1
+  _bodyRegions:
+  - source: {fileID: 5892893724314545434, guid: 92197bc7fcea41c46bca4af1be3ed203, type: 3}
+    partitioned: {fileID: 4300000, guid: 3a095c256e0483a4d8f78b73f7fc3dd5, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 5a60d4fcd264c344d84643da68f38e4e, type: 2}
+    - {fileID: 2100000, guid: 5a60d4fcd264c344d84643da68f38e4e, type: 2}
+    - {fileID: 2100000, guid: 5a60d4fcd264c344d84643da68f38e4e, type: 2}
+    - {fileID: 2100000, guid: f81e27f74e9f740458c6e680b3dd381c, type: 2}
+    - {fileID: 2100000, guid: caabc0474197f8e4ea5154aade221e9d, type: 2}
+    - {fileID: 2100000, guid: 1ec598280c844be4ead7a1350dee4bb0, type: 2}
+    - {fileID: 2100000, guid: 1ec598280c844be4ead7a1350dee4bb0, type: 2}
+    - {fileID: 2100000, guid: 1ec598280c844be4ead7a1350dee4bb0, type: 2}
+    - {fileID: 2100000, guid: 358fd7e33042aba4781c387ac459af12, type: 2}
+    slots: 010000000300000004000000ffffffffffffffffffffffff0100000002000000ffffffff
+  _viewRegions:
+  - source: {fileID: -7677519318167714445, guid: 095324f0c7cdc7f4cba7bccc451b016d, type: 3}
+    partitioned: {fileID: 4300000, guid: e60730dd150372a44bfbf50c77432234, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 1ec598280c844be4ead7a1350dee4bb0, type: 2}
+    - {fileID: 2100000, guid: 1ec598280c844be4ead7a1350dee4bb0, type: 2}
+    slots: 0100000002000000
+  _hiddenRegion: {fileID: 2100000, guid: 95cc80d7c57e58c489b4230fb9af32f3, type: 2}

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e57999c9f002a714fa01017f4d890fdd, type: 3}
+  m_Name: FieldTrousers
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WearableDefinition
+  _id: wear.fieldtrousers
+  _displayName: "\u77F3\u58A8\u8BAD\u7EC3\u88E4"
+  _thumbnail: {fileID: 2800000, guid: ee45948d531b16b4d8a6f685f90b91a4, type: 3}
+  _slot: 3
+  _character: {fileID: 0}
+  _model: {fileID: 0}
+  _viewModel: {fileID: 0}
+  _material: {fileID: 2100000, guid: 92cd598ed5356ce43b96a469657941f8, type: 2}
+  _included: 1

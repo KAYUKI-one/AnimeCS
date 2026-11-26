@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d5b5c3df167d664d8d40e6c8c5f875e, type: 3}
+  m_Name: hummingbird9
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponDefinition
+  _id: weapon.hummingbird9
+  _displayName: "\u8702\u9E1F-9"
+  _thumbnail: {fileID: 2800000, guid: 41533134b2e55d0408c02b5f6f25f80d, type: 3}
+  _glyph: {fileID: 2800000, guid: dd48dfc569fc0014a87ce7e739111e75, type: 3}
+  _archived: 0
+  _worldModel: {fileID: 919132149155446097, guid: 542fe5b961496ed40ab7bf56db80a718, type: 3}
+  _viewModel: {fileID: 0}
+  _defaultSkin: {fileID: 11400000, guid: 505f3a58b3da0a84fac2e58ff6e7ef41, type: 2}
+  _worldOffset: {x: 0, y: 0, z: 0}
+  _worldAngles: {x: 0, y: 0, z: 0}
+  _viewOffset: {x: 0, y: 0, z: 0}
+  _viewAngles: {x: 0, y: 0, z: 0}
+  _grip: {x: 0.024, y: 0.002, z: 0.051}
+  _support: {x: -0.024, y: 0.004, z: 0.168}
+  _shoulderPad: {x: 0, y: 0.034, z: -0.304}
+  _uprightSupport: 1
+  _muzzle: {x: 0.0000011976808, y: 0.08620435, z: 0.22259994}
+  _viewMuzzle: {x: 0, y: 0, z: 0}
+  _class: 1
+  _availability: 2
+  _price: 1250
+  _damage: 26
+  _penetration: 0.6
+  _falloff: 0.87
+  _rpm: 857
+  _magazine: 30
+  _reserve: 120
+  _reload: 2.1
+  _runSpeed: 5.8
+  _suppressed: 0
+  _handlingModel: {fileID: 919132149155446097, guid: eae233967297cd44e98bcc95332abee2, type: 3}

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d5b5c3df167d664d8d40e6c8c5f875e, type: 3}
+  m_Name: street20
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponDefinition
+  _id: weapon.street20
+  _displayName: "\u8857\u5934-20"
+  _thumbnail: {fileID: 2800000, guid: 6ae410e5ca5385a41ae7dc40476a36d6, type: 3}
+  _glyph: {fileID: 2800000, guid: 6b38a7c3e57d3e449aa6ae5426274970, type: 3}
+  _archived: 0
+  _worldModel: {fileID: 919132149155446097, guid: 36519b06a9513314db690a2a88665b21, type: 3}
+  _viewModel: {fileID: 0}
+  _defaultSkin: {fileID: 11400000, guid: 4f78cde5d0821e64f9f1b00f6d1ca062, type: 2}
+  _worldOffset: {x: 0, y: 0, z: 0}
+  _worldAngles: {x: 0, y: 0, z: 0}
+  _viewOffset: {x: 0, y: 0, z: 0}
+  _viewAngles: {x: 0, y: 0, z: 0}
+  _grip: {x: 0.024, y: -0.012, z: 0.027}
+  _support: {x: -0.031, y: -0.024, z: 0.037}
+  _shoulderPad: {x: 0, y: 0, z: 0}
+  _uprightSupport: 0
+  _muzzle: {x: 0.00016078306, y: 0.056979526, z: 0.18046495}
+  _viewMuzzle: {x: 0, y: 0, z: 0}
+  _class: 0
+  _availability: 1
+  _price: 0
+  _damage: 30
+  _penetration: 0.47
+  _falloff: 0.85
+  _rpm: 400
+  _magazine: 20
+  _reserve: 120
+  _reload: 2.2
+  _runSpeed: 6
+  _suppressed: 0
+  _handlingModel: {fileID: 919132149155446097, guid: 8040fd3ae1912364bb9209ffac7f5c5b, type: 3}

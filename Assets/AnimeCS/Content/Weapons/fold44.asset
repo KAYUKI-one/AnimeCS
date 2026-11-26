@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d5b5c3df167d664d8d40e6c8c5f875e, type: 3}
+  m_Name: fold44
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponDefinition
+  _id: weapon.fold44
+  _displayName: "\u6298\u7EBF-44"
+  _thumbnail: {fileID: 2800000, guid: 6dd9b9068b6107145b7bddf713e4ace8, type: 3}
+  _glyph: {fileID: 2800000, guid: 1d57cf0c67525044687acb81dde7ba82, type: 3}
+  _archived: 0
+  _worldModel: {fileID: 919132149155446097, guid: d835ba49bc96fc44ea77198dceba293b, type: 3}
+  _viewModel: {fileID: 0}
+  _defaultSkin: {fileID: 11400000, guid: 8c13f5cf0913a1642a1c282772b6cead, type: 2}
+  _worldOffset: {x: 0, y: 0, z: 0}
+  _worldAngles: {x: 0, y: 0, z: 0}
+  _viewOffset: {x: 0, y: 0, z: 0}
+  _viewAngles: {x: 0, y: 0, z: 0}
+  _grip: {x: 0.022, y: -0.002, z: 0.08}
+  _support: {x: 0.027, y: 0.076, z: 0.278}
+  _shoulderPad: {x: 0, y: 0.06, z: -0.256}
+  _uprightSupport: 0
+  _muzzle: {x: -0.000328667, y: 0.10731821, z: 0.6019999}
+  _viewMuzzle: {x: 0, y: 0, z: 0}
+  _class: 2
+  _availability: 2
+  _price: 3000
+  _damage: 33
+  _penetration: 0.7
+  _falloff: 0.97
+  _rpm: 666
+  _magazine: 30
+  _reserve: 90
+  _reload: 3.1
+  _runSpeed: 5.5
+  _suppressed: 0
+  _handlingModel: {fileID: 919132149155446097, guid: 5c6687d37b8e6e8448f285c1e6b7baa8, type: 3}

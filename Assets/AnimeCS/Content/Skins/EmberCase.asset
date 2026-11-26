@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f66550ea1707cd74d878cf97f8490109, type: 3}
+  m_Name: EmberCase
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponSkinDefinition
+  _id: skin.ember47.case
+  _displayName: "\u8868\u9762\u6DEC\u706B \xB7 \u8BD5\u73A9"
+  _thumbnail: {fileID: 2800000, guid: b3c3f824b7c46394ca74f40262f3277c, type: 3}
+  _archived: 0
+  _weapon: {fileID: 11400000, guid: 84b24e25ab2905b4d82ac2809ca1b845, type: 2}
+  _material: {fileID: 0}
+  _texture: {fileID: 2800000, guid: dfcb1e4d4c9140248a654406738994a7, type: 3}
+  _materialSlot: 0
+  _included: 1

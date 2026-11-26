@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f66550ea1707cd74d878cf97f8490109, type: 3}
+  m_Name: Fold44Finish
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponSkinDefinition
+  _id: skin.fold44.showcase
+  _displayName: Temukau
+  _thumbnail: {fileID: 2800000, guid: 5aacffcfda8d6e64c90eee1522f562ac, type: 3}
+  _weapon: {fileID: 11400000, guid: efaf2cc50cabe634e9adcae18ee47c1e, type: 2}
+  _material: {fileID: 2100000, guid: 85d2d92321d1ab64cb94d576f1f2bfd5, type: 2}
+  _texture: {fileID: 0}
+  _materialSlot: 0

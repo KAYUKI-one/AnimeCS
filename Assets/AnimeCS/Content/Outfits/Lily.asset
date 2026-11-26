@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2f829e6e69564d42a5cfe1203321163, type: 3}
+  m_Name: Lily
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.OutfitDefinition
+  _id: outfit.lily
+  _displayName: "\u8389\u8389 \xB7 \u62A4\u58EB\u670D"
+  _thumbnail: {fileID: 0}
+  _glyph: {fileID: 0}
+  _archived: 0
+  _character: {fileID: 11400000, guid: 07f2f71461b64cc42b3b2c3321a3e860, type: 2}
+  _model: {fileID: 0}
+  _arms: {fileID: 919132149155446097, guid: 02e601c7814ca8a45b84994bc5f4747d, type: 3}
+  _sidearmArms: {fileID: 919132149155446097, guid: 388e1873e01ea9643a3cdb5235225a6e, type: 3}
+  _viewRig: {fileID: 919132149155446097, guid: c743858ec9531e5468be9205cd7c3f20, type: 3}
+  _included: 1
+  _bodyRegions:
+  - source: {fileID: -826368678917381370, guid: c3046c9d153b30c4ab62037ad5f946d2, type: 3}
+    partitioned: {fileID: 4300000, guid: f83397ff9a84d7f4cbe2cf720338239b, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 5689d17c6fc84c9488cf1848132b8598, type: 2}
+    - {fileID: 2100000, guid: 36793b3ba7de2ae4f903feb45bf78072, type: 2}
+    - {fileID: 2100000, guid: da681f704b3bc164e886e5fc1a35b9c5, type: 2}
+    - {fileID: 2100000, guid: 50b7e0bbf00d1f642a01420735b8f3b8, type: 2}
+    - {fileID: 2100000, guid: 50b7e0bbf00d1f642a01420735b8f3b8, type: 2}
+    - {fileID: 2100000, guid: 50b7e0bbf00d1f642a01420735b8f3b8, type: 2}
+    - {fileID: 2100000, guid: 50b7e0bbf00d1f642a01420735b8f3b8, type: 2}
+    - {fileID: 2100000, guid: 50b7e0bbf00d1f642a01420735b8f3b8, type: 2}
+    - {fileID: 2100000, guid: 669d45bf2299fa94bbb3fa2ec4382dbf, type: 2}
+    - {fileID: 2100000, guid: 669d45bf2299fa94bbb3fa2ec4382dbf, type: 2}
+    - {fileID: 2100000, guid: 669d45bf2299fa94bbb3fa2ec4382dbf, type: 2}
+    - {fileID: 2100000, guid: b6a09aadbbd15b344919b2f89ff00c74, type: 2}
+    - {fileID: 2100000, guid: 460b86dd57d787a45acbfbe633e02340, type: 2}
+    - {fileID: 2100000, guid: 33016c01261f05d41a637fee489bc08b, type: 2}
+    slots: ffffffffffffffff01000000ffffffff01000000020000000300000004000000ffffffff0100000003000000ffffffffffffffffffffffff
+  _viewRegions:
+  - source: {fileID: -5898540917200746945, guid: c743858ec9531e5468be9205cd7c3f20, type: 3}
+    partitioned: {fileID: 4300000, guid: 774c65f550062ef4f87228cac3ba109f, type: 2}
+    materials:
+    - {fileID: 2100000, guid: da681f704b3bc164e886e5fc1a35b9c5, type: 2}
+    - {fileID: 2100000, guid: 50b7e0bbf00d1f642a01420735b8f3b8, type: 2}
+    - {fileID: 2100000, guid: 50b7e0bbf00d1f642a01420735b8f3b8, type: 2}
+    - {fileID: 2100000, guid: 669d45bf2299fa94bbb3fa2ec4382dbf, type: 2}
+    slots: 01000000010000000200000001000000
+  _hiddenRegion: {fileID: 2100000, guid: 95cc80d7c57e58c489b4230fb9af32f3, type: 2}
+  _stanceController: {fileID: 22100000, guid: 0eed5a04a6a0ab24a82befecd0b35e1a, type: 2}

@@ -1,0 +1,373 @@
+fileFormatVersion: 2
+guid: e242c80737d7a5043a5ccd31627dc114
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 715df9372183c47e389bb6e19fbc3b52, type: 3}
+  editorImportSettings:
+    generateSecondaryUVSet: 0
+  importSettings:
+    nodeNameMethod: 1
+    animationMethod: 2
+    generateMipMaps: 1
+    texturesReadable: 0
+    defaultMinFilterMode: 9729
+    defaultMagFilterMode: 9729
+    anisotropicFilterLevel: 1
+  instantiationSettings:
+    mask: -1
+    layer: 0
+    skinUpdateWhenOffscreen: 1
+    lightIntensityFactor: 1
+    sceneObjectCreation: 2
+  assetDependencies:
+  - type: 0
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\sky.bin
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\sky.bin
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_001_skybox_vmat_g_tcolor_37c55b5d.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_001_skybox_vmat_g_tcolor_37c55b5d.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\nuke_clouds_003_color_psd_bf351c08.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\nuke_clouds_003_color_psd_bf351c08.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\sun_disk_glow_001_trans_psd_e0699c26.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\sun_disk_glow_001_trans_psd_e0699c26.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\steam_001_vmat_g_tcolor_37c55b5d.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\steam_001_vmat_g_tcolor_37c55b5d.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_treecard_01_color_psd_e4e5a19c.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_treecard_01_color_psd_e4e5a19c.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_normal_tga_7be39f77.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_normal_tga_7be39f77.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1740493727.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1740493727.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_18_color_psd_4100325a.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_18_color_psd_4100325a.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_18_normal_psd_a25dc4f1.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_18_normal_psd_a25dc4f1.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_18_normal_psd_a25dc4f1_orm_1895069271.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_18_normal_psd_a25dc4f1_orm_1895069271.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\satellite_dish_card_color_psd_b1e772f0.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\satellite_dish_card_color_psd_b1e772f0.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\antenna_card_color_psd_75f7b6da.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\antenna_card_color_psd_75f7b6da.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\skybox_bushes_color_psd_e7191e08.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\skybox_bushes_color_psd_e7191e08.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\skybox_trees_color_psd_7bd93aec.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\skybox_trees_color_psd_7bd93aec.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_asphalt_06_color_psd_153a7cd9.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_asphalt_06_color_psd_153a7cd9.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_asphalt_06_normal_psd_bfbfdbf5.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_asphalt_06_normal_psd_bfbfdbf5.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_asphalt_06_normal_psd_bfbfdbf5_orm_707568586.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_asphalt_06_normal_psd_bfbfdbf5_orm_707568586.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_sidewalk01_color_psd_d0d4ec5a.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_sidewalk01_color_psd_d0d4ec5a.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_sidewalk01_normal_psd_b1bb4f61.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_sidewalk01_normal_psd_b1bb4f61.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_sidewalk01_normal_psd_b1bb4f61_orm_732683816.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_sidewalk01_normal_psd_b1bb4f61_orm_732683816.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_05b_color_psd_8b443cbf.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_05b_color_psd_8b443cbf.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_05_normal_psd_32964e28.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_05_normal_psd_32964e28.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_05_normal_psd_32964e28_orm_2383114627.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_05_normal_psd_32964e28_orm_2383114627.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_rollupdoor_metal_03_color_psd_b6c4d9f7.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_rollupdoor_metal_03_color_psd_b6c4d9f7.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_rollupdoor_metal_03_normal_tga_e5122722.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_rollupdoor_metal_03_normal_tga_e5122722.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_rollupdoor_metal_03_normal_tga_e5122722_orm_2451075906.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_rollupdoor_metal_03_normal_tga_e5122722_orm_2451075906.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06b_color_psd_d0ddc2ff.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06b_color_psd_d0ddc2ff.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06_normal_psd_b5317057.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06_normal_psd_b5317057.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06_normal_psd_b5317057_orm_1741475845.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06_normal_psd_b5317057_orm_1741475845.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_breeze_block_01_color_psd_26bc55a.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_breeze_block_01_color_psd_26bc55a.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_breeze_block_01_normal_tga_6c93f71d.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_breeze_block_01_normal_tga_6c93f71d.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_breeze_block_01_normal_tga_6c93f71d_orm_1795188767.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_breeze_block_01_normal_tga_6c93f71d_orm_1795188767.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_metal_trim_01_color_psd_1fc73036.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_metal_trim_01_color_psd_1fc73036.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_metal_trim_01_normal_psd_f059dcb2.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_metal_trim_01_normal_psd_f059dcb2.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_metal_trim_01_normal_psd_f059dcb2_orm_1351882893.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_metal_trim_01_normal_psd_f059dcb2_orm_1351882893.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_windows_01_color_psd_7cbc43f.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_windows_01_color_psd_7cbc43f.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_windows_01_normal_tga_86ae752c.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_windows_01_normal_tga_86ae752c.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2201002646.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2201002646.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_vehicle_glass_opaque_color_psd_615258b1.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_vehicle_glass_opaque_color_psd_615258b1.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_vehicle_glass_opaque_mask_rough_psd_695492aa.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_vehicle_glass_opaque_mask_rough_psd_695492aa.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1574938347.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1574938347.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06c_color_psd_570be460.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06c_color_psd_570be460.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06_normal_psd_196bf20f.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06_normal_psd_196bf20f.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06_normal_psd_196bf20f_orm_3593489586.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06_normal_psd_196bf20f_orm_3593489586.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_09_color_psd_99a0efd0.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_09_color_psd_99a0efd0.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_09b_color_psd_4b94e860.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_09b_color_psd_4b94e860.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_09c_color_psd_f7d3dabd.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_09c_color_psd_f7d3dabd.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06_color_psd_3b670aaf.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_06_color_psd_3b670aaf.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_curbs_001_color_psd_7314f1e8.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_curbs_001_color_psd_7314f1e8.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_425965217.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_425965217.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_curbs_001_painted_color_psd_eadf6b61.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_curbs_001_painted_color_psd_eadf6b61.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\concrete_10_normal_psd_d6a32d9f.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\concrete_10_normal_psd_d6a32d9f.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\concrete_10_normal_psd_d6a32d9f_orm_1834900713.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\concrete_10_normal_psd_d6a32d9f_orm_1834900713.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_door_46x106_04_color_psd_f5665b8.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_door_46x106_04_color_psd_f5665b8.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_door_46x106_04_normal_tga_ce715fef.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_door_46x106_04_normal_tga_ce715fef.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_3634124079.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_3634124079.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_kasbah_block_lifter_color_psd_ac90ecc6.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_kasbah_block_lifter_color_psd_ac90ecc6.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_kasbah_block_lifter_normal_tga_a93d454d.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_kasbah_block_lifter_normal_tga_a93d454d.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2412872806.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2412872806.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dome001_color_psd_af8ff884.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dome001_color_psd_af8ff884.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1122958474.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1122958474.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_kasbah_wood_crane_color_psd_8f0bd942.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_kasbah_wood_crane_color_psd_8f0bd942.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2835590335.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2835590335.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_mudbrick_plaster_skybox_color_psd_d318cd0c.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_mudbrick_plaster_skybox_color_psd_d318cd0c.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1492680758.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1492680758.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_ground_sand_skybox_color_psd_c349ee99.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_ground_sand_skybox_color_psd_c349ee99.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1619816496.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1619816496.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_skybox_buildings_02_color_psd_446f5b37.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_skybox_buildings_02_color_psd_446f5b37.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2681632217.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2681632217.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_wall_trim001_color_psd_47637529.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_wall_trim001_color_psd_47637529.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_wall_trim001_normal_psd_7bfedc72.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_wall_trim001_normal_psd_7bfedc72.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_3014157179.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_3014157179.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_window_frame_wood_01_color_psd_a9d8a195.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_window_frame_wood_01_color_psd_a9d8a195.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_window_frame_wood_01_normal_tga_1b9c2f7.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_window_frame_wood_01_normal_tga_1b9c2f7.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1988434850.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1988434850.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_windows_low_color_psd_88092595.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_windows_low_color_psd_88092595.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2095361646.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2095361646.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\olive_bark_01_color_psd_6af689a3.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\olive_bark_01_color_psd_6af689a3.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\olive_branch_01_color_psd_203a55d5.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\olive_branch_01_color_psd_203a55d5.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\olive_branch_01_vmat_g_tnormal_53b47c48.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\olive_branch_01_vmat_g_tnormal_53b47c48.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1066139248.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1066139248.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\olive_branch_01_nomotion_vmat_g_tnormal_53b47c48.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\olive_branch_01_nomotion_vmat_g_tnormal_53b47c48.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_505675034.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_505675034.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\nuke_concrete_barrier_color_psd_2ab82dea.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\nuke_concrete_barrier_color_psd_2ab82dea.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\nuke_concrete_barrier_rough_psd_af9cb2d5.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\nuke_concrete_barrier_rough_psd_af9cb2d5.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\nuke_concrete_barrier_ao_psd_6ff77244_orm_4159146323.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\nuke_concrete_barrier_ao_psd_6ff77244_orm_4159146323.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_light_pole_color_psd_ed17edef.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_light_pole_color_psd_ed17edef.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_light_pole_mask_rough_tga_3835755.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_light_pole_mask_rough_tga_3835755.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1261195182.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1261195182.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_color_psd_9a165602.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_color_psd_9a165602.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_mask_rough_tga_ea322e15.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_mask_rough_tga_ea322e15.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_3710303092.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_3710303092.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_interior_color_psd_c3635974.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_interior_color_psd_c3635974.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_interior_normal_psd_57475909.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_interior_normal_psd_57475909.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2365689384.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2365689384.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_wheel_color_psd_ed809751.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_wheel_color_psd_ed809751.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_wheel_normal_psd_ff9e00e1.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\dust_300d_wheel_normal_psd_ff9e00e1.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_3076588637.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_3076588637.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\power_pole_color_psd_3094dac8.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\power_pole_color_psd_3094dac8.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_3618402205.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_3618402205.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\power_pole_insulators_color_psd_2db5df2.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\power_pole_insulators_color_psd_2db5df2.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\power_pole_insulators_mask_rough_tga_5e797d8b.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\power_pole_insulators_mask_rough_tga_5e797d8b.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1418057971.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_1418057971.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_bark_01_color_psd_69667e.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_bark_01_color_psd_69667e.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_bark_01_nomotion_vmat_g_tnormal_53b47c48.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_bark_01_nomotion_vmat_g_tnormal_53b47c48.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2114370659.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_2114370659.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\sumac_01_color_psd_c0a41d34.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\sumac_01_color_psd_c0a41d34.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\sumac_01_nomotion_vmat_g_tnormal_31e5bc20.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\sumac_01_nomotion_vmat_g_tnormal_31e5bc20.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_770697788.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\default_ao_tga_559f1ac6_orm_770697788.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_frond_01_color_psd_84620c87.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_frond_01_color_psd_84620c87.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_frond_01_normal_psd_95938ef6.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_frond_01_normal_psd_95938ef6.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_frond_01_nomotion_vmat_g_tambientocclusion_9782fd5c_orm_365306592.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\palm_frond_01_nomotion_vmat_g_tambientocclusion_9782fd5c_orm_365306592.png
+  - type: 1
+    originalUri: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_18c_color_psd_c838b784.png
+    assetPath: Assets\AnimeCS\Art\Maps\DustII\Horizon\Textures\hr_dust_plaster_18c_color_psd_c838b784.png
+  reportItems:
+  - type: 2
+    code: 3
+    messages: []

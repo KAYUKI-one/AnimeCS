@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d5b5c3df167d664d8d40e6c8c5f875e, type: 3}
+  m_Name: feather08
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.WeaponDefinition
+  _id: weapon.feather08
+  _displayName: "\u8F7B\u7FBD-08"
+  _thumbnail: {fileID: 2800000, guid: 2d8f4b9a54aa46e4fb6e2f00883b6680, type: 3}
+  _glyph: {fileID: 2800000, guid: 5e32086780ee9a84da0832010dbf3d3c, type: 3}
+  _archived: 0
+  _worldModel: {fileID: 919132149155446097, guid: f73103f2f39486d4b9a0aeba74fcd0e0, type: 3}
+  _viewModel: {fileID: 0}
+  _defaultSkin: {fileID: 0}
+  _worldOffset: {x: 0, y: 0, z: 0}
+  _worldAngles: {x: 0, y: 0, z: 0}
+  _viewOffset: {x: 0, y: 0, z: 0}
+  _viewAngles: {x: 0, y: 0, z: 0}
+  _grip: {x: 0.023, y: -0.027, z: -0.006}
+  _support: {x: 0.026, y: -0.015, z: 0.192}
+  _shoulderPad: {x: 0, y: 0.012, z: -0.293}
+  _uprightSupport: 0
+  _muzzle: {x: -0.000000059604645, y: 0.09253855, z: 0.77574986}
+  _viewMuzzle: {x: 0, y: 0, z: 0}
+  _class: 3
+  _availability: 0
+  _price: 1700
+  _damage: 88
+  _penetration: 0.85
+  _falloff: 0.98
+  _rpm: 48
+  _magazine: 10
+  _reserve: 90
+  _reload: 3.7
+  _optics:
+    lowPower: 1.5
+    highPower: 2.5
+    acquireSeconds: 0.15
+    speedFraction: 1
+    hipDegrees: 0.18
+    scopedDegrees: 0.045
+    runPenalty: 7.07
+    airPenalty: 11.95
+  _runSpeed: 6
+  _suppressed: 0
+  _handlingModel: {fileID: 919132149155446097, guid: 3d423a20dd913394db7dcea3f628ab0f, type: 3}
