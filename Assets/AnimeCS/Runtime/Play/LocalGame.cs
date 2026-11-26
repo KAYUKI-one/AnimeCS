@@ -72,6 +72,39 @@ namespace AnimeCS.Play
         public FirstSide OpeningSide { get => _firstSide; set => _firstSide=value; }
         public float Sensitivity { get => _keyboard.Sensitivity; set { _keyboard.Sensitivity=Mathf.Clamp(value,.025f,.30f); PlayerPrefs.SetFloat("AnimeCS.Mouse",_keyboard.Sensitivity); } }
         public float Volume { get => _audio.Volume; set { _audio.Volume=Mathf.Clamp01(value); PlayerPrefs.SetFloat("AnimeCS.Volume",_audio.Volume); } }
+        private const string AspectKey="AnimeCS.Video.Aspect", CuesKey="AnimeCS.Hud.FriendlyCues";
+        private PlayAspect _aspect;
+        private bool _friendlyCues=true;
+        public bool FriendlyCues
+        {
+            get => _friendlyCues;
+            set { _friendlyCues=value; PlayerPrefs.SetInt(CuesKey,value?1:0); }
+        }
+        public PlayAspect AspectMode
+        {
+            get => _aspect;
+            set
+            {
+                _aspect=(PlayAspect)Mathf.Clamp((int)value,0,2);
+                PlayerPrefs.SetInt(AspectKey,(int)_aspect);
+                ApplyAspect();
+            }
+        }
+
+        private void ApplyAspect()
+        {
+            if (!_camera) return;
+            if(InLobby || _aspect==PlayAspect.Native)
+            {
+                _camera.ResetAspect();
+                if(_viewCamera) _viewCamera.ResetAspect();
+                return;
+            }
+            float ratio=_aspect==PlayAspect.Stretched ? 4f/3f : 16f/9f;
+            _camera.aspect=ratio;
+            if(_viewCamera) _viewCamera.aspect=ratio;
+        }
+
         public bool Ready => _match != null;
         internal InputActionAsset InputActions => _actions;
         public PublicMatchView MatchState => Ready ? _match.Public : default;
@@ -149,13 +182,26 @@ namespace AnimeCS.Play
         }
 
         private UnityEngine.Rendering.Universal.UniversalAdditionalCameraData _baseData;
+        private UnityEngine.Rendering.Volume _globalGrade;
+        private Light _sceneSun, _mapSun;
+        private Quaternion _menuLightRotation;
+        private void MapLight(bool inMatch)
+        {
+            if(_globalGrade) _globalGrade.sharedProfile=inMatch && SelectedMap && SelectedMap.CombatGrade?SelectedMap.CombatGrade:_presentation.daylightGrade;
+            if(!_sceneSun)return;
+            bool authored=inMatch && _mapSun;
+            _sceneSun.transform.rotation=authored?_mapSun.transform.rotation:_menuLightRotation;
+            _sceneSun.color=authored?_mapSun.color:new Color(1,.964f,.895f);
+            _sceneSun.intensity=authored?_mapSun.intensity:_presentation.sunIntensity;
+        }
+
         private void ApplyDaylight()
         {
             _baseData=_camera.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             if(_presentation.daylightGrade)
             {
                 var grade=gameObject.AddComponent<UnityEngine.Rendering.Volume>();
-                grade.isGlobal=true;grade.priority=10;grade.sharedProfile=_presentation.daylightGrade;
+                _globalGrade=grade;grade.isGlobal=true;grade.priority=10;grade.sharedProfile=_presentation.daylightGrade;
                 if(_baseData)_baseData.renderPostProcessing=true;
             }
             if (!_presentation.daylightSky) return;
@@ -173,7 +219,7 @@ namespace AnimeCS.Play
                     break;
                 }
             }
-            if(sun){RenderSettings.sun=sun;sun.color=new Color(1,.964f,.895f);sun.intensity=_presentation.sunIntensity;sun.shadows=LightShadows.Soft;sun.shadowStrength=.78f;sun.shadowNormalBias=.25f;}
+            if(sun){_sceneSun=sun;_menuLightRotation=sun.transform.rotation;RenderSettings.sun=sun;sun.color=new Color(1,.964f,.895f);sun.intensity=_presentation.sunIntensity;sun.shadows=LightShadows.Soft;sun.shadowStrength=.78f;sun.shadowNormalBias=.25f;}
             var sky=_presentation.daylightSky;
             if(sky.HasProperty("_Tex") && sky.GetTexture("_Tex") is Cubemap cube)
             {RenderSettings.defaultReflectionMode=UnityEngine.Rendering.DefaultReflectionMode.Custom;RenderSettings.customReflectionTexture=cube;RenderSettings.reflectionIntensity=.64f;}
@@ -210,6 +256,7 @@ namespace AnimeCS.Play
         {
             if (map.SpawnCount(Side.Attack) != LocalMatch.TeamSize || map.SpawnCount(Side.Defend) != LocalMatch.TeamSize)
                 throw new InvalidOperationException("地图需要攻守各五个出生位。");
+            _mapSun=null;
             var scenePath=map.PlayScenePath;
             if (!string.IsNullOrEmpty(scenePath))
             {
@@ -221,7 +268,7 @@ namespace AnimeCS.Play
                 var sceneSun=RenderSettings.sun;
                 foreach (var mapRoot in _loadedMap.GetRootGameObjects())
                 {
-                    if (mapRoot.name=="Bake sunlight" && mapRoot.TryGetComponent<Light>(out var bakedSun)) bakedSun.enabled=false;
+                    if (baked && mapRoot.name=="Bake sunlight" && mapRoot.TryGetComponent<Light>(out var bakedSun)) { _mapSun=bakedSun;bakedSun.enabled=false; }
                     foreach (var camera in mapRoot.GetComponentsInChildren<Camera>(true)) camera.enabled = false;
                     foreach (var listener in mapRoot.GetComponentsInChildren<AudioListener>(true)) listener.enabled = false;
                 }
@@ -265,6 +312,8 @@ namespace AnimeCS.Play
             _cameraMask = _camera.cullingMask;
             _matchFov = _camera.fieldOfView;
             CreateViewCamera();
+            _aspect=(PlayAspect)Mathf.Clamp(PlayerPrefs.GetInt(AspectKey,0),0,2);
+            _friendlyCues=PlayerPrefs.GetInt(CuesKey,1)!=0;
             _keyboard.Sensitivity=PlayerPrefs.GetFloat("AnimeCS.Mouse",.1f); _audio.Volume=PlayerPrefs.GetFloat("AnimeCS.Volume",1);
             var root = _document.rootVisualElement;
             root.Clear(); root.styleSheets.Add(_presentation.theme);
@@ -315,12 +364,13 @@ namespace AnimeCS.Play
             }
             _keyboard.SyncRound(_ports[0].Read(),true); _keyboard.ResetPointer();
             _hud.StartMatch(_match,profile.current);
+            ApplyAspect();MapLight(true);
             _time = 0; _discardFrameTime = true; Draw();
         }
 
         public void ReturnToLobby()
         {
-            _match?.SetPaused(true); InLobby=true; _time=0;
+            _match?.SetPaused(true); InLobby=true; _time=0; ApplyAspect();MapLight(false);
             if (_objective) _objective.SetActive(false);
             if (_heldObjective) _heldObjective.SetActive(false);
             foreach (var obj in _kitModels) obj.SetActive(false);
@@ -341,7 +391,7 @@ namespace AnimeCS.Play
             for (int i=0;i<_avatars.Length;i++) { _avatars[i].AlignWorldGun(); _world.SetMuzzle(i,_avatars[i].Muzzle()); }
             var self=_ports[0].Read();var watched=self.Health>0?self:_ports[0].WatchTeam();
             _world.RenderFeedback(Mathf.Clamp01((float)(_time*MatchRules.TickRate)));
-            _teamIds.Present(self,watched,_camera,_ports,_actors,_avatars,_world,Mathf.Clamp01((float)(_time*MatchRules.TickRate)));
+            _teamIds.Present(self,watched,_camera,_ports,_actors,_avatars,_world,FriendlyCues,Mathf.Clamp01((float)(_time*MatchRules.TickRate)));
         }
 
         public void TogglePause()

@@ -45,6 +45,7 @@ namespace AnimeCS.Editor
                     // Source 2 sky_camera origin and 1:16 world scale, mapped into Unity coordinates.
                     outside.transform.localScale=Vector3.one*16;outside.transform.localPosition=-new Vector3(7.8232f,5.1308f,-.2032f)*16;
                     foreach(var r in outside.GetComponentsInChildren<Renderer>()){r.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;r.receiveShadows=false;}
+                    DustSurfaceImport.ApplyHorizonGround(outside);
                 }
                 var staticRoot=new GameObject("Map collision");staticRoot.transform.SetParent(root.transform,false);
                 var sources=new List<NavMeshBuildSource>();
@@ -122,6 +123,7 @@ namespace AnimeCS.Editor
                 style.daylightSky=sky;EditorUtility.SetDirty(sky);EditorUtility.SetDirty(style);AssetDatabase.SaveAssets();
             }
             finally { if(handle.valid)handle.Remove();if(nav && !AssetDatabase.Contains(nav))Object.DestroyImmediate(nav);EditorSceneManager.ClosePreviewScene(scene); }
+            if(File.Exists(Source+"SurfacePaint.bin")) DustSurfaceImport.Synchronize();
         }
 
     }

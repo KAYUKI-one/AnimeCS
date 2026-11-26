@@ -60,7 +60,7 @@ namespace AnimeCS.Tests
             finally{rulesField.SetValue(game,original);Object.Destroy(rules);game.ReturnToLobby();}
         }
 
-        [UnityTest] public IEnumerator OnlyVisibleLivingTeammatesCarryIdsFromEveryFacingAndSpectatorView()
+        [UnityTest] public IEnumerator OnlyVisibleLivingTeammatesCarryIdsAndOptionalCues()
         {
             yield return SceneManager.LoadSceneAsync("Assets/AnimeCS/Scenes/LocalMatch.unity");
             var game=Object.FindAnyObjectByType<LocalGame>();
@@ -68,6 +68,7 @@ namespace AnimeCS.Tests
             var flags=BindingFlags.NonPublic|BindingFlags.Instance;
             var rulesField=typeof(LocalGame).GetField("_rules",flags);
             var original=(MatchRules)rulesField.GetValue(game);
+            bool originalFriendlyCues = game.FriendlyCues;
             var rules=Object.Instantiate(original);
             rules.buySeconds=.08f;
             var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -87,41 +88,72 @@ namespace AnimeCS.Tests
             try
             {
                 rulesField.SetValue(game,rules);
+                game.FriendlyCues = true;
                 game.SetLobbyTeammates(new[]{new LobbyMember("outfit.flor",displayId:"  小枫  ")});
                 game.Restart();
                 var match=(LocalMatch)typeof(LocalGame).GetField("_match",flags).GetValue(game);
                 var actors=(ArenaPawn[])typeof(LocalGame).GetField("_actors",flags).GetValue(game);
+                var world=(ArenaWorld)typeof(LocalGame).GetField("_world",flags).GetValue(game);
+                var catalog=(ContentCatalog)typeof(LocalGame).GetField("_catalog",flags).GetValue(game);
                 var spawn=typeof(ArenaPawn).GetMethod("Spawn",flags);
                 var facing=new PoseDriver();
+                var local = new PoseDriver();
                 for(int i=0;i<LocalMatch.Seats;i++)
                 {
                     Vector3 offset=i==0?Vector3.zero:i==1?Vector3.forward*4:
                         i==2?new Vector3(-1.4f,0,7):i==5?new Vector3(1.4f,0,5):new Vector3(i-4,0,-5);
-                    game.SetSeatDriver(i,i==1?facing:new PoseDriver());
+                    game.SetSeatDriver(i,i==0?local:i==1?facing:new PoseDriver());
                     spawn.Invoke(actors[i],new object[]{origin+offset+Vector3.up*.04f,0f});
                 }
                 game.SetSeatDisplayId(5,"敌方测试");
                 Physics.SyncTransforms();
                 var layer=Object.FindAnyObjectByType<UIDocument>().rootVisualElement.Q("team-ids");
                 var ally=layer.Q<Label>("team-id-1");
+                var chevron = layer.Q("team-chevron-1");
+                Assert.That(chevron, Is.Not.Null);
                 foreach(float yaw in new[]{0f,90f,180f})
                 {
                     facing.yaw=yaw;
                     yield return Advance(10);
                     Assert.That(ally.resolvedStyle.display,Is.EqualTo(DisplayStyle.Flex),"facing "+yaw);
+                    Assert.That(chevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex), "facing " + yaw);
                     Assert.That(ally.text,Is.EqualTo("小枫"));
                     Assert.That(layer.Q<Label>("team-id-0").resolvedStyle.display,Is.EqualTo(DisplayStyle.None));
                     Assert.That(layer.Q<Label>("team-id-5"),Is.Null,"Enemy IDs must never be bound.");
+                    Assert.That(layer.Q("team-chevron-5"), Is.Null, "Enemy cues must never be bound.");
                 }
+                game.FriendlyCues = false;
+                yield return Advance(3);
+                Assert.That(ally.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
+                Assert.That(chevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.None));
+                game.FriendlyCues = true;
+                yield return Advance(3);
+                Assert.That(chevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
                 float standing=ally.resolvedStyle.top;
                 facing.crouch=true; yield return Advance(22);
                 Assert.That(ally.resolvedStyle.top,Is.GreaterThan(standing+8),"Move the ID with the actual crouching head.");
                 wall.SetActive(true); Physics.SyncTransforms(); yield return Advance(3);
                 Assert.That(ally.resolvedStyle.display,Is.EqualTo(DisplayStyle.None),"Solid cover");
+                Assert.That(chevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.None), "Solid cover");
                 wall.SetActive(false); Physics.SyncTransforms(); facing.yaw=0; facing.crouch=false; yield return Advance(16);
                 Assert.That(ally.resolvedStyle.display,Is.EqualTo(DisplayStyle.Flex));
+                Assert.That(chevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
+
+                local.pitch = -50;
+                yield return Advance(2);
+                world.Throw(0, catalog.Find<UtilityDefinition>("utility.smoke"));
+                local.pitch = 0;
+                yield return Advance(MatchRules.TickRate * 2);
+                Assert.That(world.InSmoke(0), Is.True, "Near throw should cover the observer");
+                Assert.That(ally.resolvedStyle.display, Is.EqualTo(DisplayStyle.None), "Full smoke");
+                Assert.That(chevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.None), "Full smoke");
+                world.ResetRound();
+                yield return Advance(3);
+                Assert.That(chevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex), "Clear sight restored");
+
                 game.TogglePause(); yield return null; yield return new WaitForEndOfFrame();
                 Assert.That(ally.resolvedStyle.display,Is.EqualTo(DisplayStyle.None));
+                Assert.That(chevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.None));
                 game.TogglePause(); yield return Advance(4);
                 int[] damage=(int[])typeof(LocalMatch).GetField("_damage",flags).GetValue(match);
                 var apply=typeof(LocalMatch).GetMethod("ApplyDamage",flags);
@@ -129,14 +161,18 @@ namespace AnimeCS.Tests
                 yield return Advance(6);
                 Assert.That(game.Player.WatchTeam().Seat,Is.EqualTo(1));
                 Assert.That(ally.resolvedStyle.display,Is.EqualTo(DisplayStyle.None),"The new camera owner");
+                Assert.That(chevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.None), "The new camera owner");
                 var other=layer.Q<Label>("team-id-2");
+                var otherChevron = layer.Q("team-chevron-2");
                 Assert.That(other.resolvedStyle.display,Is.EqualTo(DisplayStyle.Flex));
+                Assert.That(otherChevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
                 damage[2]=500; apply.Invoke(match,null); yield return Advance(4);
                 Assert.That(other.resolvedStyle.display,Is.EqualTo(DisplayStyle.None),"Eliminated teammate");
+                Assert.That(otherChevron.resolvedStyle.display, Is.EqualTo(DisplayStyle.None), "Eliminated teammate");
             }
             finally
             {
-                game.ReturnToLobby(); rulesField.SetValue(game,original);
+                game.ReturnToLobby(); game.FriendlyCues = originalFriendlyCues; rulesField.SetValue(game,original);
                 Object.Destroy(floor); Object.Destroy(wall); Object.Destroy(rules);
             }
         }

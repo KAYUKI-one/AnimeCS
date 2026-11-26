@@ -5,17 +5,18 @@ namespace AnimeCS.Match
     [System.Serializable]
     public sealed class MovementTuning
     {
-        [Min(.02f), InspectorName("地面起步至满速秒数")] public float accelerateSeconds=.17f;
+        [Min(.02f), InspectorName("地面起步至满速秒数")] public float accelerateSeconds=.14f;
         [Min(.02f), InspectorName("满速反向制动秒数")] public float counterStopSeconds=.09f;
-        [Min(.02f), InspectorName("松键至稳定射速区秒数")] public float coastToSteadySeconds=.20f;
+        [Min(.02f), InspectorName("松键至稳定射速区秒数")] public float coastToSteadySeconds=.16f;
         [InspectorName("过零后保留一个模拟步")] public bool settleOnReverse=true;
         [Range(.1f,1), InspectorName("静步速度比例")] public float walkFraction=.51f;
         [Range(.1f,1), InspectorName("蹲走速度比例")] public float duckFraction=.34f;
-        [Min(0), InspectorName("空中转向加速度倍数")] public float airAcceleration=1.65f;
+        [Min(0), InspectorName("空中转向加速度倍数")] public float airAcceleration=3.15f;
         [Range(.01f,1), InspectorName("空中意向轴限速比例")] public float airProjection=.18f;
         [Min(1), InspectorName("空中速度上限倍数")] public float airCap=1.22f;
         [Min(.1f), InspectorName("初始起跳速度")] public float jumpSpeed=5.65f;
         [Min(.1f), InspectorName("重力加速度")] public float gravity=21f;
+        [Range(0,.42f), InspectorName("空中收腿高度（米）")] public float tuckHeight=.30f;
         [Min(.02f), InspectorName("下蹲过渡秒数")] public float crouchSeconds=.16f;
         [Min(.02f), InspectorName("起身过渡秒数")] public float standSeconds=.22f;
     }
@@ -38,10 +39,12 @@ namespace AnimeCS.Match
         public static Vector2 Advance(in MotionContact state, in SeatIntent input, float runSpeed, ref bool justStopped, MovementTuning tuning=null)
         {
             tuning ??= Defaults;
-            float coast = runSpeed * .66f * StepTime / Mathf.Max(StepTime,tuning.coastToSteadySeconds);
             Vector2 velocity = state.Velocity;
+            // Reach the accurate band after the configured coast time. Minimum traction prevents a long slow slide.
+            float decay = 1f - Mathf.Pow(.34f, StepTime / Mathf.Max(StepTime,tuning.coastToSteadySeconds));
+            float coast = Mathf.Max(velocity.magnitude,runSpeed*.34f)*decay;
             Vector2 wish = Vector2.ClampMagnitude(input.Move, 1);
-            if (!state.Grounded || input.Jump)
+            if (!state.Grounded)
             {
                 justStopped = false;
                 if (wish == Vector2.zero) return velocity;

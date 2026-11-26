@@ -5,6 +5,7 @@ using AnimeCS.Match;
 using AnimeCS.Play;
 using AnimeCS.Profile;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Animations;
@@ -16,6 +17,52 @@ namespace AnimeCS.Tests
 {
     public sealed class DemoPresentationTests
     {
+        [Test] public void DustHorizonSandUsesFarDepthMaterialAndLeavesMapGroundOpaque()
+        {
+            const string art = "Assets/AnimeCS/Art/Maps/DustII/";
+            const string prefab = "Assets/AnimeCS/Content/Maps/DustII.prefab";
+            var root = PrefabUtility.LoadPrefabContents(prefab);
+            try
+            {
+                int horizonSand = 0, mapGround = 0;
+                foreach (var renderer in root.GetComponentsInChildren<MeshRenderer>(true))
+                {
+                    var source = PrefabUtility.GetCorrespondingObjectFromOriginalSource(renderer);
+                    if (!source) continue;
+                    string path = AssetDatabase.GetAssetPath(source);
+                    if (path != art + "Horizon/Horizon.gltf" && path != art + "DustII.gltf") continue;
+                    var sourceMaterials = source.sharedMaterials;
+                    var materials = renderer.sharedMaterials;
+                    Assert.That(materials.Length, Is.EqualTo(sourceMaterials.Length), renderer.name);
+                    for (int i = 0; i < materials.Length; i++)
+                    {
+                        var sourceMaterial = sourceMaterials[i];
+                        if (!sourceMaterial) continue;
+                        string name = sourceMaterial.name;
+                        if (path == art + "Horizon/Horizon.gltf" && name == "hr_dust_ground_sand_skybox")
+                        {
+                            Assert.That(materials[i], Is.Not.Null, renderer.name);
+                            Assert.That(materials[i].shader.name, Is.EqualTo("AnimeCS/Horizon Ground"), renderer.name);
+                            Assert.That(materials[i].renderQueue, Is.EqualTo(2900), renderer.name);
+                            horizonSand++;
+                        }
+                        else if (path == art + "DustII.gltf" &&
+                            (name == "hr_dust_sand_02" || name == "hr_dust_stone_ground_01" ||
+                            name.StartsWith("hr_dust_blend_ground", System.StringComparison.Ordinal)))
+                        {
+                            Assert.That(materials[i], Is.Not.Null, name);
+                            Assert.That(materials[i].shader.name, Is.EqualTo("AnimeCS/Painted Masonry"), name);
+                            Assert.That(materials[i].renderQueue, Is.LessThan(2900), name);
+                            mapGround++;
+                        }
+                    }
+                }
+                Assert.That(horizonSand, Is.Positive, "The original horizon sand slots must be present.");
+                Assert.That(mapGround, Is.Positive, "The original playable floor slots must be present.");
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+
         [Test] public void EveryDustSpawnHasSolidFloorAndCanReachBothSites()
         {
             var map=ContentLibrary.Catalog.Find<MapDefinition>("map.dust2");

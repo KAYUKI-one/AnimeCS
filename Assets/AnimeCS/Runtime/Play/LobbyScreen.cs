@@ -87,7 +87,10 @@ namespace AnimeCS.Play
             if (inspect) return;
             if(_section=="settings")
             {
-                GraphicsOptions(); Header("操控与声音");
+                GraphicsOptions(); Header("对局辅助");
+                var friendly=new Toggle("队友三角与轮廓"){name="friendly-cues",value=_game.FriendlyCues};
+                friendly.AddToClassList("setting-field");friendly.RegisterValueChangedCallback(e=>_game.FriendlyCues=e.newValue);_content.Add(friendly);
+                Header("操控与声音");
                 Slider("鼠标灵敏度",.025f,.30f,_game.Sensitivity,v=>_game.Sensitivity=v);
                 Slider("音量",0,1,_game.Volume,v=>_game.Volume=v);Header("键鼠");
                 _content.Add(new Label("WASD 移动    Shift 静步    空格跳跃    Ctrl / C 下蹲"));

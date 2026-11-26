@@ -112,6 +112,7 @@ MonoBehaviour:
   _navigation: {fileID: 23800000, guid: 4211580cad87c31408ba38ca99f7e998, type: 2}
   _radarYaw: 90
   _lightingScenePath: Assets/AnimeCS/Art/MapLighting/DustII/DustII.unity
+  _combatGrade: {fileID: 11400000, guid: 0ac5598b849f93e4e8678ad7004b3679, type: 2}
   _buyRadius: 5
   _attackYaw:
   - -107

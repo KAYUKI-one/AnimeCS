@@ -75,13 +75,30 @@ namespace AnimeCS.Tests
 
         [Test] public void NeutralReleaseAndSubtickTapHaveDistinctBraking()
         {
+            const float runSpeed = 6f;
+            const float steadyFraction = .34f;
+            const float floatTolerance = .00001f;
+            var tuning = new MovementTuning();
+            int steadyTick = Mathf.CeilToInt(tuning.coastToSteadySeconds / SeatMovement.StepTime);
             bool stopped = false;
-            var moving = new MotionContact { Grounded = true, Velocity = new Vector2(6,0) };
+            var moving = new MotionContact { Grounded = true, Velocity = Vector2.right * runSpeed };
             var oneTap = new SeatIntent { BrakeTap = Vector2.left };
-            Assert.That(SeatMovement.Advance(moving,oneTap,6,ref stopped).x, Is.LessThan(SeatMovement.Advance(moving,default,6,ref stopped).x));
-            for (int i=0; i<10; i++) moving.Velocity = SeatMovement.Advance(moving, default, 6, ref stopped);
-            Assert.That(moving.Velocity.x / 6, Is.EqualTo(.34f).Within(.001));
-            Assert.That(SeatMovement.Advance(MotionContact.Standing, oneTap, 6, ref stopped), Is.EqualTo(Vector2.zero));
+            var tapped = SeatMovement.Advance(moving, oneTap, runSpeed, ref stopped, tuning);
+            var released = SeatMovement.Advance(moving, default, runSpeed, ref stopped, tuning);
+            Assert.That(tapped.x, Is.LessThan(released.x));
+
+            for (int tick = 1; tick <= steadyTick; tick++)
+            {
+                float previousSpeed = moving.Velocity.x;
+                moving.Velocity = SeatMovement.Advance(moving, default, runSpeed, ref stopped, tuning);
+                Assert.That(moving.Velocity.x, Is.LessThan(previousSpeed), $"Expected less speed at tick {tick}.");
+                if (tick < steadyTick)
+                    Assert.That(moving.Velocity.x / runSpeed, Is.GreaterThan(steadyFraction + floatTolerance));
+            }
+
+            Assert.That(moving.Velocity.x / runSpeed, Is.LessThanOrEqualTo(steadyFraction + floatTolerance));
+            Assert.That(SeatMovement.Advance(MotionContact.Standing, oneTap, runSpeed, ref stopped, tuning),
+                Is.EqualTo(Vector2.zero));
         }
 
         [Test] public void CrouchPeekLowersTheEyeAndSpeedTogetherWhileContinuingLaterally()

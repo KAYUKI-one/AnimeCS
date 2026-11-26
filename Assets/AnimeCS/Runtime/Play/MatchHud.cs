@@ -29,6 +29,7 @@ namespace AnimeCS.Play
         private AnimeCS.Profile.WardrobeLoadout _loadout;
         private readonly Button _targetMotion;
         private readonly ScopeOverlay _scope;
+        private readonly AimReticle _cross=new();
         private int _offerIndex;
         public bool ShopOpen => _open;
 
@@ -38,6 +39,7 @@ namespace AnimeCS.Play
             _catalog=catalog; _rules=rules; _style=style; _order=order;
             style.hud.CloneTree(host);
             _root=host.Q("hud"); _shop=_root.Q("shop"); _offersRoot=_root.Q("offers"); _radar=_root.Q("radar");
+            _root.Q("reticle").Add(_cross);
             _scope=new ScopeOverlay(); _root.Insert(_root.IndexOf(_root.Q("team-ids"))+1,_scope);
             _kills=new EliminationHud(_root,_catalog);
             _targetMotion=new Button(()=>{_session.MovingTargets=!_session.MovingTargets;_targetMotion.text=_session.MovingTargets?"靶位移动　开":"靶位移动　关";}){name="target-motion"};
@@ -147,7 +149,9 @@ namespace AnimeCS.Play
                 clue.Value.Region+"  ·  "+SoundName(clue.Value.Kind):"";
             bool aimVisible=active&&!_paused&&!finished&&!_open;
             _scope.Present(aimVisible && watched.ScopeLevel>0,watched.ScopeStability);
-            Show(_root.Q("reticle"),aimVisible && _catalog.Find<WeaponDefinition>(watched.WeaponId)?.Optics==null);
+            var heldGun=_catalog.Find<WeaponDefinition>(watched.WeaponId);
+            Show(_root.Q("reticle"),aimVisible && (!heldGun || heldGun.Optics==null));
+            if(aimVisible && heldGun) _cross.SetMotion(watched.Motion,heldGun.RunSpeed);
             Show(_root.Q("obscured"),watched.Blinded||watched.InsideSmoke);
             _root.Q("obscured").EnableInClassList("flash",watched.Blinded);
             Show(_root.Q("hit-confirm"),aimVisible && _style.hitConfirm && match.Tick-watched.LastConfirmationTick<6);

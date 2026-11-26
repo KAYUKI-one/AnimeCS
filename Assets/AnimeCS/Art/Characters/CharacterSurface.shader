@@ -18,6 +18,7 @@ Shader "AnimeCS/Character Surface"
         [HideInInspector] _DstBlend("Destination",Float)=0
         [HideInInspector] _ZWrite("Depth write",Float)=1
         [HideInInspector] _Cull("Culling",Float)=0
+        [PerRendererData] _FriendlyRim("Visible teammate", Float)=0
         [HideInInspector] _EmissionColor("Emission",Color)=(0,0,0,1)
         [HideInInspector] _EmissionMap("Emission map",2D)="white"{}
     }
@@ -52,6 +53,10 @@ Shader "AnimeCS/Character Surface"
             #pragma multi_compile_instancing
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/Shaders/LitForwardPass.hlsl"
+
+            UNITY_INSTANCING_BUFFER_START(FactionCue)
+                UNITY_DEFINE_INSTANCED_PROP(float,_FriendlyRim)
+            UNITY_INSTANCING_BUFFER_END(FactionCue)
 
             half4 CharacterFragment(Varyings input) : SV_Target
             {
@@ -88,6 +93,9 @@ Shader "AnimeCS/Character Surface"
                 half3 reflected=reflectColor*(f0+(1.h-f0)*fresnel)*lerp(.28h,.88h,_Smoothness);
                 half3 color=s.albedo*lighting*(1.h-.58h*_Metallic)+key.color*vis*(_SpecColor.rgb*(.5h*highlight+.5h*sheen)+
                     _ClearCoatMask*.09h*hair+rim*.065h)+reflected;
+                half ally=UNITY_ACCESS_INSTANCED_PROP(FactionCue,_FriendlyRim);
+                half edge=smoothstep(.65h,.99h,1.h-abs(dot(normalize(input.normalWS),v)));
+                color+=ally*edge*half3(.026h,.20h,.265h);
                 return half4(MixFog(color,inputData.fogCoord),s.alpha);
             }
             ENDHLSL

@@ -12,7 +12,7 @@ namespace AnimeCS.Play
         private SphereCollider _headHitbox;
         internal SphereCollider HeadHitbox => _headHitbox;
         private Vector3 _spawn, _safe, _previousEye, _previousPosition;
-        private float _vertical, _crouch;
+        private float _vertical, _crouch, _tuck;
         private bool _grounded;
         private readonly RaycastHit[] _headroomHits = new RaycastHit[12];
         public float Yaw { get; private set; }
@@ -48,7 +48,7 @@ namespace AnimeCS.Play
         {
             _body.enabled = false;
             _spawn = _safe = position; Yaw = yaw; Pitch = _vertical = 0;
-            _crouch = 0; _grounded = true; SetHeight(SeatMovement.StandingHeight);
+            _crouch = _tuck = 0; _grounded = true; SetHeight(SeatMovement.StandingHeight);
             transform.SetPositionAndRotation(position, Quaternion.Euler(0, yaw, 0));
             _previousPosition = position; _previousEye = Eye; Visuals.localPosition = Vector3.zero;
             _body.enabled = true; _hitbox.enabled = _headHitbox.enabled = true;
@@ -75,6 +75,29 @@ namespace AnimeCS.Play
             return count < _headroomHits.Length;
         }
 
+        private Vector3 ClipAirborneFeet(Vector3 travel,float rise)
+        {
+            // A rounded controller can otherwise roll up the top of a vertical crate while its feet are still below it.
+            float length=travel.magnitude;
+            if(length<.0001f)return travel;
+            Vector3 direction=travel/length;
+            const float toe=.035f;
+            Vector3 origin=transform.position+Vector3.up*(Mathf.Max(0,rise)+toe+_body.skinWidth);
+            int count=Physics.SphereCastNonAlloc(origin,toe,direction,_headroomHits,length+_body.radius+toe,
+                Physics.AllLayers,QueryTriggerInteraction.Ignore);
+            float nearest=float.MaxValue;Vector3 wall=default;
+            for(int i=0;i<count;i++)
+            {
+                var hit=_headroomHits[i];
+                if(hit.collider==_body || hit.normal.y>.45f || hit.normal.y<-.45f || hit.distance>=nearest)continue;
+                nearest=hit.distance;wall=hit.normal;
+            }
+            if(nearest==float.MaxValue)return travel;
+            Vector3 advance=direction*Mathf.Clamp(nearest+toe-_body.radius-_body.skinWidth,0,length);
+            Vector3 side=travel-advance;wall.y=0;wall.Normalize();
+            return advance+side-wall*Mathf.Min(0,Vector3.Dot(side,wall));
+        }
+
         internal MotionContact Move(Vector2 velocity, float yaw, float pitch, bool jump, bool crouch)
         {
             _previousEye = Eye; _previousPosition = transform.position;
@@ -88,11 +111,22 @@ namespace AnimeCS.Play
                 _crouch = amount;
                 SetHeight(height);
             }
-            _vertical = jump && _grounded ? Tuning.jumpSpeed : _grounded ? -2f : Mathf.Max(-24, _vertical - Tuning.gravity * dt);
+            bool takingOff = jump && _grounded;
+            bool airborne = takingOff || !_grounded;
+            float targetTuck = airborne && crouch ? Tuning.tuckHeight * _crouch : 0f;
+            float nextTuck = Mathf.MoveTowards(_tuck,targetTuck,Tuning.tuckHeight*dt/Mathf.Max(dt,Tuning.crouchSeconds));
+            float legMotion = nextTuck - _tuck;
+            _tuck = nextTuck;
+            // Only the feet retract. The ballistic velocity stays independent of repeated crouch input.
+            _body.stepOffset = airborne ? 0f : .25f;
+            _vertical = takingOff ? Tuning.jumpSpeed : _grounded ? -2f : Mathf.Max(-24, _vertical - Tuning.gravity * dt);
             var before = transform.position;
-            var flags = _body.Move(new Vector3(velocity.x, _vertical, velocity.y) * dt);
+            float rise=_vertical*dt+legMotion;
+            Vector3 travel=new Vector3(velocity.x,0,velocity.y)*dt;
+            if(airborne)travel=ClipAirborneFeet(travel,rise);
+            var flags = _body.Move(travel+Vector3.up*rise);
             _grounded = (flags & CollisionFlags.Below) != 0;
-            if (_grounded) { _vertical = 0; _safe = transform.position; }
+            if (_grounded) { _vertical = _tuck = 0; _safe = transform.position; }
             else if ((flags & CollisionFlags.Above) != 0) _vertical = Mathf.Min(0, _vertical);
             if (transform.position.y < Mathf.Min(_safe.y, _spawn.y) - 6f) Spawn(_safe, yaw);
             Vector3 actual = (transform.position - before) / dt;

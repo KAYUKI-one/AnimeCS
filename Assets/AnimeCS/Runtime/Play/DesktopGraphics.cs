@@ -5,6 +5,8 @@ using UnityEngine.Rendering.Universal;
 
 namespace AnimeCS.Play
 {
+    public enum PlayAspect { Native, Widescreen, Stretched }
+
     internal readonly struct PictureQuality
     {
         internal readonly int Scale, Samples, Shadow;

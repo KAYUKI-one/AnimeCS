@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: dust_hanging_light_02_off_-7069774988611786968
+  m_Shader: {fileID: 4800000, guid: 9bb23e9a2e5017a4d9a50f83e5dda27a, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 5f3e7750b22e859459f275ed87313e87, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BlendMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: 396c188cf78ab64409dc128dc6abbbf2, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _LayerSurface:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ORM:
+        m_Texture: {fileID: 2800000, guid: 720391b3dd51adf4caf38daea5fab38e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Cull: 2
+    - _Layered: 0
+    - _MetalFactor: 1
+    - _PaintMode: -1
+    - _RoughFactor: 1
+    - _Softness: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _BaseTint: {r: 0.62745076, g: 0.62745076, b: 0.62745076, a: 1}
+    - _ColorU: {r: 1, g: 0, b: 0, a: 0}
+    - _ColorV: {r: 0, g: 1, b: 0, a: 0}
+    - _LayerTint: {r: 1, g: 1, b: 1, a: 1}
+    - _MaskU: {r: 1, g: 0, b: 0, a: 0}
+    - _MaskV: {r: 0, g: 1, b: 0, a: 0}
+    - _NormalU: {r: 1, g: 0, b: 0, a: 0}
+    - _NormalV: {r: 0, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

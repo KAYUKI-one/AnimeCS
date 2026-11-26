@@ -59,6 +59,103 @@ namespace AnimeCS.Tests
             }
         }
 
+        [UnityTest] public IEnumerator AspectModesKeepTheAimCenteredAndSurviveSceneReload()
+        {
+            const string aspectKey = "AnimeCS.Video.Aspect";
+            yield return SceneManager.LoadSceneAsync(Scene);
+            var game = Object.FindAnyObjectByType<LocalGame>();
+            while (!game.InLobby) yield return null;
+            PlayAspect previous = game.AspectMode;
+            int? saved = PlayerPrefs.HasKey(aspectKey) ? PlayerPrefs.GetInt(aspectKey) : null;
+            try
+            {
+                var root = Object.FindAnyObjectByType<UIDocument>().rootVisualElement;
+                Click(root, "settings");
+                var aspect = root.Q<DropdownField>("video-aspect");
+                Assert.That(aspect, Is.Not.Null);
+                Assert.That(aspect.choices.Count, Is.EqualTo(3));
+                foreach (var mode in new[] { PlayAspect.Native, PlayAspect.Widescreen, PlayAspect.Stretched })
+                {
+                    aspect = root.Q<DropdownField>("video-aspect");
+                    aspect.index = (int)mode;
+                    Assert.That(game.AspectMode, Is.EqualTo(mode));
+                }
+                Click(root, "close");
+                game.Restart();
+                while (!game.Ready) yield return null;
+                var world = Camera.main;
+                var hands = world.GetComponentsInChildren<Camera>(true).Single(camera => camera != world);
+                var center = new Vector3(.5f, .5f, 0f);
+                void AssertCenteredAim(Camera camera)
+                {
+                    var projection = camera.projectionMatrix;
+                    var localCenter = projection.inverse * new Vector4(0f, 0f, -1f, 1f);
+                    var localRay = new Vector3(localCenter.x, localCenter.y, localCenter.z) / localCenter.w;
+                    Assert.That(Vector3.Distance(localRay.normalized, Vector3.back), Is.LessThan(.000001f), camera.name);
+
+                    // A world-space ray can lose precision when the near plane is small
+                    // relative to the camera's distance from the world origin.
+                    var aim = camera.transform.InverseTransformDirection(camera.ViewportPointToRay(center).direction);
+                    var clip = projection * new Vector4(aim.x, aim.y, -aim.z, 0f);
+                    var pixelOffset = new Vector2(clip.x / clip.w * camera.pixelWidth, clip.y / clip.w * camera.pixelHeight) * .5f;
+                    Assert.That(pixelOffset.magnitude, Is.LessThan(.25f), camera.name + " center ray offset in output pixels");
+                }
+
+                game.AspectMode = PlayAspect.Native;
+                yield return new WaitForEndOfFrame();
+                var nativeWorld = world.projectionMatrix;
+                var nativeHands = hands.projectionMatrix;
+                var nativeRect = world.rect;
+                Assert.That(nativeWorld.m11 / nativeWorld.m00,
+                    Is.EqualTo((float)world.pixelWidth / world.pixelHeight).Within(.002f));
+                Assert.That(nativeHands.m11 / nativeHands.m00,
+                    Is.EqualTo((float)hands.pixelWidth / hands.pixelHeight).Within(.002f));
+                AssertCenteredAim(world);
+                AssertCenteredAim(hands);
+
+                game.AspectMode = PlayAspect.Widescreen;
+                yield return new WaitForEndOfFrame();
+                var wideWorld = world.projectionMatrix;
+                var wideHands = hands.projectionMatrix;
+                Assert.That(wideWorld.m11 / wideWorld.m00, Is.EqualTo(16f / 9f).Within(.001f));
+                Assert.That(wideHands.m11 / wideHands.m00, Is.EqualTo(16f / 9f).Within(.001f));
+                AssertCenteredAim(world);
+                AssertCenteredAim(hands);
+
+                game.AspectMode = PlayAspect.Stretched;
+                yield return new WaitForEndOfFrame();
+                Assert.That(world.projectionMatrix.m00 / wideWorld.m00, Is.EqualTo(4f / 3f).Within(.001f));
+                Assert.That(hands.projectionMatrix.m00 / wideHands.m00, Is.EqualTo(4f / 3f).Within(.001f));
+                Assert.That(world.projectionMatrix.m11, Is.EqualTo(wideWorld.m11).Within(.001f));
+                Assert.That(hands.projectionMatrix.m11, Is.EqualTo(wideHands.m11).Within(.001f));
+                AssertCenteredAim(world);
+                AssertCenteredAim(hands);
+
+                game.AspectMode = PlayAspect.Native;
+                yield return new WaitForEndOfFrame();
+                Assert.That(world.rect, Is.EqualTo(nativeRect));
+                Assert.That(world.projectionMatrix.m00, Is.EqualTo(nativeWorld.m00).Within(.001f));
+                Assert.That(hands.projectionMatrix.m00, Is.EqualTo(nativeHands.m00).Within(.001f));
+
+                game.AspectMode = PlayAspect.Stretched;
+                yield return SceneManager.LoadSceneAsync(Scene);
+                game = Object.FindAnyObjectByType<LocalGame>();
+                while (!game.InLobby) yield return null;
+                Assert.That(game.AspectMode, Is.EqualTo(PlayAspect.Stretched));
+            }
+            finally
+            {
+                if (game)
+                {
+                    game.AspectMode = previous;
+                    if (game.Ready) game.ReturnToLobby();
+                }
+                if (saved.HasValue) PlayerPrefs.SetInt(aspectKey, saved.Value);
+                else PlayerPrefs.DeleteKey(aspectKey);
+                PlayerPrefs.Save();
+            }
+        }
+
         [UnityTest] public IEnumerator RightMouseCyclesBothSniperLensesAndLeavesShopLookIndependent()
         {
             yield return SceneManager.LoadSceneAsync(Scene);

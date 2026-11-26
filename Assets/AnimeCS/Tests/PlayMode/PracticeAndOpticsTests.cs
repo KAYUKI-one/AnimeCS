@@ -136,6 +136,7 @@ namespace AnimeCS.Tests
                     finally {Object.Destroy(baked);}
                     var hit=actors[i].HeadHitbox;
                     Assert.That(hit.transform.TransformPoint(hit.center).y-actors[i].transform.position.y,Is.EqualTo(expected+.006).Within(.001));
+                    Assert.That(hit.radius * hit.transform.lossyScale.x * 2f, Is.EqualTo(.29f).Within(.001f), character.Id);
                 }
                 Assert.That(attackIds, Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain" }));
                 Assert.That(defendIds, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily" }));

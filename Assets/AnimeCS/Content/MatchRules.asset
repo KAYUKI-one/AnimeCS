@@ -13,17 +13,18 @@ MonoBehaviour:
   m_Name: MatchRules
   m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Match.MatchRules
   movement:
-    accelerateSeconds: 0.17
+    accelerateSeconds: 0.14
     counterStopSeconds: 0.09
-    coastToSteadySeconds: 0.2
+    coastToSteadySeconds: 0.16
     settleOnReverse: 1
     walkFraction: 0.51
     duckFraction: 0.34
-    airAcceleration: 1.65
+    airAcceleration: 3.15
     airProjection: 0.18
     airCap: 1.22
     jumpSpeed: 5.65
     gravity: 21
+    tuckHeight: 0.3
     crouchSeconds: 0.16
     standSeconds: 0.22
   winsRequired: 13

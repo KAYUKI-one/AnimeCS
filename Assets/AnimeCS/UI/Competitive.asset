@@ -26,6 +26,7 @@ MonoBehaviour:
   sunIntensity: 1.75
   handlingMotion: 1
   hitConfirm: 1
+  longGunViewOffset: {x: 0.023, y: -0.034, z: 0}
   cameraKickDegrees: 0.58
   tracers: 1
   surfaceMarks: 1

@@ -63,6 +63,22 @@ namespace AnimeCS.Play
         private HitZone _hitZone;
         private static readonly int BaseMap = Shader.PropertyToID("_BaseMap"), MainTex = Shader.PropertyToID("_MainTex");
 
+        private SkinnedMeshRenderer[] _cueRenderers=System.Array.Empty<SkinnedMeshRenderer>();
+        private readonly MaterialPropertyBlock _cueBlock=new();
+        private static readonly int FriendlyRim=Shader.PropertyToID("_FriendlyRim");
+        private bool _cueActive;
+        internal void SetFriendlyCue(bool visible)
+        {
+            if(_cueActive==visible)return;
+            _cueActive=visible;
+            foreach(var renderer in _cueRenderers)
+            {
+                renderer.GetPropertyBlock(_cueBlock);
+                _cueBlock.SetFloat(FriendlyRim,visible?1f:0f);
+                renderer.SetPropertyBlock(_cueBlock);
+            }
+        }
+
         public AppearancePresenter(ContentCatalog catalog, ArenaPawn actor, Transform camera, MatchPresentation style = null)
         { _catalog = catalog; _actor = actor; _camera = camera; _style = style; }
 
@@ -106,6 +122,8 @@ namespace AnimeCS.Play
                 _rig=new CharacterRig(body,character,outfit ? outfit.PoseController : null);
                 WearablePresenter.Apply(_catalog,_worn,outfit,false,body,_rig);
                 if (outfit != null) _rig.BindClothing(AddVisual(outfit.Model, _stature, Vector3.zero));
+                _cueRenderers=_stature.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+                _cueActive=false;
                 var mark = AddVisual(character.Insignia(_side), _stature, Vector3.zero);
                 bool followsSkin = mark && mark.GetComponentInChildren<SkinnedMeshRenderer>(true) && _rig.BindClothing(mark);
                 _mark = mark && !followsSkin ? mark.transform : null;
@@ -203,7 +221,9 @@ namespace AnimeCS.Play
             float pace = Mathf.Clamp01(view.Motion.Velocity.magnitude / speed);
             if (view.Motion.Grounded) _stride += ticks * SeatMovement.StepTime * pace * 10;
             float bob = view.Motion.Grounded ? pace : 0;
-            _first.transform.localPosition = new Vector3(Mathf.Sin(_stride)*.009f*bob, Mathf.Cos(2*_stride)*.006f*bob, -kick*.004f);
+            bool longGun=_equipped && _equipped.Class!=WeaponClass.Pistol && _equipped.Class!=WeaponClass.Knife;
+            var framing=longGun && _style?_style.longGunViewOffset:Vector3.zero;
+            _first.transform.localPosition = framing+new Vector3(Mathf.Sin(_stride)*.009f*bob, Mathf.Cos(2*_stride)*.006f*bob, -kick*.004f);
             _first.transform.localRotation = Quaternion.Euler(Mathf.Clamp(-view.Motion.VerticalSpeed*.36f,-2,2)-_flinch*.4f-kick, 0, _flinch*.18f);
         }
 

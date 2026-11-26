@@ -232,6 +232,11 @@ namespace AnimeCS.Editor
                 if (character && folder.Contains("/Characters/")) CharacterShading.Apply(original.name,m);
                 if (character) BindCharacterNormal(folder, original.name, m);
                 var diffuse = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/" + original.name + ".png");
+                if(!character && original.name=="Ember47_T00")
+                {
+                    var deLit=AssetDatabase.LoadAssetAtPath<Texture2D>(folder+"/Ember47Albedo.png");
+                    if(deLit)diffuse=deLit;
+                }
                 if (diffuse && m.GetTexture("_BaseMap") != diffuse) { m.SetTexture("_BaseMap", diffuse); EditorUtility.SetDirty(m); }
                 if (!character && original.name.EndsWith("_T00", StringComparison.Ordinal))
                 {

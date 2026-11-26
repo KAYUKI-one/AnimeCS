@@ -187,7 +187,10 @@ namespace AnimeCS.Match
             _signals?.Emit(i, SoundKind.Gun, gun.Definition.SoundRadius, gun.Definition.Suppressed);
             s.NextShot = _tick + Mathf.CeilToInt(60f * MatchRules.TickRate / gun.Definition.ShotsPerMinute);
             bool steady = gun.Definition.IsSteady(s.Motion.Velocity.magnitude, s.Motion.Grounded);
-            float spread = steady ? 0.06f : 1.0f + 3f * s.Motion.Velocity.magnitude / gun.Definition.RunSpeed;
+            float speedRatio=s.Motion.Velocity.magnitude/gun.Definition.RunSpeed;
+            float moving=Mathf.InverseLerp(.34f,1f,speedRatio);
+            float spread=steady ? .06f : Mathf.Lerp(.06f,4f,Mathf.SmoothStep(0f,1f,moving));
+            if(!s.Motion.Grounded) spread=Mathf.Max(2.8f,spread);
             if (lens != null)
                 spread = lens.Spread(s.Motion.Velocity.magnitude / gun.Definition.RunSpeed, s.Motion.Crouch,
                     s.Motion.Grounded, s.Scope.Stability(lens, _tick));

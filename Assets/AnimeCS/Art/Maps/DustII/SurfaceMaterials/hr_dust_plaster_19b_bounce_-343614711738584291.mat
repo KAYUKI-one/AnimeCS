@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: hr_dust_plaster_19b_bounce_-343614711738584291
+  m_Shader: {fileID: 4800000, guid: 9bb23e9a2e5017a4d9a50f83e5dda27a, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _PAINTED
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 1cbb3659f6444ac4982fd28850374c13, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BlendMask:
+        m_Texture: {fileID: 2800000, guid: 07a1902a175419b4191befb29405c789, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: 2a37c2898d41c044397027f11483f041, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Layer:
+        m_Texture: {fileID: 2800000, guid: 3938e3758d2c8944b86c14a29c93acd1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _LayerSurface:
+        m_Texture: {fileID: 2800000, guid: 53b2f9149be4d3a4c92f96277d4f6fb6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ORM:
+        m_Texture: {fileID: 2800000, guid: 8945952ddbdbdf145a90b65e0960d721, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Cull: 2
+    - _Layered: 1
+    - _MetalFactor: 1
+    - _PaintMode: 2
+    - _RoughFactor: 1
+    - _Softness: 0.01
+    - _ZWrite: 1
+    m_Colors:
+    - _BaseTint: {r: 1, g: 1, b: 1, a: 1}
+    - _ColorU: {r: 1, g: 0, b: 0, a: 0}
+    - _ColorV: {r: 0, g: 1, b: 0, a: 0}
+    - _LayerTint: {r: 1, g: 1, b: 1, a: 1}
+    - _MaskU: {r: 1, g: 0, b: 0, a: 0}
+    - _MaskV: {r: 0, g: 1, b: 0, a: 0}
+    - _NormalU: {r: 1, g: 0, b: 0, a: 0}
+    - _NormalV: {r: 0, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

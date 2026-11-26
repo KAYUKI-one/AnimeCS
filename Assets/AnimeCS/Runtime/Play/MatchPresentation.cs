@@ -20,6 +20,7 @@ namespace AnimeCS.Play
         [Header("交火反馈")]
         [Range(0,1)] public float handlingMotion = 1;
         public bool hitConfirm = true;
+        [InspectorName("第一人称长枪构图偏移（米）")] public Vector3 longGunViewOffset=new(.023f,-.034f,0);
         [Range(0,2)] public float cameraKickDegrees=.58f;
         public bool tracers = true, surfaceMarks = true, hitReaction = true;
         public Material tracerMaterial, impactMaterial;

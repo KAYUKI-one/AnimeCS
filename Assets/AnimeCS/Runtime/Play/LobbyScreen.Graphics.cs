@@ -8,9 +8,13 @@ namespace AnimeCS.Play
     {
         private void GraphicsOptions()
         {
+            Header("画面");
+            var aspect=new DropdownField("游戏画幅",new List<string>{"跟随窗口","16:9","4:3 拉伸"},(int)_game.AspectMode){name="video-aspect"};
+            aspect.AddToClassList("video-field");
+            aspect.RegisterValueChangedCallback(_=>_game.AspectMode=(PlayAspect)aspect.index);
+            _content.Add(aspect);
             var graphics=_game.GraphicsOptions;
             if (graphics==null || !graphics.Supported) return;
-            Header("画面");
             var presets=Row();
             var current=graphics.Current;
             var scale=new SliderInt("渲染精度",75,200){name="render-scale",value=current.Scale,showInputField=true};
