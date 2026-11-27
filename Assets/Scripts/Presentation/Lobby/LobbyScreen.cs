@@ -187,6 +187,7 @@ namespace AnimeCS.Play
             Slider("鼠标灵敏度",.025f,.30f,settings.Sensitivity,v=>SensitivityRequested?.Invoke(v));
             Slider("音量",0,1,settings.Volume,v=>VolumeRequested?.Invoke(v));Header("键鼠");
             _content.Add(new Label("WASD 移动    Shift 静步    空格跳跃    Ctrl / C 下蹲"));
+            _content.Add(new Label("V 切换视角    第三人称：鼠标环绕、滚轮缩放"));
             _content.Add(new Label("1 主武器    2 副武器    3 刀    5 目标包    滚轮切换    Q 上一件"));
             _content.Add(new Label("左键使用    右键开镜    R 换弹    F 检视    E 交互    X 投道具    G 丢弃手持物"));
             _content.Add(new Label("B 购买    商店内按住右键转头    Esc 关闭商店 / 暂停"));

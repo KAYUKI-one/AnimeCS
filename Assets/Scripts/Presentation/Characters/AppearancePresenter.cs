@@ -11,10 +11,10 @@ namespace AnimeCS.Play
         private readonly ArenaPawn _actor;
         private readonly Transform _camera;
         private readonly MatchPresentation _style;
-        private GameObject _third, _first, _worldGun, _viewGun;
-        private CharacterRig _rig, _viewRig;
+        private GameObject _third, _worldGun;
+        private CharacterRig _rig;
         private FirstPersonBody _localBody;
-        private ReloadInsert _worldInsert, _viewInsert;
+        private ReloadInsert _worldInsert;
 
         internal struct ReloadInsert
         {
@@ -50,7 +50,7 @@ namespace AnimeCS.Play
         }
         private string _outfit, _gun, _skin;
         private Side _side;
-        private bool _built, _watch, _showView;
+        private bool _built, _watch, _eyeGrip;
         private WeaponDefinition _equipped;
         private readonly GameObject _objectiveModel;
         private UtilityDefinition _utility;
@@ -58,21 +58,20 @@ namespace AnimeCS.Play
         private HeldItemActions _actions;
         private GameObject CarriedModel => _gun==Objective?_objectiveModel:_utility?_utility.Model:null;
         private Vector3 _tip;
-        private GameObject _viewFlash, _worldFlash;
+        private GameObject _worldFlash;
         private bool _flashVisible;
         private int _lastPresentedRound = -1, _lastPresentedTick = -1, _shotFrame = -1;
         private int _predictedRound=-1,_predictedTick=-1;
         internal void PredictTrigger(int round,int tick){_predictedRound=round;_predictedTick=tick;}
         private Quaternion _aim;
         private Transform _mark, _stature;
-        private float _stanceEyes, _feetWeight, _footFloorHeight;
+        private float _stanceEyes, _feetWeight, _footFloorHeight, _stanceWeight;
         private bool _grounded;
-        private int _viewTick = -1;
-        private float _stride, _bodyYaw, _lookYaw, _lookPitch, _swing;
+        private float _bodyYaw, _lookYaw, _lookPitch, _swing;
         private int _bodyRound=-1;
         private WornItems _worn;
         private float _flinch, _obstruction;
-        private WeaponActionPose _viewAction, _worldAction;
+        private WeaponActionPose _worldAction;
         private HitZone _hitZone;
         private static readonly int BaseMap = Shader.PropertyToID("_BaseMap"), MainTex = Shader.PropertyToID("_MainTex");
 
@@ -100,21 +99,20 @@ namespace AnimeCS.Play
 
         public void Present(in SeatView view, bool watch, float alpha = 0)
         {
-            _showView=watch && view.Health>0 && view.ScopeLevel==0;
             if (view.Health<=0) { Hide(); return; }
+            if ((_watch != watch || _bodyRound != view.Match.Round) && _rig?.SecondaryMotion is { } motion && motion)
+                motion.ResetMotion(preservePose: _bodyRound == view.Match.Round);
             bool lowering = _built && _gun != null && _watch == watch && _bodyRound == view.Match.Round &&
                 WeaponActionPose.DrawProgress(view, alpha) < WeaponActionPose.SwapPoint;
             string id = lowering ? _gun : view.Held==HeldSlot.Utility?view.UtilityId : view.Held==HeldSlot.Objective?Objective:view.WeaponId;
             string skinId = lowering ? _skin : view.SkinId;
             bool bodyChanged = NeedsBody(view);
-            bool cameraChanged = !_built || _watch != watch || bodyChanged;
             bool gunChanged = !_built || _gun != id || _skin != skinId;
-            if (watch && gunChanged && _built && _viewRig == null)
-                cameraChanged |= (_equipped?.Class == WeaponClass.Pistol) != (_catalog.Find<WeaponDefinition>(id)?.Class == WeaponClass.Pistol);
-            if (!bodyChanged && !cameraChanged && !gunChanged)
+            if (!bodyChanged && !gunChanged)
             {
-                if (_third != null) _third.SetActive(view.Health > 0 && (!watch || view.Pitch < -18f));
-                if (_first != null) _first.SetActive(watch && (_equipped || CarriedModel));
+                _watch = watch;
+                _localBody?.SetLocal(watch);
+                _third.SetActive(true);
                 UpdateMotion(view, alpha);
                 return;
             }
@@ -131,6 +129,7 @@ namespace AnimeCS.Play
             var skin = _catalog.Find<WeaponSkinDefinition>(_skin);
             if (bodyChanged)
             {
+                _localBody?.Release();
                 Retire(_third); _worldGun = null;
                 _third = NewRoot("Third person", _actor.Visuals);
                 var character = outfit != null && outfit.Character != null ? outfit.Character : _catalog.Character;
@@ -138,9 +137,11 @@ namespace AnimeCS.Play
                 float height=character.StandingEyes>0 ? Mathf.Clamp(SeatMovement.EyeHeight(0)/character.StandingEyes,.88f,1.14f) : 1f;
                 _stature.localScale=new Vector3(Mathf.Sqrt(height),height,Mathf.Sqrt(height));
                 var body=AddVisual(character.Model,_stature,Vector3.zero);
-                _rig=new CharacterRig(body,character,outfit ? outfit.PoseController : null);
-                var lowerWearables=new System.Collections.Generic.List<Renderer>();
-                WearablePresenter.Apply(_catalog,_worn,outfit,false,body,_rig,lowerWearables);
+                _rig=new CharacterRig(body,character,outfit ? outfit.PoseController : null,
+                    alwaysAnimate:watch, regions:outfit ? outfit.Regions(false) : null,
+                    secondaryMotionProfile:_style ? _style.secondaryMotion : null);
+                var localWearables=new System.Collections.Generic.List<Renderer>();
+                WearablePresenter.Apply(_catalog,_worn,outfit,false,body,_rig,localWearables);
                 if(_rig.Head)_rig.Head.localScale*=character.CombatHeadScale;
                 if (outfit != null) _rig.BindClothing(AddVisual(outfit.Model, _stature, Vector3.zero));
                 _cueRenderers=_stature.GetComponentsInChildren<SkinnedMeshRenderer>(true);
@@ -148,7 +149,7 @@ namespace AnimeCS.Play
                 var mark = AddVisual(character.Insignia(_side), _stature, Vector3.zero);
                 bool followsSkin = mark && mark.GetComponentInChildren<SkinnedMeshRenderer>(true) && _rig.BindClothing(mark);
                 _mark = mark && !followsSkin ? mark.transform : null;
-                _localBody=new FirstPersonBody(_third,outfit,lowerWearables);
+                _localBody=new FirstPersonBody(_third,outfit,localWearables);
             }
             if ((bodyChanged || gunChanged) && !gun) { Retire(_worldGun); _worldGun = null; }
             if ((bodyChanged || gunChanged) && gun != null)
@@ -156,7 +157,7 @@ namespace AnimeCS.Play
                 Retire(_worldGun);
                 bool socket = _rig.WeaponSocket != null && _rig.Grip?.Valid != true;
                 _worldGun = MountGun(socket ? _rig.WeaponSocket : _third.transform,
-                    socket ? Vector3.zero : new Vector3(0.24f, 1.13f, 0.2f), gun, skin, false);
+                    socket ? Vector3.down * WeaponGripRig.WorldGripDrop : new Vector3(0.24f, 1.09f, 0.2f), gun, skin, false);
                 _worldInsert=new ReloadInsert(_worldGun.transform);
                 _worldFlash=MakeFlash(_worldGun,false);
             }
@@ -167,37 +168,8 @@ namespace AnimeCS.Play
             }
             _actor.Visuals.gameObject.SetActive(view.Health > 0);
             _localBody?.SetLocal(watch);
-            if(_worldGun)_worldGun.SetActive(!watch);
-            _third.SetActive(view.Health > 0 && (!watch || view.Pitch < -18f));
-            if (cameraChanged) { Retire(_first); _first = _viewGun = null; _viewRig = null; }
+            _third.SetActive(true);
             UpdateMotion(view, alpha);
-            if (!watch || view.Health <= 0) return;
-            if (_first == null)
-            {
-                _first = NewRoot("View model", _camera);
-                if (outfit && outfit.ViewRig)
-                {
-                    var sleeves = AddVisual(outfit.ViewRig, _first.transform, Vector3.down * 1.60f);
-                    _viewRig = new CharacterRig(sleeves, outfit.Character, alwaysAnimate:true);
-                    WearablePresenter.Apply(_catalog,_worn,outfit,true,sleeves,_viewRig);
-                    foreach (var skinRenderer in sleeves.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-                    {
-                        skinRenderer.updateWhenOffscreen = true;
-                        skinRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    }
-                }
-                else if (outfit) AddVisual(outfit.ViewArms(gun?.Class == WeaponClass.Pistol), _first.transform, Vector3.zero);
-            }
-            if ((cameraChanged || gunChanged) && gun != null)
-            {
-                Retire(_viewGun);
-                _viewGun = MountGun(_first.transform, new Vector3(0.23f, -0.22f, 0.43f), gun, skin, true);
-                _viewInsert=new ReloadInsert(_viewGun.transform);
-                _viewFlash=MakeFlash(_viewGun,true);
-            }
-            if(!gun && (gunChanged || cameraChanged)) { Retire(_viewGun); _viewGun=CarriedModel?MountCarried(_first.transform):null; _viewInsert=default; _viewFlash=null; }
-            UseViewLayer(_first);
-            _first.SetActive(gun || CarriedModel);
         }
 
         private GameObject MountCarried(Transform parent)
@@ -212,9 +184,10 @@ namespace AnimeCS.Play
             _stanceEyes=_actor.RenderEye(alpha).y-feetHeight;
             _footFloorHeight = feetHeight - _actor.GroundSkin;
             _grounded = view.Motion.Grounded;
+            _eyeGrip = _watch && view.ScopeLevel == 0;
             _feetWeight=view.Motion.Grounded ? 1f-Mathf.InverseLerp(.12f,1.5f,view.Motion.Velocity.magnitude) : 0f;
+            _stanceWeight = _grounded ? (1f - view.Motion.Crouch) * Mathf.Lerp(.5f, 1f, _feetWeight) : 0f;
             float scale = _style ? _style.handlingMotion : 1f;
-            if (_showView) _viewAction = WeaponActionPose.Sample(view, _equipped, alpha, true, scale, _actions);
             _worldAction = WeaponActionPose.Sample(view, _equipped, alpha, false, scale, _actions);
             // Several simulation ticks can elapse between rendered frames.
             if (_lastPresentedRound == view.Match.Round && view.LastShotTick > _lastPresentedTick)
@@ -223,19 +196,19 @@ namespace AnimeCS.Play
             _lastPresentedTick = view.Match.Tick;
             _flashVisible = _equipped && !_equipped.Suppressed && _equipped.Class != WeaponClass.Knife && view.Health > 0 &&
                 view.LastShotTick >= 0 && (_shotFrame == Time.frameCount || view.Match.Tick + alpha - view.LastShotTick < 2.5f);
-            if (_worldFlash) _worldFlash.SetActive(_flashVisible);
             bool predicted=_watch && view.Health>0 && _predictedRound==view.Match.Round && _predictedTick==view.Match.Tick+1;
-            if (_viewFlash) _viewFlash.SetActive(_flashVisible || predicted && _equipped && !_equipped.Suppressed);
-            if(predicted) _viewAction.Offset+=Vector3.back*.014f;
+            if (_worldFlash) _worldFlash.SetActive(_flashVisible || predicted);
+            if (predicted) _worldAction.Offset += Vector3.back * .014f;
             if (_watch && _equipped && view.Health > 0 && view.ScopeLevel==0)
             {
                 float reach = _equipped.Class==WeaponClass.Pistol || _equipped.Class==WeaponClass.Knife ? .61f : .92f;
                 float close = Physics.SphereCast(_camera.position,.055f,_camera.forward,out var hit,reach,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore)
                     ? 1f-Mathf.InverseLerp(.22f,reach,hit.distance) : 0;
                 _obstruction = Mathf.MoveTowards(_obstruction, close, Time.unscaledDeltaTime * 9f);
-                _viewAction.Offset += new Vector3(.015f,-.082f,-.036f)*_obstruction;
-                _viewAction.Angles += new Vector3(21,-10,-9)*_obstruction;
+                _worldAction.Offset += new Vector3(.015f,-.082f,-.036f)*_obstruction;
+                _worldAction.Angles += new Vector3(21,-10,-9)*_obstruction;
             }
+            else _obstruction = 0;
             float speed = _equipped != null ? _equipped.RunSpeed : 6f;
             float age = (view.Match.Tick - view.LastHitTick) * SeatMovement.StepTime;
             float t = _style ? Mathf.Clamp01(age / Mathf.Max(.03f,_style.flinchSeconds)) : 1;
@@ -252,24 +225,14 @@ namespace AnimeCS.Play
             if(_third)
             {
                 _third.transform.rotation=Quaternion.Euler(0,_bodyYaw,0);
-                // Place the local hips behind the eye so the thighs enter from the bottom of the frame.
-                float setback=_watch?Mathf.Lerp(.40f,.64f,Mathf.InverseLerp(28,79,-view.Pitch)):0;
-                _third.transform.position=_actor.RenderFeet(alpha)-Quaternion.Euler(0,view.Yaw,0)*Vector3.forward*setback;
+                _third.transform.position=_actor.RenderFeet(alpha);
             }
             bool knife=_equipped && _equipped.Class==WeaponClass.Knife;
             _swing=knife && _actions?.Attack(view.LastMelee) == null ? Mathf.Sin(Mathf.PI*Mathf.Clamp01((tick-view.LastShotTick)*SeatMovement.StepTime/.30f)) : 0;
             if(knife)kick=0;
-            _aim = Quaternion.Euler(-Mathf.Clamp(view.Pitch+kick,-66,69), view.Yaw, 0);
-            if (_first == null || !_showView || view.Match.Paused || _viewTick == view.Match.Tick) return;
-            int ticks = _viewTick >= 0 ? Mathf.Clamp(view.Match.Tick - _viewTick, 0, 8) : 0;
-            _viewTick = view.Match.Tick;
-            float pace = Mathf.Clamp01(view.Motion.Velocity.magnitude / speed);
-            if (view.Motion.Grounded) _stride += ticks * SeatMovement.StepTime * pace * 10;
-            float bob = view.Motion.Grounded ? pace : 0;
-            bool longGun=_equipped && _equipped.Class!=WeaponClass.Pistol && _equipped.Class!=WeaponClass.Knife;
-            var framing=longGun && _style?_style.longGunViewOffset:Vector3.zero;
-            _first.transform.localPosition = framing+new Vector3(Mathf.Sin(_stride)*.009f*bob, Mathf.Cos(2*_stride)*.006f*bob, -kick*.0015f);
-            _first.transform.localRotation = Quaternion.Euler(Mathf.Clamp(-view.Motion.VerticalSpeed*.36f,-2,2)-_flinch*.4f-kick*.32f, 0, _flinch*.18f);
+            float pitch = _watch ? -Mathf.DeltaAngle(0, _camera.eulerAngles.x) : view.Pitch;
+            float yaw = _watch ? _camera.eulerAngles.y : view.Yaw;
+            _aim = Quaternion.Euler(-Mathf.Clamp(pitch+kick,-75,75), yaw, 0);
         }
 
         public void AlignWorldGun()
@@ -278,6 +241,7 @@ namespace AnimeCS.Play
             {
                 _rig.RestoreHitPose();
                 var basis=_third.transform;
+                _rig.RelaxStance(_stanceWeight, PhysicsFootSurface.Shared, _footFloorHeight);
                 _rig.Look(basis,_lookYaw,_lookPitch);
                 // Humanoid retargeting can lower the ankles below the mesh origin in a crouch.
                 // Fit the planted sole and eye together, using the moving leg pose each frame.
@@ -303,7 +267,7 @@ namespace AnimeCS.Play
                     if(_gun==Objective && _rig.Grip?.Valid==true)_rig.Grip.PoseDevice(basis,_worldGun.transform,_aim,false,_worldAction);
                     else if(_utility && _rig.Grip?.Valid==true)_rig.Grip.PoseKnife(basis,_worldGun.transform,null,_aim,false,0,_worldAction);
                     else if (_rig.Grip?.Valid==true)
-                        _rig.Grip.Pose(basis,_worldGun.transform,_equipped,_aim,false,_swing,_worldAction,_worldInsert.Bounds);
+                        _rig.Grip.Pose(basis,_worldGun.transform,_equipped,_aim,false,_swing,_worldAction,_worldInsert.Bounds,_eyeGrip);
                 }
                 if (_mark && _rig.Chest)
                 {
@@ -313,14 +277,7 @@ namespace AnimeCS.Play
             }
             if (_worldGun != null && _worldGun.activeInHierarchy && _rig.Grip?.Valid != true && _rig.AimFromHand && _equipped != null)
                 _worldGun.transform.rotation = _aim * _equipped.Rotation(false);
-            if (_showView && _first && _first.activeInHierarchy && _viewGun)
-            {
-                _viewInsert.Apply(_viewGun.transform,_viewAction.InsertOffset,_viewAction.Hinge);
-                if(_gun==Objective && _viewRig?.Grip?.Valid==true)_viewRig.Grip.PoseDevice(_first.transform,_viewGun.transform,_first.transform.rotation,true,_viewAction);
-                else if(_utility && _viewRig?.Grip?.Valid==true)_viewRig.Grip.PoseKnife(_first.transform,_viewGun.transform,null,_first.transform.rotation,true,0,_viewAction);
-                else if (_viewRig?.Grip?.Valid==true)
-                    _viewRig.Grip.Pose(_first.transform,_viewGun.transform,_equipped,_first.transform.rotation,true,_swing,_viewAction,_viewInsert.Bounds);
-            }
+            _localBody?.SyncShadows();
         }
 
         public Vector3 LabelAnchor(float alpha) => _rig?.Head && _third && _third.activeInHierarchy
@@ -340,9 +297,9 @@ namespace AnimeCS.Play
 
         public Vector3? Muzzle()
         {
-            var mount=_watch ? _viewGun : _worldGun;
+            var mount=_worldGun;
             return _equipped && _equipped.Class!=WeaponClass.Knife && mount && mount.activeInHierarchy
-                ? mount.transform.TransformPoint(Tip(_watch)) : (Vector3?)null;
+                ? mount.transform.TransformPoint(Tip(false)) : (Vector3?)null;
         }
         public void BeforeAnimation()
         {
@@ -352,15 +309,11 @@ namespace AnimeCS.Play
         public void Hide()
         {
             SetFriendlyCue(false);
-            if (_first && _first.activeSelf) _first.SetActive(false);
+            _localBody?.SetLocal(false);
             if (_third && _third.activeSelf) _third.SetActive(false);
         }
 
-        internal static void UseViewLayer(GameObject root)
-        {
-            int layer = LayerMask.NameToLayer("First Person"); if (layer < 0 || !root) return;
-            foreach (var child in root.GetComponentsInChildren<Transform>(true)) child.gameObject.layer=layer;
-        }
+        public void Release() => _localBody?.Release();
 
         internal static GameObject MountGun(Transform parent, Vector3 anchor, WeaponDefinition gun, WeaponSkinDefinition skin, bool firstPerson)
         {

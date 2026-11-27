@@ -64,6 +64,8 @@ namespace AnimeCS.Play
             _previousPosition = position; _previousEye = Eye; Visuals.localPosition = Vector3.zero;
             _body.enabled = true; _hitbox.enabled = _headHitbox.enabled = true;
             Visuals.gameObject.SetActive(true);
+            var secondaryMotion = Visuals.GetComponentInChildren<StylizedCharacters.HumanoidSecondaryMotion>();
+            if (secondaryMotion) secondaryMotion.ResetMotion();
         }
         internal void SetAlive(bool alive) { _body.enabled = _hitbox.enabled = _headHitbox.enabled = alive; Visuals.gameObject.SetActive(alive); }
         private void SetHeight(float value)

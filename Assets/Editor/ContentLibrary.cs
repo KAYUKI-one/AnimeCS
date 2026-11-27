@@ -43,6 +43,8 @@ namespace AnimeCS.Editor
         {
             if (catalog == null) throw new ArgumentNullException(nameof(catalog));
             if (source != null) SourceField(kind, source);
+            if (kind == ContentKind.Character && source is GameObject characterModel)
+                source = PrepareCharacter(characterModel);
             string clean = string.Concat((label ?? "").Trim().Where(c => !Path.GetInvalidFileNameChars().Contains(c))).TrimEnd('.', ' ');
             if (string.IsNullOrEmpty(clean)) clean = Labels[(int)kind];
             string catalogFolder = Path.GetDirectoryName(AssetDatabase.GetAssetPath(catalog));
@@ -124,7 +126,7 @@ namespace AnimeCS.Editor
         {
             string field = SourceField(entry.Kind, source);
             if (entry is CharacterDefinition && source is GameObject model)
-                source=StylizedCharacters.Editor.CharacterModelMaterials.Prepare(model);
+                source=PrepareCharacter(model);
             var data = new SerializedObject(entry);
             var reference = data.FindProperty(field);
             if (entry is WeaponDefinition && field=="_worldModel" && reference.objectReferenceValue!=source)
@@ -156,6 +158,16 @@ namespace AnimeCS.Editor
                 FoundationBuild.IncludeScene(map.ScenePath);
         }
 
+        private static GameObject PrepareCharacter(GameObject model)
+        {
+            if (model.GetComponentInChildren<SkinnedMeshRenderer>(true) == null)
+                return StylizedCharacters.Editor.CharacterModelMaterials.Prepare(model);
+            var controller = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(StylizedCharacters.Editor.CharacterPrefabSetup.ControllerPath);
+            var prepared = StylizedCharacters.Editor.CharacterPrefabSetup.PrepareVisual(model, controller);
+            if (!prepared) throw new ArgumentException($"角色 {model.name} 的自动准备未通过，详见 Unity Console。");
+            return prepared;
+        }
+
         // Model instances preserve their authored root TRS below the in-game Weapon mount.
         internal static Vector3 MuzzleMarker(GameObject model)
         {
@@ -177,12 +189,13 @@ namespace AnimeCS.Editor
                 return definition;
             }
             string field = SourceField(kind, source);
+            string label = source.name;
             if (kind == ContentKind.Character && source is GameObject model)
-                source=StylizedCharacters.Editor.CharacterModelMaterials.Prepare(model);
+                source=PrepareCharacter(model);
             foreach (var entry in catalog.Entries)
                 if (entry != null && entry.Kind == kind && (entry is MapDefinition map && field == "_geometry" ? map.Geometry == source : new SerializedObject(entry).FindProperty(field).objectReferenceValue == source))
                     return entry;
-            return Create(catalog, kind, source.name, source, faction);
+            return Create(catalog, kind, label, source, faction);
         }
 
         [Serializable] private class GltfDependency { public string uri; }

@@ -182,6 +182,59 @@ namespace AnimeCS.Tests
             }
         }
 
+        [UnityTest]
+        public IEnumerator NonuniformScaleAndSharpTurnsKeepTipsOnTheirSkinnedSegments()
+        {
+            yield return SceneManager.LoadSceneAsync(GameplayScene);
+            var character = ReadSceneCatalog().SeatOutfits.Select(outfit => outfit.Character)
+                .First(definition => definition.name == "Flor");
+            var rig = Object.Instantiate(character.Model);
+            var originalStep = Time.captureDeltaTime;
+            try
+            {
+                Time.captureDeltaTime = 1f / 60f;
+                StaticAnimator(rig);
+                var motion = HumanoidSecondaryMotion.Attach(rig);
+                yield return null;
+                var bones = rig.GetComponentsInChildren<SpringBone>();
+                Assert.That(bones, Is.Not.Empty);
+                var rest = bones.Select(bone => bone.transform.localRotation).ToArray();
+                var segments = bones.Select(bone => bone.transform.InverseTransformPoint(bone.ComputeChildPosition())).ToArray();
+                var previous = (Quaternion[])rest.Clone();
+                for (int frame = 0; frame < 18; frame++)
+                {
+                    rig.transform.localScale = new Vector3(.96f, frame % 2 == 0 ? 1.16f : .79f, 1.07f);
+                    rig.transform.SetPositionAndRotation(new Vector3(frame * .4f, 0, 0),
+                        Quaternion.Euler(0, frame % 2 == 0 ? 35f : -35f, 0));
+                    yield return null;
+                    for (int i = 0; i < bones.Length; i++)
+                    {
+                        var bone = bones[i];
+                        var node = bone.transform;
+                        AssertFinite(bone.CurrentTipPosition);
+                        float error = Vector3.Distance(bone.CurrentTipPosition, node.TransformPoint(segments[i]));
+                        Assert.That(error, Is.LessThan(.0001f), bone.name);
+                        Assert.That(Quaternion.Angle(previous[i], node.localRotation), Is.LessThan(7.1f), bone.name);
+                        previous[i] = node.localRotation;
+                    }
+                }
+                motion.ResetMotion(preservePose: true);
+                yield return null;
+                for (int i = 0; i < bones.Length; i++)
+                    Assert.That(Quaternion.Angle(previous[i], bones[i].transform.localRotation), Is.LessThan(.06f), bones[i].name);
+
+                motion.ResetMotion();
+                yield return null;
+                for (int i = 0; i < bones.Length; i++)
+                    Assert.That(Quaternion.Angle(rest[i], bones[i].transform.localRotation), Is.LessThan(.06f), bones[i].name);
+            }
+            finally
+            {
+                Time.captureDeltaTime = originalStep;
+                Object.Destroy(rig);
+            }
+        }
+
         private sealed class SpringCapture : IDisposable
         {
             private const int Width = 680;

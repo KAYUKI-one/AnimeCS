@@ -1,0 +1,5 @@
+{
+    "name": "StylizedCharacters.Player",
+    "rootNamespace": "StylizedCharacters",
+    "references": ["StylizedCharacters.Runtime", "Unity.InputSystem"]
+}

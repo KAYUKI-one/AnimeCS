@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
+using UnityEditor.SceneManagement;
 
 namespace AnimeCS.Editor
 {
@@ -20,8 +21,13 @@ namespace AnimeCS.Editor
             File.WriteAllText(receipt,"Building");
             try
             {
+                var scenes = EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path).ToArray();
+                // lilToon's build callback restores the active scene after it scans the player scenes.
+                if (UnityEngine.Application.isBatchMode && scenes.Length > 0 &&
+                    string.IsNullOrEmpty(EditorSceneManager.GetActiveScene().path))
+                    EditorSceneManager.OpenScene(scenes[0]);
                 var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions {
-                    scenes=EditorBuildSettings.scenes.Where(scene=>scene.enabled).Select(scene=>scene.path).ToArray(),
+                    scenes=scenes,
                     locationPathName=Path.Combine(directory,"AnimeCS.exe"),
                     target=BuildTarget.StandaloneWindows64, subtarget=(int)StandaloneBuildSubtarget.Player,
                     extraScriptingDefines=defines, options=BuildOptions.DetailedBuildReport

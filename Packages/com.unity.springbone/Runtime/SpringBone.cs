@@ -40,6 +40,12 @@ namespace Unity.Animations.SpringBones
 
         public Vector3 CurrentTipPosition { get { return currTipPos; } }
 
+        /// <summary>Publishes the final tip when a host drives this bone with its own solver.</summary>
+        public void SetExternalPoseTip(Vector3 position)
+        {
+            currTipPos = prevTipPos = position;
+        }
+
         // This should be called by the SpringManager in its Awake function before any updates
         public void Initialize(SpringManager owner)
         {

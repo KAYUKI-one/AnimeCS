@@ -43,6 +43,9 @@ namespace StylizedCharacters
             _right?.Restore();
         }
 
+        public float DropBelow(IFootSurface surface, float floorHeight) =>
+            Mathf.Max(_left?.DropBelow(surface, floorHeight) ?? 0, _right?.DropBelow(surface, floorHeight) ?? 0);
+
         public sealed class Foot
         {
             private const float ProbeUp = .25f, ProbeDown = .27f, SoleClearance = .006f;
@@ -85,6 +88,15 @@ namespace StylizedCharacters
                 if (!TwoBonePose.Solve(_space, _thigh, _knee, _ankle, desiredSole - tilt * soleOffset, pole)) return;
                 TwoBonePose.SetRotation(_space, _ankle, tilt * ankleRotation);
                 _solved = true;
+            }
+
+            internal float DropBelow(IFootSurface surface, float floorHeight)
+            {
+                if (!_ankle) return 0;
+                var sole = _ankle.TransformPoint(_sole);
+                if (!surface.TryFind(sole + Vector3.up * ProbeUp, ProbeUp + ProbeDown, out var ground, out var normal) ||
+                    normal.y < .65f) return 0;
+                return Mathf.Max(0, floorHeight - ground.y);
             }
 
             internal void Restore()

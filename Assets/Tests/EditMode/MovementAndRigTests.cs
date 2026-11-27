@@ -157,17 +157,33 @@ namespace AnimeCS.Tests
             {
                 var region = outfit.Regions(false).Single(item => item.firstPersonLower);
                 var skin = body.GetComponentsInChildren<SkinnedMeshRenderer>().Single(renderer => renderer.sharedMesh == region.source);
+                skin.sharedMesh = region.partitioned;
+                skin.sharedMaterials = region.materials;
                 var headgear = new GameObject("Head accessory");
                 headgear.transform.SetParent(body.transform, false);
                 var headRenderer = headgear.AddComponent<MeshRenderer>();
                 var perspective = new FirstPersonBody(body, outfit, new System.Collections.Generic.List<Renderer>());
-                perspective.SetLocal(true);
-                Assert.That(skin.enabled, Is.True, "The lower body remains renderable.");
-                Assert.That(skin.sharedMesh, Is.SameAs(region.firstPersonLower));
-                Assert.That(headRenderer.enabled, Is.False, "Upper-only renderers must leave the first-person view.");
-                perspective.SetLocal(false);
-                Assert.That(skin.sharedMesh, Is.SameAs(region.source));
-                Assert.That(headRenderer.enabled, Is.True);
+                try
+                {
+                    perspective.SetLocal(true);
+                    var visible = skin.transform.Find("First-person body").GetComponent<SkinnedMeshRenderer>();
+                    var shadow = skin.transform.Find("Full character shadow").GetComponent<SkinnedMeshRenderer>();
+                    int layer = LayerMask.NameToLayer(CharacterCamera.HiddenLayer);
+                    Assert.That(layer, Is.GreaterThanOrEqualTo(0));
+                    Assert.That(headRenderer.gameObject.layer, Is.EqualTo(layer));
+                    Assert.That(skin.gameObject.layer, Is.EqualTo(layer));
+                    Assert.That(visible.gameObject.layer, Is.Not.EqualTo(layer));
+                    Assert.That(visible.sharedMesh.triangles.Length, Is.Positive);
+                    Assert.That(visible.bones, Is.EqualTo(skin.bones));
+                    Assert.That(visible.sharedMesh.triangles.Length, Is.LessThan(region.partitioned.triangles.Length));
+                    Assert.That(shadow.sharedMesh, Is.SameAs(region.partitioned));
+                    Assert.That(shadow.shadowCastingMode, Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly));
+                    perspective.SetLocal(false);
+                    Assert.That(skin.sharedMesh, Is.SameAs(region.partitioned));
+                    Assert.That(skin.gameObject.layer, Is.Not.EqualTo(layer));
+                    Assert.That(visible.enabled || shadow.enabled, Is.False);
+                }
+                finally { perspective.Release(); }
             }
             finally { Object.DestroyImmediate(body); }
         }

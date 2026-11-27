@@ -82,21 +82,7 @@ namespace StylizedCharacters.Editor
                 styled.SetFloat("_OutlineWidth",face ? .020f : hair ? .024f : .055f);
                 styled.SetFloat("_OutlineZBias",face || hair ? .005f : .002f);
                 styled.SetColor("_OutlineColor",face ? new Color(.73f,.53f,.55f) : new Color(.57f,.51f,.62f));
-                styled.SetFloat("_LightMinLimit",face ? .34f : .25f);
-                styled.SetFloat("_LightMaxLimit",1.15f);
-                styled.SetFloat("_MonochromeLighting",.18f);
-                styled.SetFloat("_ShadowStrength",face ? .62f : .88f);
-                styled.SetFloat("_ShadowBorder",face ? .34f : .52f);
-                styled.SetFloat("_ShadowBlur",face ? .34f : hair ? .13f : .11f);
-                styled.SetFloat("_ShadowReceive",face ? .22f : .72f);
-                styled.SetFloat("_ShadowBorderRange",face ? .018f : .01f);
-                styled.SetColor("_ShadowBorderColor",new Color(.95f,.77f,.73f));
-                styled.SetFloat("_ShadowEnvStrength",.18f);
-                styled.SetFloat("_UseRim",1);
-                styled.SetColor("_RimColor",new Color(.82f,.80f,.86f,face ? .055f : .16f));
-                styled.SetFloat("_RimBorder",.7f);
-                styled.SetFloat("_RimBlur",.35f);
-                styled.SetFloat("_RimMainStrength",.43f);
+                RefineLighting(styled, role);
                 if (role == CharacterSurfaceRole.Metal)
                 {
                     // Keep painted jewelry readable in a preview room without a reflection probe.
@@ -119,6 +105,36 @@ namespace StylizedCharacters.Editor
                 EditorUtility.SetDirty(material);
             }
             finally { UnityEngine.Object.DestroyImmediate(styled); }
+        }
+
+        /// <summary>Applies the shared shadow and rim palette without changing surface modes or texture settings.</summary>
+        public static void RefineLighting(Material material, CharacterSurfaceRole role)
+        {
+            if (!IsPrepared(material)) return;
+            bool face = role == CharacterSurfaceRole.Face;
+            bool hair = role == CharacterSurfaceRole.Hair;
+            material.SetFloat("_UseShadow", 1);
+            material.SetFloat("_LightMinLimit", face ? .36f : .29f);
+            material.SetFloat("_LightMaxLimit", 1.15f);
+            material.SetFloat("_MonochromeLighting", .12f);
+            material.SetFloat("_ShadowStrength", face ? .63f : .79f);
+            material.SetFloat("_ShadowBorder", face ? .35f : .50f);
+            material.SetFloat("_ShadowBlur", face ? .31f : hair ? .22f : .19f);
+            material.SetFloat("_Shadow2ndBorder", face ? .21f : .30f);
+            material.SetFloat("_Shadow2ndBlur", .24f);
+            material.SetFloat("_ShadowReceive", face ? .23f : .65f);
+            material.SetFloat("_Shadow2ndReceive", .50f);
+            material.SetColor("_ShadowColor", face ? new Color(.98f,.83f,.88f) :
+                hair ? new Color(.80f,.84f,.98f) : new Color(.84f,.86f,.96f));
+            material.SetColor("_Shadow2ndColor", face ? new Color(.78f,.72f,.88f,.43f) : new Color(.73f,.76f,.93f,.44f));
+            material.SetFloat("_ShadowBorderRange", face ? .018f : .013f);
+            material.SetColor("_ShadowBorderColor", new Color(.95f,.81f,.79f));
+            material.SetFloat("_ShadowEnvStrength", .23f);
+            material.SetFloat("_UseRim", 1);
+            material.SetColor("_RimColor", new Color(.83f,.90f,.98f, face ? .055f : .145f));
+            material.SetFloat("_RimBorder", .84f);
+            material.SetFloat("_RimBlur", .16f);
+            material.SetFloat("_RimMainStrength", .42f);
         }
     }
 }

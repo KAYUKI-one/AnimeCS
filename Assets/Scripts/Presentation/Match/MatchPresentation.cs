@@ -21,6 +21,7 @@ namespace AnimeCS.Play
         public UnityEngine.Rendering.VolumeProfile daylightGrade;
         [InspectorName("大厅着色器预热")] public ShaderVariantCollection lobbyShaders;
         [InspectorName("对局着色器预热")] public ShaderVariantCollection matchShaders;
+        [InspectorName("角色弹簧骨预设")] public StylizedCharacters.SecondaryMotionProfile secondaryMotion;
         [ColorUsage(false)] public Color skyLight = new Color(.76f,.81f,.86f), horizonLight=new Color(.53f,.56f,.60f), groundLight=new Color(.35f,.32f,.29f);
         [Range(.2f,3)] public float sunIntensity=1.36f;
         [Header("交火反馈")]

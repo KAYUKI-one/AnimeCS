@@ -73,5 +73,24 @@ namespace AnimeCS.Editor
                     CharacterToonMaterial.Convert(mat,CharacterSurfaceRole.Fabric);
             }
         }
+
+        [MenuItem("AnimeCS/美术/更新角色阴影与边缘光")]
+        internal static void RefineCastLighting()
+        {
+            var roles = LoadRoles();
+            var folders = ContentLibrary.Catalog.Entries.OfType<CharacterDefinition>().Where(c => !c.Archived && c.Model)
+                .Select(c => Path.GetDirectoryName(AssetDatabase.GetAssetPath(c.Model)).Replace('\\','/'))
+                .Append("Assets/Content/Art/Wearables").Distinct().ToArray();
+            foreach (var guid in AssetDatabase.FindAssets("t:Material", folders))
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!path.EndsWith(".mat", StringComparison.OrdinalIgnoreCase)) continue;
+                var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (!CharacterToonMaterial.IsPrepared(material)) continue;
+                CharacterToonMaterial.RefineLighting(material, roles.Role(material.name));
+                EditorUtility.SetDirty(material);
+            }
+            AssetDatabase.SaveAssets();
+        }
     }
 }

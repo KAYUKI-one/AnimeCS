@@ -6,6 +6,7 @@ using AnimeCS.Content;
 using AnimeCS.Match;
 using AnimeCS.Play;
 using NUnit.Framework;
+using StylizedCharacters;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -124,9 +125,38 @@ namespace AnimeCS.Tests
             while(match.Public.Phase==RoundPhase.Buy)match.Step();
             var drivers=new ObserverPoseTests.PoseDriver[LocalMatch.Seats];
             for(int i=0;i<drivers.Length;i++){drivers[i]=new ObserverPoseTests.PoseDriver();game.SetSeatDriver(i,drivers[i]);}
-            var main=Camera.main;int fp=1<<LayerMask.NameToLayer("First Person");
-            var overlay=(Camera)typeof(LocalGame).GetField("_viewCamera",flags).GetValue(game);
-            Assert.That(main.cullingMask & fp,Is.Zero);Assert.That(overlay.cullingMask,Is.EqualTo(fp));
+            var main=Camera.main;int hidden=CharacterCamera.HiddenLayerMask;
+            Assert.That(hidden, Is.Not.Zero);
+            Assert.That(main.cullingMask & hidden, Is.Zero);
+            Assert.That(main.nearClipPlane, Is.EqualTo(.05f).Within(.0001f));
+            Assert.That(main.GetComponentsInChildren<Camera>(true).Length, Is.EqualTo(1));
+            drivers[0].crouch = false;
+            drivers[0].pitch = 0;
+            int lookAhead = match.Public.Tick + 28;
+            while (match.Public.Tick < lookAhead) yield return null;
+            yield return LobbyTestServices.Capture("FirstPerson");
+            drivers[0].pitch = -80;
+            int lookDown = match.Public.Tick + 28;
+            while (match.Public.Tick < lookDown) yield return null;
+            yield return LobbyTestServices.Capture("FirstPersonLookDown");
+            var original = actors[0].Visuals.GetComponentInChildren<Animator>();
+            var held = actors[0].Visuals.GetComponentsInChildren<Transform>().Single(t => t.name == "Weapon");
+            var visible = original.GetComponentsInChildren<SkinnedMeshRenderer>().Single(s => s.name == "First-person body");
+            var shadow = original.GetComponentsInChildren<SkinnedMeshRenderer>().Single(s => s.name == "Full character shadow");
+            Assert.That(visible.enabled, Is.True);
+            Assert.That(shadow.enabled, Is.True);
+            game.SetThirdPerson(true);
+            yield return null; yield return new WaitForEndOfFrame();
+            Assert.That(game.ThirdPerson, Is.True);
+            Assert.That(actors[0].Visuals.GetComponentInChildren<Animator>(), Is.SameAs(original));
+            Assert.That(held.gameObject.activeInHierarchy, Is.True);
+            Assert.That(visible.enabled || shadow.enabled, Is.False);
+            Assert.That(Vector3.Distance(main.transform.position, actors[0].Visuals.position), Is.GreaterThan(.6f));
+            drivers[0].pitch = 0;
+            var orbit = (CharacterCamera)typeof(LocalGame).GetField("_characterCamera",flags).GetValue(game);
+            orbit.Orbit(new Vector2(139f, 0), 1f);
+            yield return LobbyTestServices.Capture("ThirdPersonOrbit");
+            game.SetThirdPerson(false);
             foreach(bool crouch in new[]{false,true})
             {
                 var attackIds = new HashSet<string>();
@@ -136,6 +166,8 @@ namespace AnimeCS.Tests
                 yield return new WaitForEndOfFrame();
                 float expected=crouch?1.16f:1.62f;
                 Assert.That(main.transform.position.y-actors[0].Visuals.position.y,Is.EqualTo(expected).Within(.004));
+                var facing = Quaternion.Euler(0, drivers[0].yaw, 0) * Vector3.forward;
+                Assert.That(Vector3.Dot(main.transform.position - actors[0].Visuals.position, facing), Is.EqualTo(.08f).Within(.006f));
                 // Seat zero uses the first-person camera. The other four attack seats
                 // and five defend seats cover all eight third-person rigs.
                 for(int i=1;i<LocalMatch.Seats;i++)
@@ -170,7 +202,8 @@ namespace AnimeCS.Tests
                             if (Physics.Raycast(sole + Vector3.up * .28f, Vector3.down, out var contact, .56f,
                                     Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore) && contact.normal.y < .9999f)
                                 floor = contact.point.y;
-                            Assert.That(sole.y, Is.EqualTo(floor).Within(.045f), character.Id + " sole / crouch=" + crouch);
+                            Assert.That(sole.y, Is.EqualTo(floor).Within(.045f),
+                                $"{character.Id} sole / crouch={crouch}, contact={contact.collider?.name}, normal={contact.normal:F4}, capsule={actors[i].Visuals.position.y:F5}");
                         }
                     }
                     finally {Object.Destroy(baked);}
@@ -190,18 +223,18 @@ namespace AnimeCS.Tests
             {
                 drivers[0].fire=drivers[1].fire=(match.Public.Tick-start)%18<7;
                 yield return new WaitForEndOfFrame();
-                var flash=main.GetComponentsInChildren<Transform>().FirstOrDefault(t=>t.name=="枪口火光");
+                var flash=actors[0].Visuals.GetComponentsInChildren<Transform>().FirstOrDefault(t=>t.name=="枪口火光");
                 var worldFlash=actors[1].Visuals.GetComponentsInChildren<Transform>().FirstOrDefault(t=>t.name=="枪口火光");
                 observed |= worldFlash && Vector3.Distance(worldFlash.position,viewers[1].Muzzle().GetValueOrDefault())<.002f;
-                flashed |= flash && flash.gameObject.layer==LayerMask.NameToLayer("First Person") &&
+                flashed |= flash && flash.gameObject.layer!=LayerMask.NameToLayer(CharacterCamera.HiddenLayer) &&
                     Vector3.Distance(flash.position,viewers[0].Muzzle().GetValueOrDefault())<.002f;
             }
-            Assert.That(flashed,Is.True,"View model has its own muzzle flash");
+            Assert.That(flashed,Is.True,"First-person flash is anchored at the shared world weapon");
             Assert.That(observed,Is.True,"Third-person fire is anchored at the world gun");
             var remoteGun=catalog.Find<WeaponDefinition>(match.BindSeat(1).Read().WeaponId);
             var remote=actors[1].Visuals.GetComponentsInChildren<Transform>(true).Single(t=>t.name=="枪口火光");
             Assert.That((remote.localPosition-remoteGun.Muzzle(false)).sqrMagnitude,Is.LessThan(.000001));
-            Assert.That(remote.gameObject.layer,Is.Not.EqualTo(LayerMask.NameToLayer("First Person")));
+            Assert.That(remote.gameObject.layer,Is.Not.EqualTo(LayerMask.NameToLayer(CharacterCamera.HiddenLayer)));
             game.ReturnToLobby();
         }
     }

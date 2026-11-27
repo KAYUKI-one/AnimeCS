@@ -3,7 +3,7 @@ import re
 from collections import defaultdict
 
 # Source conventions are import metadata. The exported bone names are engine independent.
-HAIR = re.compile(r"hair|^左右?后\d|^[左右]后\d|^前\d|^H\d*_\d|前髪|側髪|邊髪|劉海|刘海|馬尾|马尾|辫子|^Tail_|^toujin_|^后带子_", re.I)
+HAIR = re.compile(r"hair|veil|頭紗|头纱|ベール|^左右?后\d|^[左右]后\d|^前\d|^H\d*_\d|前髪|側髪|邊髪|劉海|刘海|馬尾|马尾|辫子|^Tail_|^toujin_|^后带子_", re.I)
 CLOTH = re.compile(r"スカート|skirt|裙|dress|^q_\d|^下摆|^下擺|^belt_[a-e]_|^cloak_|^衣領|^外套|^后带|^cloth_[mn]_|^piaodai", re.I)
 
 
@@ -20,7 +20,7 @@ def add_secondary(body, armature, points, basis, humanoid_target, tailor):
             continue
         source = re.sub(r"^[左右]", "", name)
         kind = "Hair" if HAIR.search(source) or HAIR.search(name) else "Cloth" if CLOTH.search(source) else None
-        if not kind or "veil" in source.lower():
+        if not kind:
             continue
         anchor = humanoid_target(name)
         if anchor not in points:

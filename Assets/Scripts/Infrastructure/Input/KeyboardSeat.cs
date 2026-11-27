@@ -16,6 +16,7 @@ namespace AnimeCS.Play
         private bool _active;
         private bool _shopping, _canLook, _blockFire;
         public bool ShopLook => _scope.IsPressed();
+        internal bool Orbiting { get; set; }
         public bool Shopping
         {
             get => _shopping;
@@ -169,8 +170,9 @@ namespace AnimeCS.Play
             input.Jump = _jumped; input.Crouch = _crouch.IsPressed();
             input.FirePressed = !_blockFire && _clicked;
             input.Fire = !_blockFire && (_fire.IsPressed() || _clicked); input.Interact = _use.IsPressed(); input.Walk = _walk.IsPressed();
-            input.Select=_slot;input.SwitchWeapon = _switch; input.DropHeld = _drop; input.Inspect = _inspect; input.Cycle = _cycle; input.Reload = _reload;
-            input.Zoom = _zoom;
+            input.Select=_slot;input.SwitchWeapon = _switch; input.DropHeld = _drop; input.Inspect = _inspect; input.Cycle = Orbiting ? 0 : _cycle; input.Reload = _reload;
+            input.Zoom = !Orbiting && _zoom;
+            input.LowerScope = Orbiting;
             input.ThrowUtility = _utility;
             ClearEdges();
             return input;

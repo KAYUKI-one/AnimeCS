@@ -270,7 +270,7 @@ namespace AnimeCS.Tests
             Click(root,"mode"); Click(root,"mode-practice"); Click(root,"close"); Click(root,"start");
             yield return WaitForMatch(game);
             var camera=Camera.main;
-            var hands=camera.GetComponentsInChildren<Camera>(true).Single(c=>c!=camera);
+            Assert.That(camera.GetComponentsInChildren<Camera>(true).Length, Is.EqualTo(1));
             float baseFov=camera.fieldOfView;
             var mouse=InputSystem.AddDevice<Mouse>();
             IEnumerator Ticks(int n){int end=game.MatchState.Tick+n;while(game.MatchState.Tick<end) yield return null;}
@@ -290,12 +290,12 @@ namespace AnimeCS.Tests
                     var lens=root.Q("scope-lens");
                     Assert.That(lens.resolvedStyle.visibility,Is.EqualTo(Visibility.Visible));
                     Assert.That(root.Q("reticle").resolvedStyle.display,Is.EqualTo(DisplayStyle.None));
-                    Assert.That(hands.enabled,Is.True); Assert.That(hands.cullingMask,Is.Zero); float first=camera.fieldOfView;
+                    float first=camera.fieldOfView;
                     Assert.That(first,Is.LessThan(baseFov));
                     yield return Right();Assert.That(camera.fieldOfView,Is.LessThan(first));
                     Assert.That(game.Player.Read().ScopeLevel,Is.EqualTo(2));
                     yield return Right();Assert.That(game.Player.Read().ScopeLevel,Is.Zero);
-                    Assert.That(camera.fieldOfView,Is.EqualTo(baseFov).Within(.01));Assert.That(hands.cullingMask,Is.EqualTo(1 << LayerMask.NameToLayer("First Person")));
+                    Assert.That(camera.fieldOfView,Is.EqualTo(baseFov).Within(.01));
                     Assert.That(lens.resolvedStyle.visibility,Is.EqualTo(Visibility.Hidden));
                 }
                 Click(root,"open-shop");yield return null;Click(root,"weapon.ember47");yield return Ticks(23);

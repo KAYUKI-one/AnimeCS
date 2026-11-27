@@ -25,20 +25,24 @@ namespace AnimeCS.Play
         private bool _lookApplied;
         public Transform Chest { get; }
         internal WeaponGripRig Grip { get; }
+        internal HumanoidSecondaryMotion SecondaryMotion { get; }
         private bool _hitApplied;
         private Quaternion _beforeHit;
         private readonly Animator _animator;
-        private bool _checked, _driven, _air;
-        private int _tick = -1, _round = -1, _landUntil;
+        private readonly HumanoidLocomotion _animation;
+        private readonly UprightStance _stance;
         private LocomotionPose _locomotion;
         internal float BodyYaw => _locomotion.BodyYaw;
         internal float WaistYaw => _locomotion.Twist;
-        private static readonly int Strafe = Animator.StringToHash("Strafe"), Forward = Animator.StringToHash("Forward"),
-            Crouch = Animator.StringToHash("Crouch"), Vertical = Animator.StringToHash("Vertical"), AirTurn = Animator.StringToHash("AirTurn");
-        public CharacterRig(GameObject body, CharacterDefinition definition, RuntimeAnimatorController stanceController=null, bool alwaysAnimate=false)
+        public CharacterRig(GameObject body, CharacterDefinition definition, RuntimeAnimatorController stanceController=null,
+            bool alwaysAnimate=false, GarmentRegions[] regions=null)
+            : this(body, definition, stanceController, alwaysAnimate, regions, null) { }
+
+        internal CharacterRig(GameObject body, CharacterDefinition definition, RuntimeAnimatorController stanceController,
+            bool alwaysAnimate, GarmentRegions[] regions, SecondaryMotionProfile secondaryMotionProfile)
         {
             if (body == null) return;
-            StylizedCharacters.HumanoidSecondaryMotion.Attach(body);
+            SecondaryMotion = HumanoidSecondaryMotion.Attach(body, secondaryMotionProfile);
             foreach (var bone in body.GetComponentsInChildren<Transform>(true))
             {
                 // Ambiguous names cannot be safely retargeted.
@@ -64,6 +68,8 @@ namespace AnimeCS.Play
                 WeaponSocket = body.transform.Find(definition.WeaponSocket);
             if (animator && animator.avatar && animator.avatar.isValid && animator.isHuman)
             {
+                _animation = new HumanoidLocomotion(animator);
+                _stance = new UprightStance(animator);
                 animator.cullingMode = alwaysAnimate ? AnimatorCullingMode.AlwaysAnimate : AnimatorCullingMode.CullUpdateTransforms;
                 if (!WeaponSocket) Grip = new WeaponGripRig(animator);
             }
@@ -77,6 +83,10 @@ namespace AnimeCS.Play
                 _feet[2]=animator.GetBoneTransform(HumanBodyBones.LeftToes);
                 _feet[3]=animator.GetBoneTransform(HumanBodyBones.RightToes);
                 var sourceSkin = body.GetComponentInChildren<SkinnedMeshRenderer>(true);
+                Vector3[] calibrated = null;
+                if (sourceSkin && regions != null)
+                    foreach (var region in regions)
+                        if (region.source == sourceSkin.sharedMesh) { calibrated = region.soleAnchors; break; }
                 var skinBones = sourceSkin ? sourceSkin.bones : System.Array.Empty<Transform>();
                 var bindPoses = sourceSkin && sourceSkin.sharedMesh ? sourceSkin.sharedMesh.bindposes : System.Array.Empty<Matrix4x4>();
                 GroundedFeet.Foot leftFoot = null, rightFoot = null;
@@ -92,6 +102,7 @@ namespace AnimeCS.Play
                         floorPoint.y = 0;
                         var bodyToBone = boneToBody.inverse;
                         _soleLocal[i] = bodyToBone.MultiplyPoint3x4(floorPoint);
+                        if (calibrated?.Length > i && calibrated[i] != Vector3.zero) _soleLocal[i] = calibrated[i];
                         if (i < 2)
                         {
                             var thigh = animator.GetBoneTransform(i == 0 ? HumanBodyBones.LeftUpperLeg : HumanBodyBones.RightUpperLeg);
@@ -133,7 +144,18 @@ namespace AnimeCS.Play
         internal void FitGround(IFootSurface surface, float floorHeight, bool grounded) =>
             _groundedFeet?.Apply(surface, floorHeight, grounded);
 
-        internal void RestoreFootPose() => _groundedFeet?.Restore();
+        internal void RestoreFootPose()
+        {
+            _groundedFeet?.Restore();
+            _stance?.Restore();
+            Grip?.RestoreClavicles();
+        }
+
+        internal void RelaxStance(float weight, IFootSurface surface = null, float floor = 0)
+        {
+            if (weight > 0 && _stance != null)
+                _stance.Apply(weight, surface == null ? 0 : _groundedFeet?.DropBelow(surface, floor) ?? 0);
+        }
 
         internal float LowestSole(float fallback)
         {
@@ -202,39 +224,10 @@ namespace AnimeCS.Play
         public void Animate(in SeatView view, float runSpeed, float alpha = 0)
         {
             _locomotion.Sample(view, runSpeed, alpha);
-            if (_animator == null || !_animator.isActiveAndEnabled || !_animator.runtimeAnimatorController) return;
-            if (!_checked)
-            {
-                _checked = true;
-                foreach (var param in _animator.parameters) if (param.nameHash == AirTurn) _driven = true;
-            }
-            if (!_driven) return;
-            _animator.speed = view.Match.Paused || view.Match.Phase == RoundPhase.Finished ? 0 : 1;
-            int tick = view.Match.Tick;
-            if (_round != view.Match.Round || tick < _tick)
-            {
-                _round = view.Match.Round; _tick = -1; _landUntil = 0; _air = false;
-                _animator.Play("Base Layer.Ground", 0, 0);
-            }
-            _animator.SetFloat(Strafe, _locomotion.Direction.x);
-            _animator.SetFloat(Forward, _locomotion.Direction.y);
-            _animator.SetFloat(Crouch, _locomotion.Crouch);
-            _animator.SetFloat(Vertical, _locomotion.Vertical);
-            _animator.SetFloat(AirTurn, _locomotion.AirTurn);
-            if (tick == _tick) return;
-            var motion = view.Motion;
-            FitDrape(motion.Crouch);
-            if (!motion.Grounded && !_air) { _animator.CrossFadeInFixedTime("Base Layer.Air", .085f); _landUntil=0; }
-            if (motion.Grounded && _air)
-            {
-                _animator.CrossFadeInFixedTime("Base Layer.Land", .045f);
-                _landUntil = tick + 4;
-            }
-            if (_landUntil != 0 && tick >= _landUntil)
-            {
-                _animator.CrossFadeInFixedTime("Base Layer.Ground", .095f); _landUntil=0;
-            }
-            _air = !motion.Grounded; _tick = tick;
+            _animation?.Apply(_locomotion.Direction, _locomotion.Crouch, _locomotion.Vertical, _locomotion.AirTurn,
+                view.Motion.Grounded, view.Match.Tick * SeatMovement.StepTime, _locomotion.JustReset,
+                view.Match.Paused || view.Match.Phase == RoundPhase.Finished);
+            FitDrape(_locomotion.Crouch);
         }
 
         public bool BindClothing(GameObject garment)

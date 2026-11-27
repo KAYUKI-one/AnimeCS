@@ -160,6 +160,7 @@ namespace AnimeCS.Play
             self.Position=_online.PredictedPosition;
             var watched=self.Health>0 ? self : _online.WatchTeam();
             bool mouseLook=watched.Seat==self.Seat && !_online.Finished;
+            bool orbit=Orbiting(watched);
             var eye=watched.Position+Vector3.up*SeatMovement.EyeHeight(watched.Motion.Crouch);
             PositionCamera(watched,eye,mouseLook,1);
             for (int i=0;i<_replicas.Length;i++)
@@ -181,7 +182,7 @@ namespace AnimeCS.Play
                 {
                     _avatars[i].BeforeAnimation();
                     _actors[i].PresentReplica(member.Position,member.Yaw,member.Pitch,member.Motion.Crouch);
-                    _avatars[i].Present(member,i==watched.Seat);
+                    _avatars[i].Present(member,i==watched.Seat && !orbit);
                     _shown[i]=true;
                 }
                 else if (_shown[i]) { _avatars[i].Hide(); _shown[i]=false; }

@@ -409,16 +409,15 @@ namespace AnimeCS.Tests.Performance
         void RecordView()
         {
             var camera=Camera.main;
-            var viewModel=camera ? camera.transform.Find("View model") : null;
-            if(!viewModel) return;
-            report.activeSleeveRenderers=viewModel.GetComponentsInChildren<SkinnedMeshRenderer>().Count(r=>r.enabled);
-            var animator=viewModel.GetComponentInChildren<Animator>();
+            if(!camera || game.OnlineProbeClient==null) return;
+            var body=game.OnlineProbeActor(game.OnlineProbeClient.View.Seat);
+            report.activeSleeveRenderers=body.GetComponentsInChildren<SkinnedMeshRenderer>().Count(r=>r.enabled && r.name=="First-person body");
+            var animator=body.GetComponentInChildren<Animator>();
             if(!animator || !animator.isHuman) return;
-            var eye=camera.GetComponentsInChildren<Camera>().FirstOrDefault(c=>c!=camera && c.enabled) ?? camera;
             var left=animator.GetBoneTransform(HumanBodyBones.LeftHand);
             var right=animator.GetBoneTransform(HumanBodyBones.RightHand);
-            if(left) report.leftWristViewport=eye.WorldToViewportPoint(left.position);
-            if(right) report.rightWristViewport=eye.WorldToViewportPoint(right.position);
+            if(left) report.leftWristViewport=camera.WorldToViewportPoint(left.position);
+            if(right) report.rightWristViewport=camera.WorldToViewportPoint(right.position);
         }
 
         void CheckPurchases(in SeatView view)

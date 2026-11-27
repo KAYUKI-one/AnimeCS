@@ -191,12 +191,18 @@ namespace AnimeCS.Play
             ClearItem();SetInspection(false);_stage.SetActive(false); _camera.fieldOfView=_matchFov; _camera.farClipPlane=_matchFar;
         }
 
+        public void BeforeAnimation()
+        {
+            foreach (var entry in _party) entry.rig.RestoreFootPose();
+        }
+
         public void Present()
         {
             Frame();
             if(_inspection && _hands?.Grip?.Valid==true && _held){_hands.Grip.Pose(_sleeves.transform,_held,_party[0].gun,_sleeves.transform.rotation,true);return;}
             foreach (var entry in _party)
             {
+                entry.rig.RelaxStance(1);
                 if (entry.member.unarmed) { entry.rig.Grip?.RestAtSides(entry.root.transform); continue; }
                 if (entry.rig.Grip?.Valid != true || !entry.mount) continue;
                 var root = entry.root.transform;
@@ -254,7 +260,8 @@ namespace AnimeCS.Play
                 shadow.localScale=new Vector3(1.05f,.52f,1);
             }
             var body=AppearancePresenter.AddVisual(character.Model,root.transform,Vector3.zero);
-            var rig=new CharacterRig(body,character,outfit.PoseController);
+            var rig=new CharacterRig(body,character,outfit.PoseController, alwaysAnimate:false, regions:null,
+                secondaryMotionProfile:_style.secondaryMotion);
             WearablePresenter.Apply(_catalog,member.worn,outfit,false,body,rig);
             rig.BindClothing(AppearancePresenter.AddVisual(outfit.Model,root.transform,Vector3.zero));
             Transform mount = null;

@@ -6,11 +6,54 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using AnimeCS.Content;
 using System.Linq;
+using StylizedCharacters;
 
 namespace AnimeCS.Tests
 {
     public sealed class PawnMovementTests
     {
+        [UnityTest] public IEnumerator StandaloneMotorWalksJumpsAndRespectsOverheadClearance()
+        {
+            var room = new GameObject("Standalone character motor test");
+            room.transform.position = new Vector3(1700, 116, 1600);
+            try
+            {
+                var floor = new GameObject("Ground").AddComponent<BoxCollider>();
+                floor.transform.SetParent(room.transform, false);
+                floor.center = Vector3.down * .15f;
+                floor.size = new Vector3(8, .3f, 8);
+                var player = new GameObject("Independent avatar");
+                player.transform.SetParent(room.transform, false);
+                var controller = player.AddComponent<CharacterController>();
+                controller.height = 1.7f;
+                controller.center = Vector3.up * .85f;
+                controller.radius = .25f;
+                var motor = new CharacterMotor(controller);
+                Physics.SyncTransforms();
+                const float step = 1f / 60;
+                for (int i = 0; i < 18; i++) motor.Step(Vector3.forward, 3f, false, false, step);
+                Assert.That(player.transform.localPosition.z, Is.GreaterThan(.7f));
+                Assert.That(motor.Grounded, Is.True);
+                motor.Step(Vector3.zero, 3f, true, false, step);
+                for (int i = 0; i < 9; i++) motor.Step(Vector3.zero, 3f, false, false, step);
+                Assert.That(player.transform.localPosition.y, Is.GreaterThan(.35f));
+                for (int i = 0; i < 70; i++) motor.Step(Vector3.zero, 3f, false, true, step);
+                Assert.That(motor.Grounded, Is.True);
+                Assert.That(motor.Crouch, Is.EqualTo(1f).Within(.01f));
+                var ceiling = new GameObject("Low ceiling").AddComponent<BoxCollider>();
+                ceiling.transform.SetParent(room.transform, false);
+                ceiling.center = new Vector3(0, 1.56f, player.transform.localPosition.z);
+                ceiling.size = new Vector3(1.2f, .2f, .85f);
+                Physics.SyncTransforms();
+                for (int i = 0; i < 18; i++) motor.Step(Vector3.zero, 3f, false, false, step);
+                Assert.That(controller.height, Is.LessThan(1.48f));
+                for (int i = 0; i < 42; i++) motor.Step(Vector3.forward, 3f, false, false, step);
+                Assert.That(controller.height, Is.EqualTo(1.7f).Within(.01f));
+            }
+            finally { Object.Destroy(room); }
+            yield return null;
+        }
+
         [UnityTest] public IEnumerator AThrownDisplayMeshRestsAboveTheFloorAndOnTheNearSideOfAWall()
         {
             var root=new GameObject("Drop clearance test");root.transform.position=new Vector3(1800,110,1700);

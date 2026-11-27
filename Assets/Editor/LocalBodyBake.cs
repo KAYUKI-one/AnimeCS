@@ -78,6 +78,40 @@ namespace AnimeCS.Editor
                 for(int j=0;j<include.Length;j++)slots.GetArrayElementAtIndex(j).intValue=include[j];
             }
             data.ApplyModifiedPropertiesWithoutUndo();
+            BindPerspective(outfit);
+        }
+
+        [MenuItem("AnimeCS/美术/更新共享第一人称可见区域")]
+        internal static void BakePerspective()
+        {
+            foreach (var outfit in ContentLibrary.Catalog.SeatOutfits.Where(o => o && !o.Archived && o.Character).Distinct())
+                BindPerspective(outfit);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void BindPerspective(OutfitDefinition outfit)
+        {
+            var model = outfit.Character.Model;
+            if (!model || outfit.Regions(false) == null) return;
+            var animator = model.GetComponentInChildren<Animator>(true);
+            var renderers = model.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            foreach (var region in outfit.Regions(false))
+            {
+                var renderer = renderers.FirstOrDefault(r => r.sharedMesh == region.source);
+                // A packed array is substantially smaller than embedding another copy of the skinned mesh.
+                region.firstPersonVisible = StylizedCharacters.Editor.FirstPersonMeshBake.Create(animator, renderer);
+                region.soleAnchors = StylizedCharacters.Editor.FirstPersonMeshBake.MeasureSoles(animator, renderer);
+                if (region.firstPersonVisible?.Length > 0 && region.partitioned && !region.partitioned.isReadable)
+                {
+                    // The source FBX can stay GPU-only. The generated partition is also the source for the camera mesh.
+                    var mesh = new SerializedObject(region.partitioned);
+                    mesh.FindProperty("m_IsReadable").boolValue = true;
+                    mesh.FindProperty("m_KeepVertices").boolValue = true;
+                    mesh.FindProperty("m_KeepIndices").boolValue = true;
+                    mesh.ApplyModifiedPropertiesWithoutUndo();
+                }
+            }
+            EditorUtility.SetDirty(outfit);
         }
 
         private static Mesh Compact(Mesh source,ref int[] slots, Matrix4x4 toModel,float top)

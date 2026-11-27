@@ -5,6 +5,7 @@ using System.IO;
 using AnimeCS.Content;
 using AnimeCS.Match;
 using AnimeCS.Profile;
+using StylizedCharacters;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -40,9 +41,10 @@ namespace AnimeCS.Play
         private TeamNameplates _teamIds;
         private readonly TeamNameplates.Entry[] _teamTags=new TeamNameplates.Entry[LocalMatch.TeamSize];
         private LocalMatch _match;
-        private int _cameraMask, _handsMask;
+        private int _cameraMask;
         private float _matchFov;
-        private Camera _viewCamera;
+        private CharacterCamera _characterCamera;
+        public bool ThirdPerson => _characterCamera?.ThirdPerson == true;
         private SeatDatagramHost _remote;
         private int _remoteSeat=MatchFormat.TeamSize;
         private bool _discardFrameTime;
@@ -103,12 +105,10 @@ namespace AnimeCS.Play
             if(InLobby || _aspect==PlayAspect.Native)
             {
                 _camera.ResetAspect();
-                if(_viewCamera) _viewCamera.ResetAspect();
                 return;
             }
             float ratio=_aspect==PlayAspect.Stretched ? 4f/3f : 16f/9f;
             _camera.aspect=ratio;
-            if(_viewCamera) _viewCamera.aspect=ratio;
         }
 
         public bool Ready => (_online?.Connected == true || _online?.Finished == true || _match != null) && !_preparing && !InLobby;
@@ -379,7 +379,7 @@ namespace AnimeCS.Play
             _audio = new SeatAudio(gameObject.AddComponent<AudioSource>(), _audioClips, _presentation);
             _cameraMask = _camera.cullingMask;
             _matchFov = _camera.fieldOfView;
-            CreateViewCamera();
+            _characterCamera = new CharacterCamera(_camera);
             _aspect=(PlayAspect)Mathf.Clamp(PlayerPrefs.GetInt(AspectKey,0),0,2);
             _friendlyCues=PlayerPrefs.GetInt(CuesKey,1)!=0;
             _keyboard.Sensitivity=PlayerPrefs.GetFloat("AnimeCS.Mouse",.1f); _audio.Volume=PlayerPrefs.GetFloat("AnimeCS.Volume",1);
@@ -413,25 +413,6 @@ namespace AnimeCS.Play
             _lobby.VolumeRequested += SetLobbyVolume;
             _preview = new LobbyPreview(transform,_camera,_presentation,_catalog);
             ReturnToLobby();
-        }
-
-        private void CreateViewCamera()
-        {
-            var layer = LayerMask.NameToLayer("First Person");
-            if (layer < 0) return;
-            var go = new GameObject("第一人称相机");
-            go.transform.SetParent(_camera.transform,false); _viewCamera = go.AddComponent<Camera>();
-            _viewCamera.CopyFrom(_camera); _viewCamera.nearClipPlane = .015f; _viewCamera.farClipPlane = 4f;
-            _handsMask = 1 << layer;
-            _viewCamera.cullingMask = _handsMask; _viewCamera.useOcclusionCulling = false;
-            var overlay = go.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
-            overlay.renderType = UnityEngine.Rendering.Universal.CameraRenderType.Overlay;
-            overlay.renderShadows = false; overlay.renderPostProcessing = false;
-            overlay.requiresDepthOption=UnityEngine.Rendering.Universal.CameraOverrideOption.Off;
-            overlay.requiresColorOption=UnityEngine.Rendering.Universal.CameraOverrideOption.Off;
-            var basis = _camera.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
-            if (basis && basis.cameraStack != null) basis.cameraStack.Add(_viewCamera);
-            _viewCamera.enabled = false;
         }
 
         private int _entrySeed;
@@ -539,7 +520,7 @@ namespace AnimeCS.Play
             foreach (var model in _drops.Values) AppearancePresenter.Retire(model);
             _drops.Clear();
             _audio.Stop(); _camera.cullingMask=_cameraMask;
-            if (_viewCamera) _viewCamera.enabled=false;
+            SetThirdPerson(false);
             if (_baseData) _baseData.renderPostProcessing=_presentation.daylightGrade;
             foreach (var avatar in _avatars) avatar.Hide();
             _lobbyHost.style.display=DisplayStyle.Flex; _hudHost.style.display=DisplayStyle.None;
@@ -608,7 +589,7 @@ namespace AnimeCS.Play
         {
             if (_keyboard == null || _queuedStart || _preparing) return;
             _keyboard.ReadMenuKeys(out bool pause, out bool shop);
-            if (InLobby) { if (pause) _lobby.Back(); return; }
+            if (InLobby) { _preview.BeforeAnimation(); if (pause) _lobby.Back(); return; }
             if (_online!=null) { UpdateOnline(pause,shop); return; }
             if (!Ready) return;
             foreach(var avatar in _avatars) avatar.BeforeAnimation();
@@ -661,6 +642,11 @@ namespace AnimeCS.Play
             if (_focused && _keyboard.Shopping) _hud.NavigateShop(step,confirm,undo,self.Match.Phase==RoundPhase.Buy);
             bool playing=_focused && !MenuOpen && self.Match.Phase!=RoundPhase.Finished;
             var mouse=Mouse.current;
+            if (playing && self.Health > 0 && !_keyboard.Shopping)
+            {
+                if (Keyboard.current?.vKey.wasPressedThisFrame == true) SetThirdPerson(!ThirdPerson);
+                if (ThirdPerson && mouse != null) _characterCamera.Orbit(mouse.delta.ReadValue() * Sensitivity, mouse.scroll.ReadValue().y / 120f);
+            }
             if (playing && self.Health<=0 && !_keyboard.Shopping && mouse!=null)
             {
                 float scroll=mouse.scroll.ReadValue().y;
@@ -668,8 +654,19 @@ namespace AnimeCS.Play
                     mouse.rightButton.wasPressedThisFrame || scroll>0 ? -1 : 0;
                 if (direction!=0) Player.WatchTeam(direction);
             }
-            _keyboard.Sample(playing && self.Health>0,playing && (!_keyboard.Shopping || _keyboard.ShopLook),Mathf.Max(1f,self.Magnification));
+            _keyboard.Sample(playing && self.Health>0,playing && !ThirdPerson && (!_keyboard.Shopping || _keyboard.ShopLook),Mathf.Max(1f,self.Magnification));
         }
+
+        public void SetThirdPerson(bool enabled)
+        {
+            if (_characterCamera == null || enabled && (!Ready || InLobby || Player.Read().Health <= 0)) return;
+            if (enabled == ThirdPerson) return;
+            _characterCamera.SetThirdPerson(enabled, enabled ? Player.Read().Yaw : 0);
+            _keyboard.Orbiting = enabled;
+            _keyboard.ResetPointer();
+        }
+
+        private bool Orbiting(in SeatView watched) => ThirdPerson && watched.Seat >= 0 && watched.Seat == Player.Read().Seat;
 
         private void Draw()
         {
@@ -678,14 +675,15 @@ namespace AnimeCS.Play
             bool publicOnly = watched.Seat < 0;
             float alpha = Mathf.Clamp01((float)(_time * MatchRules.TickRate));
             bool mouseLook=watched.Seat==self.Seat && _drivers[self.Seat]==_keyboard && !MenuOpen && self.Match.Phase!=RoundPhase.Finished;
+            bool orbit = Orbiting(watched);
             PositionCamera(watched,publicOnly ? default : _actors[watched.Seat].RenderEye(alpha),mouseLook,alpha);
             for (int i=0;i<_avatars.Length;i++)
             {
                 _actors[i].InterpolateVisuals(alpha);
                 _hudSeats[i]=_ports[i].Read();
-                _avatars[i].Present(_hudSeats[i],watched.Seat==i,alpha);
+                _avatars[i].Present(_hudSeats[i],watched.Seat==i && !orbit,alpha);
             }
-            _world.SetLocalView(!publicOnly && watched.Seat==0 && _drivers[0]==_keyboard ? _camera.transform.position : (Vector3?)null);
+            _world.SetLocalView(!publicOnly && watched.Seat==0 && _drivers[0]==_keyboard ? _actors[0].RenderEye(alpha) : (Vector3?)null);
             DrawWorld(_match,publicOnly,_match.Public.Tick+alpha);
             _hud.Present(self,watched,_hudSeats,movingTargets:_match.MovingTargets);
             UpdatePointer();
@@ -695,25 +693,18 @@ namespace AnimeCS.Play
         private void PositionCamera(in SeatView watched,Vector3 eye,bool mouseLook,float alpha)
         {
             bool publicOnly=watched.Seat<0;
-            _camera.cullingMask = publicOnly ? 0 : _cameraMask & ~_handsMask;
-            float power = publicOnly ? 1f : Mathf.Max(1f,watched.Magnification);
+            bool orbit = Orbiting(watched);
+            if (publicOnly) _camera.cullingMask = 0;
+            float power = publicOnly || orbit ? 1f : Mathf.Max(1f,watched.Magnification);
             float worldFov=2f*Mathf.Atan(Mathf.Tan(_matchFov*Mathf.Deg2Rad*.5f)/power)*Mathf.Rad2Deg;
             if(!Mathf.Approximately(_camera.fieldOfView,worldFov))_camera.fieldOfView=worldFov;
-            if(_viewCamera)
-            {
-                bool drawHands=!publicOnly && watched.ScopeLevel==0;
-                // Keep the stack and its color/depth attachments stable through both lens changes.
-                _viewCamera.cullingMask=drawHands ? _handsMask : 0;
-                if (!_viewCamera.enabled) _viewCamera.enabled=true;
-                if(drawHands && !Mathf.Approximately(_viewCamera.fieldOfView,_matchFov))_viewCamera.fieldOfView=_matchFov;
-            }
             if (!publicOnly)
             {
                 float elapsed=(watched.Match.Tick+alpha-watched.LastShotTick)*SeatMovement.StepTime;
                 float kick=1-Mathf.Clamp01(elapsed/.12f);
                 _keyboard.SetViewKick(mouseLook && _online==null && watched.Held!=HeldSlot.Knife ? _presentation.cameraKickDegrees*kick*kick/Mathf.Max(1f,watched.Magnification):0);
-                _camera.transform.SetPositionAndRotation(eye, Quaternion.Euler(
-                    mouseLook ? -_keyboard.ViewPitch : -watched.Pitch, mouseLook ? _keyboard.ViewYaw : watched.Yaw, 0));
+                _characterCamera.Present(eye, mouseLook ? _keyboard.ViewYaw : watched.Yaw,
+                    mouseLook ? _keyboard.ViewPitch : watched.Pitch, _actors[watched.Seat].transform, _cameraMask, orbit);
             }
         }
 
@@ -815,6 +806,7 @@ namespace AnimeCS.Play
             GraphicsOptions?.Dispose();
             _keyboard?.Dispose();
             _audio?.Dispose();
+            foreach (var avatar in _avatars) avatar?.Release();
             Cursor.lockState = CursorLockMode.None; Cursor.visible = true;
             if (_loadedMap.IsValid() && _loadedMap.isLoaded && SceneManager.sceneCount > 1)
                 SceneManager.UnloadSceneAsync(_loadedMap);

@@ -2,5 +2,5 @@
     "name": "StylizedCharacters.Editor",
     "rootNamespace": "StylizedCharacters.Editor",
     "includePlatforms": ["Editor"],
-    "references": ["lilToon.Editor"]
+    "references": ["lilToon.Editor", "StylizedCharacters.Runtime", "StylizedCharacters.Player", "com.unity.animations.springbone"]
 }
