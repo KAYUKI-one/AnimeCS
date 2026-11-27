@@ -17,6 +17,8 @@ namespace AnimeCS.Content
         public static string FactionName(Side side) => side == Side.Attack ? "余烬" : "苍盾";
         public GameObject Model => _model;
         public Texture2D Portrait => _portrait;
+        [SerializeField, InspectorName("对阵卡正面立绘")] private Texture2D _battlePortrait;
+        public Texture2D BattlePortrait => _battlePortrait ? _battlePortrait : _portrait;
         public Texture2D Icon => _icon ? _icon : _portrait;
         [SerializeField, InspectorName("头饰在头骨上的偏移")] private Vector3 _headwearOffset;
         public Vector3 HeadwearOffset=>_headwearOffset;

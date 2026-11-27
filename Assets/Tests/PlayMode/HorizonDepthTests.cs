@@ -25,6 +25,10 @@ namespace AnimeCS.Tests
             var readback = new Texture2D(size, size, TextureFormat.RGB24, false);
             var sandMaterial = new Material(sandShader);
             var wallMaterial = new Material(wallShader);
+#if UNITY_EDITOR
+            bool asyncShaders=UnityEditor.ShaderUtil.allowAsyncCompilation;
+            UnityEditor.ShaderUtil.allowAsyncCompilation=false;
+#endif
             try
             {
                 rig.transform.position = new Vector3(1200f, 100f, 1200f);
@@ -44,17 +48,28 @@ namespace AnimeCS.Tests
                 var sand = AddProbe("Horizon sand", new Vector3(0f, 0f, 3f), new Vector3(6f, 6f, .1f), sandMaterial);
                 sand.SetActive(false);
 
-                yield return new WaitForEndOfFrame();
-                var (wallBefore, skyBefore) = Sample();
-                Assert.That(Difference(wallBefore, skyBefore), Is.GreaterThan(.25f), "Opaque wall and clear sky must both be visible.");
+                Color wallBefore=default,skyBefore=default,wallAfter=default,skyAfter=default;
+                bool baseline=false;
+                double deadline=Time.realtimeSinceStartupAsDouble+8;
+                do
+                {
+                    yield return new WaitForEndOfFrame();
+                    (wallBefore,skyBefore)=Sample();
+                    baseline=wallBefore.r>.8f && wallBefore.g<.1f && wallBefore.b<.1f && Difference(skyBefore,Color.black)<.05f;
+                } while (!baseline && Time.realtimeSinceStartupAsDouble<deadline);
+                Assert.That(baseline,Is.True,$"Expected a red wall and black clear color; wall={wallBefore}, sky={skyBefore}.");
 
                 sand.SetActive(true);
-                yield return new WaitForEndOfFrame();
-                var (wallAfter, skyAfter) = Sample();
-                Assert.That(Difference(wallAfter, wallBefore), Is.LessThanOrEqualTo(2f / 255f),
-                    "The opaque wall must keep its color even with horizon geometry in front of it.");
+                deadline=Time.realtimeSinceStartupAsDouble+8;
+                do
+                {
+                    yield return new WaitForEndOfFrame();
+                    (wallAfter,skyAfter)=Sample();
+                } while (Difference(skyAfter,skyBefore)<=.06f && Time.realtimeSinceStartupAsDouble<deadline);
                 Assert.That(Difference(skyAfter, skyBefore), Is.GreaterThan(.06f),
-                    "The horizon sand must actually draw in the clear region.");
+                    $"Horizon sand did not appear over the clear region. Sky before={skyBefore}, after={skyAfter}.");
+                Assert.That(Difference(wallAfter, wallBefore), Is.LessThanOrEqualTo(2f / 255f),
+                    $"Horizon sand covered the wall. Wall before={wallBefore}, after={wallAfter}; sky before={skyBefore}, after={skyAfter}.");
 
                 GameObject AddProbe(string name, Vector3 position, Vector3 scale, Material material)
                 {
@@ -82,6 +97,9 @@ namespace AnimeCS.Tests
             }
             finally
             {
+#if UNITY_EDITOR
+                UnityEditor.ShaderUtil.allowAsyncCompilation=asyncShaders;
+#endif
                 rig.SetActive(false);
                 target.Release();
                 Object.Destroy(rig);

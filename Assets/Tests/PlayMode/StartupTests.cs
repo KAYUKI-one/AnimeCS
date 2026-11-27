@@ -15,6 +15,8 @@ namespace AnimeCS.Tests
     {
         [UnityTest] public IEnumerator StartupWiresRealMapSeatsHudAndPause()
         {
+            using var services=new LobbyTestServices();
+            yield return services.Ready();
             yield return SceneManager.LoadSceneAsync("Assets/Scenes/Gameplay/LocalMatch.unity");
             var game = Object.FindAnyObjectByType<LocalGame>();
             for (int i = 0; i < 60 && !game.InLobby; i++) yield return null;
@@ -27,7 +29,27 @@ namespace AnimeCS.Tests
                 using var submit=NavigationSubmitEvent.GetPooled();
                 submit.target=button; button.SendEvent(submit);
             }
-            Assert.That(root.Q<Button>("start").text, Is.EqualTo("开始游戏"));
+            Assert.That(root.Q("auth").resolvedStyle.display,Is.EqualTo(DisplayStyle.Flex));
+            yield return LobbyTestServices.Capture("Login");
+            yield return services.Register(root);
+            Assert.That(root.Q<Button>("start").text,Does.Contain("开始游戏"));
+            Assert.That(root.Q<Label>("profile-name").text,Is.EqualTo(game.Account.State.id));
+            yield return LobbyTestServices.Capture("Lobby");
+            Press("character");yield return null;
+            yield return LobbyTestServices.Capture("Characters");
+            Assert.That(root.Q("character-rail").Query<Button>(className:"item-tile").ToList().Count,Is.EqualTo(2));
+            Press("home");Press("world");yield return null;
+            Assert.That(root.Q("dialog").worldBound.width/root.worldBound.width,Is.EqualTo(.50f).Within(.035f));
+            Press("dialog-close");Press("config");yield return null;
+            Assert.That(root.Q<DropdownField>("display-character").choices.Count,Is.EqualTo(2));
+            Press("dialog-close");Press("tasks");yield return null;
+            Assert.That(root.Q("sheet").ClassListContains("full-page"),Is.True);
+            Assert.That(root.Q("sheet-content").Query<ProgressBar>().ToList().Count,Is.GreaterThan(0));
+            Press("close");Press("shop-tab");yield return null;
+            Assert.That(root.Q<Button>("draw-character"),Is.Not.Null);
+            Press("shop-cosmetics");yield return null;
+            Assert.That(root.Q("sheet-content").Query<Button>().ToList().Any(b=>b.name?.StartsWith("buy-")==true),Is.True);
+            Press("home");yield return null;
             var party = game.transform.Find("队伍大厅/Party");
             Assert.That(game.LobbyPartyCount, Is.EqualTo(1));
             Assert.That(party.GetComponentsInChildren<Animator>().Length, Is.EqualTo(1));
@@ -42,8 +64,9 @@ namespace AnimeCS.Tests
             Assert.That(party.GetComponentsInChildren<Animator>().Length,Is.EqualTo(1));
             yield return null;
             Press("inventory"); yield return null;
-            var page=root.Q("sheet");var rail=root.Q(className:"nav-rail");
-            Assert.That(page.worldBound.xMin,Is.EqualTo(rail.worldBound.xMax).Within(2));
+            yield return LobbyTestServices.Capture("Inventory");
+            var page=root.Q("sheet");var rail=root.Q("top-tabs");
+            Assert.That(page.worldBound.yMin,Is.GreaterThanOrEqualTo(rail.worldBound.yMax-3));
             Assert.That(page.Q(className:"wardrobe-tabs"),Is.Null);
             Assert.That(page.Query<Button>(className:"item-tile").ToList().Count,Is.GreaterThan(15));
             Assert.That(page.Q<Button>("character.endmin"), Is.Null);
@@ -55,17 +78,19 @@ namespace AnimeCS.Tests
             Assert.That(page.Q("weapon.street20"),Is.Not.Null);
             Press("equipment");yield return null;
             Assert.That(page.ClassListContains("equipment-page"),Is.True);
+            yield return LobbyTestServices.Capture("Equipment");
             var mounts=page.Q("loadout-slots");var stage=page.Q("inspection-stage");var bag=page.Q("sheet-content");
-            Assert.That(mounts.Query<Button>(className:"mount-slot").ToList().Count,Is.EqualTo(10));
+            Assert.That(mounts.Query<Button>(className:"mount-slot").ToList().Count,Is.EqualTo(5));
+            Assert.That(page.Q("wear-rail").Query<Button>(className:"mount-slot").ToList().Count,Is.EqualTo(5));
             Assert.That(mounts.worldBound.xMax,Is.LessThanOrEqualTo(stage.worldBound.xMin+2));
             Assert.That(bag.worldBound.xMin,Is.GreaterThanOrEqualTo(stage.worldBound.xMax-2));
-            Assert.That(rail.worldBound.width/root.worldBound.width,Is.LessThan(.13f));
-            Press("faction-attack"); yield return null;
+            Assert.That(rail.worldBound.center.x,Is.EqualTo(root.worldBound.center.x).Within(4));
+            Press("equip-current");Press("faction-attack"); yield return null;
             Assert.That(page.Q("backpack-items").Query<Button>(className:"item-tile").ToList()
-                .Select(button => button.name), Is.EquivalentTo(new[] { "outfit.flor", "outfit.blackmiku", "outfit.laevatain", "outfit.nora" }));
+                .Select(button => button.name), Is.EquivalentTo(new[] { "outfit.nora" }));
             Press("faction-defend"); yield return null;
             Assert.That(page.Q("backpack-items").Query<Button>(className:"item-tile").ToList()
-                .Select(button => button.name), Is.EquivalentTo(new[] { "outfit.mornye", "outfit.rover", "outfit.lily", "outfit.michele" }));
+                .Select(button => button.name), Is.EquivalentTo(new[] { "outfit.lily" }));
             Press("faction-attack"); yield return null;
             Press("equip-slot-1"); yield return null;
             Assert.That(page.Q("backpack-items").Q<Button>("weapon.ember47"),Is.Not.Null);
@@ -73,7 +98,7 @@ namespace AnimeCS.Tests
             Assert.That(page.Q<Button>("equip-slot-1").Query<Label>().ToList().Last().text,Is.Not.Empty);
             Press("equip-slot-6");yield return null;
             Assert.That(page.Q("backpack-items").Query<Button>().ToList().Count,Is.GreaterThan(0));
-            Press("settings");
+            Press("home");Press("settings");
             yield return null;
             Assert.That(root.Q("sheet-content").Query<Slider>(className:"setting-field").ToList().Count,Is.EqualTo(2));
             Press("close"); Press("start");

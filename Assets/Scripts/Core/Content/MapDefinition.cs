@@ -53,6 +53,10 @@ namespace AnimeCS.Content
         [SerializeField, HideInInspector] private string _geometrySourceGuid;
         [SerializeField, HideInInspector] private string _lightingSceneGuid;
 #endif
+        [SerializeField, InspectorName("加载背景")] private Texture2D _loadingArt;
+        [SerializeField, TextArea, InspectorName("加载页地图简介")] private string _loadingBrief;
+        public Texture2D LoadingArt => _loadingArt ? _loadingArt : Thumbnail;
+        public string LoadingBrief => string.IsNullOrWhiteSpace(_loadingBrief) ? DisplayName : _loadingBrief;
         public Texture2D Radar => _radar;
         [SerializeField, InspectorName("雷达北向旋转")] private float _radarYaw;
         public float RadarYaw => _radarYaw;

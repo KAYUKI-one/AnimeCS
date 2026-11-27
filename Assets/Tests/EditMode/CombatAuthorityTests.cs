@@ -256,6 +256,13 @@ namespace AnimeCS.Tests
             updated.Match.Tick = 101;
             updated.Position.z += .15f;
             updated.Magazine = 20;
+            updated.Held = HeldSlot.Knife;
+            updated.WeaponId = "weapon.rubyedge";
+            updated.OutfitId = "outfit.lily";
+            updated.EquipTick = 75;
+            updated.InspectTick = -100000;
+            updated.LastMelee = MeleeAction.Rear;
+            updated.Heard = new SoundClue { Kind=SoundKind.Gun, ItemId=updated.WeaponId, Tick=101, Melee=MeleeAction.Rear };
             host.Publish(updated);
             host.Publish(authoritative);
             Assert.That(SpinWait.SpinUntil(() =>
@@ -265,6 +272,11 @@ namespace AnimeCS.Tests
             }, 2000), Is.True, "Loopback client did not advance to the new authority snapshot.");
             Assert.That(Vector3.Distance(client.View.Position, updated.Position), Is.LessThanOrEqualTo(.015f));
             Assert.That(client.View.Magazine, Is.EqualTo(20));
+            Assert.That(client.View.WeaponId, Is.EqualTo(updated.WeaponId));
+            Assert.That(client.View.OutfitId, Is.EqualTo(updated.OutfitId));
+            Assert.That(client.View.EquipTick, Is.EqualTo(75));
+            Assert.That(client.View.LastMelee, Is.EqualTo(MeleeAction.Rear));
+            Assert.That(client.View.Heard?.ItemId, Is.EqualTo(updated.WeaponId));
         }
 
         private static SeatView ViewAt(int round, int tick) => new SeatView

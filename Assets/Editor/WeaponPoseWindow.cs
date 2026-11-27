@@ -20,6 +20,7 @@ namespace AnimeCS.Editor
         private CharacterRig _rig;
         private AppearancePresenter.ReloadInsert _movingPart;
         private int _action;
+        private HeldItemActions _actions;
         private float _progress;
         private float _angle=62, _distance=1.45f;
         private PreviewRenderUtility _preview;
@@ -48,6 +49,7 @@ namespace AnimeCS.Editor
             var view=new Toggle("第一人称"){value=_view};root.Add(view);
             view.RegisterValueChangedCallback(e=>{_view=e.newValue;CreateGUI();});
             if (!_weapon || !_outfit || !_outfit.Character) return;
+            _actions = AssetDatabase.LoadAssetAtPath<HeldItemLibrary>(HeldItemDefaults.Path)?.Find(_weapon.Id);
             if(!_view)
             {
                 var poses=new VisualElement();poses.style.flexDirection=FlexDirection.Row;root.Add(poses);
@@ -56,7 +58,10 @@ namespace AnimeCS.Editor
                 var yaw=new Slider("上身左右转向",-55,55){value=_yaw,showInputField=true};root.Add(yaw);
                 pitch.RegisterValueChangedCallback(e=>{_pitch=e.newValue;Repaint();});yaw.RegisterValueChangedCallback(e=>{_yaw=e.newValue;Repaint();});
             }
-            var action=new DropdownField("动作预览",new System.Collections.Generic.List<string>{"持握","检视","换弹","击发"},_action);
+            if (_weapon.Class != WeaponClass.Knife && _action > 3) _action = 0;
+            var action=new DropdownField("动作预览",_weapon.Class == WeaponClass.Knife
+                ? new System.Collections.Generic.List<string>{"持握","检视","换弹","轻击","重击","背击"}
+                : new System.Collections.Generic.List<string>{"持握","检视","换弹","击发"},_action);
             root.Add(action);
             var progress=new Slider("动作进度",0,1){value=_progress,showInputField=true};
             progress.SetEnabled(_action!=0);root.Add(progress);
@@ -131,15 +136,17 @@ namespace AnimeCS.Editor
             if(!_view)_rig?.Look(_actor,_yaw,_pitch);
             var aim=_view ? Quaternion.identity : Quaternion.Euler(-Mathf.Clamp(_pitch,-66,69),_yaw,0);
             var sample=new SeatView{EquipTick=-10000,InspectTick=-10000,LastShotTick=-10000};
-            float seconds=_action==1?WeaponActionPose.InspectSeconds(_weapon.Inspect):_action==2?_weapon.ReloadSeconds:.24f;
+            sample.LastMelee = _action == 5 ? MeleeAction.Rear : _action == 4 ? MeleeAction.Heavy : MeleeAction.Light;
+            float seconds = _action == 1 ? _actions?.inspect?.seconds ?? WeaponActionPose.InspectSeconds(_weapon.Inspect) :
+                _action == 2 ? _weapon.ReloadSeconds : _actions?.Attack(sample.LastMelee)?.seconds ?? .24f;
             float frame=_progress*seconds*MatchRules.TickRate;
             sample.Match.Tick=Mathf.FloorToInt(frame);
             if(_action==1)sample.InspectTick=0;
             if(_action==2 && _weapon.Class!=WeaponClass.Knife)sample.ReloadEnd=MatchRules.Ticks(_weapon.ReloadSeconds);
-            if(_action==3)sample.LastShotTick=0;
-            var pose=WeaponActionPose.Sample(sample,_weapon,frame-sample.Match.Tick,_view,1);
+            if(_action>=3)sample.LastShotTick=0;
+            var pose=WeaponActionPose.Sample(sample,_weapon,frame-sample.Match.Tick,_view,1,_actions);
             _movingPart.Apply(_mount,pose.InsertOffset,pose.Hinge);
-            float swing=_action==3 && _weapon.Class==WeaponClass.Knife?Mathf.Sin(Mathf.PI*_progress):0;
+            float swing=_action==3 && _weapon.Class==WeaponClass.Knife && _actions?.light==null?Mathf.Sin(Mathf.PI*_progress):0;
             _hands?.Pose(_actor,_mount,_weapon,aim,_view,swing,pose,_movingPart.Bounds);
             var camera=_preview.camera;
             camera.nearClipPlane=.025f;camera.farClipPlane=18;

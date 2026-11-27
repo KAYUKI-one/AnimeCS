@@ -19,6 +19,8 @@
 /[Oo]bj/
 /[Bb]uild/
 /[Bb]uilds/
+# Local Windows service binaries for Editor play, including a junction to a verified build.
+/Services
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
 *.log
@@ -117,3 +119,4 @@ InitTestScene*.unity*
 !/Servers/**/*.csproj
 /Servers/**/bin/
 /Servers/**/obj/
+/Servers/**/__pycache__/

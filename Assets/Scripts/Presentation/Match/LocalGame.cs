@@ -13,7 +13,7 @@ using Cursor = UnityEngine.Cursor;
 
 namespace AnimeCS.Play
 {
-    public sealed class LocalGame : MonoBehaviour
+    public sealed partial class LocalGame : MonoBehaviour
     {
         [SerializeField, InspectorName("资源目录")] private ContentCatalog _catalog;
         [SerializeField, InspectorName("比赛规则")] private MatchRules _rules;
@@ -31,6 +31,7 @@ namespace AnimeCS.Play
         private readonly ISeatPort[] _ports = new ISeatPort[LocalMatch.Seats];
         private readonly ISeatDriver[] _drivers = new ISeatDriver[LocalMatch.Seats];
         private readonly Dictionary<GroundPickup, GameObject> _drops = new();
+        private readonly HashSet<GroundPickup> _presentDrops = new();
         private readonly List<GroundPickup> _retired = new();
         private ArenaWorld _world;
         private KeyboardSeat _keyboard;
@@ -41,9 +42,9 @@ namespace AnimeCS.Play
         private float _matchFov;
         private Camera _viewCamera;
         private SeatDatagramHost _remote;
-        private int _remoteSeat=5;
+        private int _remoteSeat=MatchFormat.TeamSize;
         private bool _discardFrameTime;
-        public System.Net.IPEndPoint OpenSeatLink(System.Net.IPEndPoint endpoint,int seat=5)
+        public System.Net.IPEndPoint OpenSeatLink(System.Net.IPEndPoint endpoint,int seat=MatchFormat.TeamSize)
         {
             if(seat<1 || seat>=LocalMatch.Seats)throw new ArgumentOutOfRangeException(nameof(seat));
             var socket=new SeatDatagramHost(endpoint);_remote?.Dispose();_remote=socket;_remoteSeat=seat;
@@ -57,7 +58,7 @@ namespace AnimeCS.Play
         private Coroutine _entry;
         private MapDefinition _requestedMap, _lastBombMap;
         public MapDefinition SelectedMap => _requestedMap ? _requestedMap : _catalog.Map;
-        public MatchMode Mode => SelectedMap.Practice ? MatchMode.AimPractice : _remote!=null ? MatchMode.Online : MatchMode.BotMatch;
+        public MatchMode Mode => SelectedMap.Practice ? MatchMode.AimPractice : _onlineRequested || _remote!=null ? MatchMode.Online : MatchMode.BotMatch;
         internal MapDefinition LastBombMap => _lastBombMap;
         private GameObject _objective;
         private readonly List<GameObject> _kitModels = new List<GameObject>();
@@ -66,11 +67,11 @@ namespace AnimeCS.Play
         private SeatAudio _audio;
         private LobbyScreen _lobby;
         private LobbyPreview _preview;
-        private readonly List<LobbyMember> _teammates = new List<LobbyMember>(4);
+        private readonly List<LobbyMember> _teammates = new List<LobbyMember>(MatchFormat.TeamSize - 1);
         public int LobbyPartyCount => _preview?.Count ?? 0;
-        public string LobbyWeaponId => PlayerPrefs.GetString("AnimeCS.LobbyWeapon",_presentation.lobbyWeapon ? _presentation.lobbyWeapon.Id : null);
+        public string LobbyWeaponId => Account?.State != null ? DisplayWeapon(Account.State.showSkinId) : PlayerPrefs.GetString("AnimeCS.LobbyWeapon",_presentation.lobbyWeapon ? _presentation.lobbyWeapon.Id : null);
         private VisualElement _hudHost, _lobbyHost;
-        private Label _loading;
+        private BattleLoadingScreen _loading;
         public bool InLobby { get; private set; }
         public FirstSide OpeningSide { get => _firstSide; set => _firstSide=value; }
         public float Sensitivity { get => _keyboard.Sensitivity; set { _keyboard.Sensitivity=Mathf.Clamp(value,.025f,.30f); PlayerPrefs.SetFloat("AnimeCS.Mouse",_keyboard.Sensitivity); } }
@@ -108,13 +109,13 @@ namespace AnimeCS.Play
             if(_viewCamera) _viewCamera.aspect=ratio;
         }
 
-        public bool Ready => _match != null && !_preparing && !InLobby;
+        public bool Ready => (_online?.Connected == true || _online?.Finished == true || _match != null) && !_preparing && !InLobby;
         internal InputActionAsset InputActions => _actions;
-        public PublicMatchView MatchState => Ready ? _match.Public : default;
-        public ISeatPort Player => _ports[0];
+        public PublicMatchView MatchState => Ready ? (_online?.PlayView.Match ?? _match.Public) : default;
+        public ISeatPort Player => _ports[_online?.View.Seat ?? 0];
         public IReadOnlyList<RoundReport> PostMatchReports =>
-            Ready && _match.Public.Phase == RoundPhase.Finished ? _match.Reports : Array.Empty<RoundReport>();
-        public WardrobeProfile ReadWardrobe() => _profiles.Load(_catalog);
+            Ready && _match!=null && _match.Public.Phase == RoundPhase.Finished ? _match.Reports : Array.Empty<RoundReport>();
+        public WardrobeProfile ReadWardrobe() => Account?.State == null ? _profiles.Load(_catalog) : AccountWardrobe();
         public void SaveWardrobe(WardrobeProfile profile)
         { profile.Repair(_catalog); _profiles.Save(profile); if (InLobby) ShowParty(profile); }
 
@@ -123,18 +124,18 @@ namespace AnimeCS.Play
         {
             _teammates.Clear();
             if (members != null)
-                for (int i=0;i<Mathf.Min(4,members.Count);i++) _teammates.Add(members[i]);
+                for (int i=0;i<Mathf.Min(MatchFormat.TeamSize - 1,members.Count);i++) _teammates.Add(members[i]);
             if (InLobby) ShowParty(ReadWardrobe());
         }
         public void SetLobbyWeapon(string id)
         {
-            if (!_catalog.Find<WeaponDefinition>(id)) return;
+            if (Account?.State != null || !_catalog.Find<WeaponDefinition>(id)) return;
             PlayerPrefs.SetString("AnimeCS.LobbyWeapon",id);
             if (InLobby) ShowParty(ReadWardrobe());
         }
-        internal void PreviewWardrobe(WardrobeLoadout wear,string gun,bool first,bool inspectItem=false)
+        internal void PreviewWardrobe(WardrobeLoadout wear,string gun,bool first,bool inspectItem=false,bool unarmed=false)
         {
-            _preview.Show(new LobbyMember(wear.outfitId,gun,wear.SkinFor(gun),wear.worn),Array.Empty<LobbyMember>());
+            _preview.Show(new LobbyMember(wear.outfitId,gun,wear.SkinFor(gun),wear.worn,unarmed:unarmed),Array.Empty<LobbyMember>());
             _preview.SetPageFraming(inspectItem ? .55f : .50f);
             _preview.SetInspection(first);
         }
@@ -149,7 +150,9 @@ namespace AnimeCS.Play
         private void ShowParty(WardrobeProfile profile)
         {
             string id = LobbyWeaponId;
-            _preview.Show(new LobbyMember(profile.current.outfitId,id,profile.current.SkinFor(id),profile.current.worn),_teammates);
+            var state = Account?.State;
+            var self = state == null ? new LobbyMember(profile.current.outfitId,id,profile.current.SkinFor(id),profile.current.worn) : DisplayMember(state.id,state.showCharacterId,state.showSkinId,profile.current.worn);
+            _preview.Show(self,_teammates);
         }
 
         public void SetSeatDisplayId(int seat,string id) => _match?.SetSeatDisplayId(seat,id);
@@ -176,7 +179,7 @@ namespace AnimeCS.Play
             if (GraphicsOptions.CanWarm(_presentation.lobbyShaders))
             {
                 InLobby=false; _preparing=true;
-                _loading.style.display=DisplayStyle.Flex;
+                _loading.Boot();
                 yield return GraphicsOptions.WarmUp(_presentation.lobbyShaders,ShowWarmup);
                 _loading.style.display=DisplayStyle.None;
                 _preparing=false; InLobby=true;
@@ -195,7 +198,7 @@ namespace AnimeCS.Play
         private UnityEngine.Rendering.Universal.UniversalAdditionalCameraData _baseData;
         private UnityEngine.Rendering.Volume _globalGrade;
         private Light _sceneSun, _mapSun;
-        private void ShowWarmup(int completed,int total) => _loading.text=$"正在准备着色器  {completed} / {total}";
+        private void ShowWarmup(int completed,int total) => _loading.ShaderProgress(completed,total);
         private void MapLight(bool inMatch)
         {
             if(_globalGrade) _globalGrade.sharedProfile=inMatch && SelectedMap && SelectedMap.CombatGrade?SelectedMap.CombatGrade:_presentation.daylightGrade;
@@ -276,7 +279,12 @@ namespace AnimeCS.Play
             {
                 if (!Application.CanStreamedLevelBeLoaded(scenePath))
                     throw new InvalidOperationException("请在资源管理器中将这张场景地图设为启动地图：" + scenePath);
-                yield return SceneManager.LoadSceneAsync(scenePath, LoadSceneMode.Additive);
+                var operation = SceneManager.LoadSceneAsync(scenePath, LoadSceneMode.Additive);
+                while (!operation.isDone)
+                {
+                    if (_queuedStart) _loading.Progress(.4f * operation.progress, "正在读取地图");
+                    yield return null;
+                }
                 _loadedMap = SceneManager.GetSceneByPath(scenePath);
                 bool baked=string.IsNullOrEmpty(map.ScenePath);
                 foreach (var mapRoot in _loadedMap.GetRootGameObjects())
@@ -337,16 +345,11 @@ namespace AnimeCS.Play
             _lobbyHost=new VisualElement(); _hudHost=new VisualElement();
             _lobbyHost.style.flexGrow=1; _hudHost.style.flexGrow=1;
             root.Add(_lobbyHost); root.Add(_hudHost);
-            _loading = new Label { name="match-loading" };
-            _loading.style.position=Position.Absolute;
-            _loading.style.left=_loading.style.right=_loading.style.top=_loading.style.bottom=0;
-            _loading.style.backgroundColor=new Color(.09f,.13f,.17f,.94f);
-            _loading.style.color=Color.white; _loading.style.fontSize=20;
-            _loading.style.unityTextAlign=TextAnchor.MiddleCenter;
-            _loading.style.display=DisplayStyle.None;
+            _loading = new BattleLoadingScreen(_catalog, _presentation.battleLoadingStyle);
             root.Add(_loading);
-            _hud = new MatchHud(_hudHost,_presentation,_catalog,_rules,_keyboard.Order,TogglePause,Restart,ReturnToLobby);
+            _hud = new MatchHud(_hudHost,_presentation,_catalog,_rules,_keyboard.Order,TogglePause,Restart,ReturnToLobby,EndOnlineRoom);
             _teamIds = new TeamNameplates(_hudHost.Q("hud"));
+            Account = new AnimeCS.Accounts.AccountClient();
             _lobby = new LobbyScreen(_lobbyHost,_presentation,_catalog,this);
             _preview = new LobbyPreview(transform,_camera,_presentation,_catalog);
             ReturnToLobby();
@@ -371,12 +374,31 @@ namespace AnimeCS.Play
             _viewCamera.enabled = false;
         }
 
+        private int _entrySeed;
+        private void ShowLineup()
+        {
+            _loading.Begin(SelectedMap,_onlineRequested,Account?.State?.members);
+            if (_onlineRequested) return;
+            var opening=LocalMatch.OpeningFor(Mode,_firstSide);
+            _entrySeed=opening==FirstSide.Random ? UnityEngine.Random.Range(1,int.MaxValue) : _seed;
+            int attackers=LocalMatch.PreviewAttackTeam(opening,_entrySeed);
+            var wardrobe=ReadWardrobe().current;
+            for (int i=0;i<LocalMatch.Seats;i++)
+            {
+                var side=i/LocalMatch.TeamSize==attackers ? Side.Attack : Side.Defend;
+                int slot=i%LocalMatch.TeamSize;
+                var outfit=_catalog.OutfitForSide(side,i==0?wardrobe.OutfitFor(side):null,slot);
+                bool empty=Mode==MatchMode.AimPractice && i>0 && i<LocalMatch.TeamSize;
+                _loading.SetCard(side,slot,empty ? null : outfit?.Id,empty ? "空席" : i==0 ? Account?.State?.id ?? "自己" : "BOT "+(i+1).ToString("00"));
+            }
+        }
+
         public void Restart()
         {
             if (_preparing) return;
+            if (_online!=null) { RestartOnlineRoom(); return; }
+            if (!_queuedStart) ShowLineup();
             _queuedStart=true;
-            _loading.text="正在加载"+SelectedMap.DisplayName+"…";
-            _loading.style.display=DisplayStyle.Flex;
             if (_changingMap) return;
             if (_world==null) { StartCoroutine(ChangeMap(SelectedMap)); return; }
             _queuedStart=false;
@@ -389,19 +411,22 @@ namespace AnimeCS.Play
             GraphicsOptions.SetLobbyPacing(false);
             yield return null;
             yield return GraphicsOptions.WarmUp(_presentation.matchShaders,ShowWarmup);
-            _loading.text="正在准备角色…";
+            _loading.Progress(.62f,"正在准备角色");
+            if (_onlineRequested) { yield return EnterOnline(); yield break; }
             var profile = ReadWardrobe();
             var mode=Mode;
             var opening=LocalMatch.OpeningFor(mode,_firstSide);
-            int seed=opening==FirstSide.Random ? UnityEngine.Random.Range(1,int.MaxValue) : _seed;
+            int seed=_entrySeed;
             _match = new LocalMatch(_catalog, _rules, _world, seed, opening, profile,mode);
             for (int member=0;member<_teammates.Count;member++)
                 _match.SetSeatDisplayId(member+1,_teammates[member].displayId);
             for (int i = 0; i < _ports.Length; i++)
             {
                 _ports[i] = _match.BindSeat(i);
-                _drivers[i] = i == 0 ? _keyboard : mode==MatchMode.AimPractice ? new PracticeTarget(_match,_catalog.Map,i) : new ObjectiveBot(_catalog, seed ^ (i * 7919));
+                _drivers[i] = i == 0 ? _keyboard : mode==MatchMode.AimPractice ? new PracticeTarget(_match,_catalog.Map,i) : new ObjectiveBot(_catalog, seed ^ (i * 7919),_rules.bot);
                 var view = _ports[i].Read();
+                _loading.SetCard(view.Side,i % LocalMatch.TeamSize,view.Health>0 ? view.OutfitId : null,view.Health<=0 ? "空席" : i==0 ? Account?.State?.id ?? "自己" : "BOT "+(i+1).ToString("00"));
+                _loading.Progress(.63f + .23f*(i+1)/_ports.Length, "正在准备角色");
                 if (view.Health<=0 || !_avatars[i].NeedsBody(view)) continue;
                 _avatars[i].Present(view,i==0);
                 yield return null;
@@ -413,11 +438,13 @@ namespace AnimeCS.Play
             _hud.StartMatch(_match,profile.current);
             ApplyAspect();MapLight(true);
             _time=0;
-            _loading.text="正在绘制场景…";
+            _loading.Progress(.93f,"正在绘制场景");
             // Submit the actual world, skin layouts, camera stack and HUD before the first playable tick.
             Draw();
             yield return null;
             yield return null;
+            _loading.Progress(1,"资源就绪");
+            RecordEntry(mode);
             _discardFrameTime=true;
             _preparing=false; _entry=null; _loading.style.display=DisplayStyle.None;
             UpdatePointer();
@@ -425,12 +452,15 @@ namespace AnimeCS.Play
 
         public void ReturnToLobby()
         {
+            StopOnline();
             if (_entry!=null) StopCoroutine(_entry);
             _entry=null; _queuedStart=_preparing=false; _loading.style.display=DisplayStyle.None;
             _match?.SetPaused(true); InLobby=true; _time=0; ApplyAspect();MapLight(false);
             GraphicsOptions.SetLobbyPacing(true);
             if (_objective) _objective.SetActive(false);
             foreach (var obj in _kitModels) obj.SetActive(false);
+            foreach (var model in _drops.Values) AppearancePresenter.Retire(model);
+            _drops.Clear();
             _audio.Stop(); _camera.cullingMask=_cameraMask;
             if (_viewCamera) _viewCamera.enabled=false;
             if (_baseData) _baseData.renderPostProcessing=_presentation.daylightGrade;
@@ -446,16 +476,32 @@ namespace AnimeCS.Play
             if (_preparing) return;
             if (InLobby) { _preview.Present(); return; }
             if (!Ready) return;
-            for (int i=0;i<_avatars.Length;i++) { _avatars[i].AlignWorldGun(); _world.SetMuzzle(i,_avatars[i].Muzzle()); }
-            var self=_ports[0].Read();var watched=self.Health>0?self:_ports[0].WatchTeam();
-            _world.RenderFeedback(Mathf.Clamp01((float)(_time*MatchRules.TickRate)));
-            _teamIds.Present(self,watched,_camera,_ports,_actors,_avatars,_world,FriendlyCues,Mathf.Clamp01((float)(_time*MatchRules.TickRate)));
+            float alpha=Mathf.Clamp01((float)(_time*MatchRules.TickRate));
+            if (_online!=null)
+            {
+                for (int i=0;i<_avatars.Length;i++) if (_shown[i]) _avatars[i].AlignWorldGun();
+            }
+            else
+            {
+                for (int i=0;i<_avatars.Length;i++) { _avatars[i].AlignWorldGun(); _world.SetMuzzle(i,_avatars[i].Muzzle()); }
+                _world.RenderFeedback(alpha);
+            }
+            var self=Player.Read();
+            var watched=self.Health>0 ? self : Player.WatchTeam();
+            _teamIds.Present(self,watched,_camera,_ports,_actors,_avatars,_world,FriendlyCues,alpha,
+                _online==null ? null : _onlineAllyTags,MenuOpen);
         }
 
         public void TogglePause()
         {
-            if (!Ready || _match.Public.Phase == RoundPhase.Finished) return;
-            _keyboard.ResetPointer(); _match.SetPaused(!_match.IsPaused); _time = 0; _discardFrameTime=true; Draw();
+            if (!Ready || MatchState.Phase==RoundPhase.Finished) return;
+            _keyboard.ResetPointer(); _time=0; _discardFrameTime=true;
+            if (_online!=null)
+            {
+                _onlineMenu=!_onlineMenu;
+                RenderOnline(); UpdatePointer();
+            }
+            else { _match.SetPaused(!_match.IsPaused); Draw(); }
         }
 
         private void Update()
@@ -463,27 +509,11 @@ namespace AnimeCS.Play
             if (_keyboard == null || _queuedStart || _preparing) return;
             _keyboard.ReadMenuKeys(out bool pause, out bool shop);
             if (InLobby) { if (pause) _lobby.Back(); return; }
+            if (_online!=null) { UpdateOnline(pause,shop); return; }
             if (!Ready) return;
             foreach(var avatar in _avatars) avatar.BeforeAnimation();
-            if (pause && _hud.ShopOpen && !_match.IsPaused) _hud.ToggleShop();
-            else if (pause) TogglePause();
             var self = _ports[0].Read();
-            _keyboard.SyncRound(self);
-            if (shop && !_match.IsPaused && self.CanBuy) _hud.ToggleShop();
-            _keyboard.ReadShop(out int step, out bool confirm, out bool cancel);
-            _keyboard.Shopping = _hud.ShopOpen && self.CanBuy && !_match.IsPaused;
-            if (_keyboard.Shopping) _hud.NavigateShop(step, confirm, cancel, self.Match.Phase == RoundPhase.Buy);
-            bool playing = !_match.IsPaused && self.Match.Phase != RoundPhase.Finished;
-            var mouse=Mouse.current;
-            if(playing && self.Health<=0 && !_keyboard.Shopping && mouse!=null)
-            {
-                float wheel=mouse.scroll.ReadValue().y;
-                int direction=mouse.leftButton.wasPressedThisFrame || wheel<0 ? 1 :
-                    mouse.rightButton.wasPressedThisFrame || wheel>0 ? -1 : 0;
-                if(direction!=0)_ports[0].WatchTeam(direction);
-            }
-            bool look=playing && _focused && (!_keyboard.Shopping || _keyboard.ShopLook);
-            _keyboard.Sample(playing && self.Health > 0 && _focused,look,self.Magnification);
+            ReadPlayerInput(self,pause,shop);
             if(_drivers[0]==_keyboard && self.CanStartShot && _keyboard.PredictPress)
             {
                 var gun=_catalog.Find<WeaponDefinition>(self.WeaponId);
@@ -505,9 +535,33 @@ namespace AnimeCS.Play
                     _ports[i].Submit(view.Match.Tick + 1, driver.Decide(view));
                 }
                 _match.Step();
+                ObserveRound(_match.Public);
                 if(_remote!=null && (_match.Public.Tick&1)==0)_remote.Publish(_ports[_remoteSeat].Read());
             }
             Draw();
+        }
+
+        private bool MenuOpen => _online!=null ? _onlineMenu : _match!=null && _match.IsPaused;
+
+        private void ReadPlayerInput(in SeatView self,bool pause,bool shop)
+        {
+            if (pause && _hud.ShopOpen && !MenuOpen) _hud.ToggleShop();
+            else if (pause) TogglePause();
+            else if (shop && !MenuOpen && self.CanBuy) _hud.ToggleShop();
+            _keyboard.SyncRound(self);
+            _keyboard.ReadShop(out int step,out bool confirm,out bool undo);
+            _keyboard.Shopping=_hud.ShopOpen && self.CanBuy && !MenuOpen;
+            if (_focused && _keyboard.Shopping) _hud.NavigateShop(step,confirm,undo,self.Match.Phase==RoundPhase.Buy);
+            bool playing=_focused && !MenuOpen && self.Match.Phase!=RoundPhase.Finished;
+            var mouse=Mouse.current;
+            if (playing && self.Health<=0 && !_keyboard.Shopping && mouse!=null)
+            {
+                float scroll=mouse.scroll.ReadValue().y;
+                int direction=mouse.leftButton.wasPressedThisFrame || scroll<0 ? 1 :
+                    mouse.rightButton.wasPressedThisFrame || scroll>0 ? -1 : 0;
+                if (direction!=0) Player.WatchTeam(direction);
+            }
+            _keyboard.Sample(playing && self.Health>0,playing && (!_keyboard.Shopping || _keyboard.ShopLook),Mathf.Max(1f,self.Magnification));
         }
 
         private void Draw()
@@ -516,6 +570,23 @@ namespace AnimeCS.Play
             var watched = self.Health > 0 ? self : _ports[0].WatchTeam();
             bool publicOnly = watched.Seat < 0;
             float alpha = Mathf.Clamp01((float)(_time * MatchRules.TickRate));
+            bool mouseLook=watched.Seat==self.Seat && _drivers[self.Seat]==_keyboard && !MenuOpen && self.Match.Phase!=RoundPhase.Finished;
+            PositionCamera(watched,publicOnly ? default : _actors[watched.Seat].RenderEye(alpha),mouseLook,alpha);
+            for (int i=0;i<_avatars.Length;i++)
+            {
+                _actors[i].InterpolateVisuals(alpha);
+                _avatars[i].Present(_ports[i].Read(),watched.Seat==i,alpha);
+            }
+            _world.SetLocalView(!publicOnly && watched.Seat==0 && _drivers[0]==_keyboard ? _camera.transform.position : (Vector3?)null);
+            DrawWorld(_match,publicOnly,_match.Public.Tick+alpha);
+            _hud.Present(self,watched,_ports);
+            UpdatePointer();
+            _audio.Present(watched,_world);
+        }
+
+        private void PositionCamera(in SeatView watched,Vector3 eye,bool mouseLook,float alpha)
+        {
+            bool publicOnly=watched.Seat<0;
             _camera.cullingMask = publicOnly ? 0 : _cameraMask & ~_handsMask;
             float power = publicOnly ? 1f : Mathf.Max(1f,watched.Magnification);
             float worldFov=2f*Mathf.Atan(Mathf.Tan(_matchFov*Mathf.Deg2Rad*.5f)/power)*Mathf.Rad2Deg;
@@ -530,36 +601,29 @@ namespace AnimeCS.Play
             }
             if (!publicOnly)
             {
-                var actor = _actors[watched.Seat];
-                bool mouseLook = watched.Seat == 0 && _drivers[0] == _keyboard && !self.Match.Paused && self.Match.Phase != RoundPhase.Finished;
                 float elapsed=(watched.Match.Tick+alpha-watched.LastShotTick)*SeatMovement.StepTime;
                 float kick=1-Mathf.Clamp01(elapsed/.12f);
-                _keyboard.SetViewKick(mouseLook && watched.Held!=HeldSlot.Knife ? _presentation.cameraKickDegrees*kick*kick/Mathf.Max(1f,watched.Magnification):0);
-                _camera.transform.SetPositionAndRotation(actor.RenderEye(alpha), Quaternion.Euler(
+                _keyboard.SetViewKick(mouseLook && _online==null && watched.Held!=HeldSlot.Knife ? _presentation.cameraKickDegrees*kick*kick/Mathf.Max(1f,watched.Magnification):0);
+                _camera.transform.SetPositionAndRotation(eye, Quaternion.Euler(
                     mouseLook ? -_keyboard.ViewPitch : -watched.Pitch, mouseLook ? _keyboard.ViewYaw : watched.Yaw, 0));
             }
-            for (int i = 0; i < _avatars.Length; i++)
-            {
-                _actors[i].InterpolateVisuals(alpha);
-                _avatars[i].Present(_ports[i].Read(), watched.Seat == i, alpha);
-            }
-            _world.SetLocalView(!publicOnly && watched.Seat==0 && _drivers[0]==_keyboard ? _camera.transform.position : (Vector3?)null);
-            DrawDroppedGuns(_match.Public.Tick+alpha);
+        }
+
+        internal void DrawWorld(IMatchWorldView view,bool publicOnly,float frame)
+        {
+            DrawDroppedGuns(publicOnly ? Array.Empty<GroundPickup>() : view.GroundWeapons,frame);
             if (_objective != null)
             {
-                var point = _match.ObjectiveAt(_match.Public.Tick+alpha);
-                _objective.SetActive(point.HasValue && !publicOnly);
+                var point = publicOnly ? null : view.ObjectiveAt(frame);
+                _objective.SetActive(point.HasValue);
                 if (point.HasValue) _objective.transform.position = point.Value;
             }
-            DrawEquipment(publicOnly);
-            _hud.Present(self, watched, _ports);
-            UpdatePointer();
-            _audio.Present(watched,_world);
+            DrawEquipment(publicOnly ? Array.Empty<Vector3>() : view.GroundKits);
         }
 
         private void UpdatePointer()
         {
-            bool capture = _focused && Ready && !InLobby && !_match.IsPaused && MatchState.Phase!=RoundPhase.Finished &&
+            bool capture = _focused && Ready && !MenuOpen && MatchState.Phase!=RoundPhase.Finished &&
                 (!_hud.ShopOpen || _keyboard.ShopLook);
             var mode = capture ? CursorLockMode.Locked : CursorLockMode.None;
             if (Cursor.lockState!=mode) Cursor.lockState=mode;
@@ -573,9 +637,9 @@ namespace AnimeCS.Play
             UpdatePointer();
         }
 
-        private void DrawEquipment(bool publicOnly)
+        private void DrawEquipment(IReadOnlyList<Vector3> kits)
         {
-            for (int i = 0; i < _match.GroundKits.Count; i++)
+            for (int i = 0; i < kits.Count; i++)
             {
                 if (_kitModels.Count == i)
                 {
@@ -583,19 +647,19 @@ namespace AnimeCS.Play
                     AppearancePresenter.AddVisual(_presentation.recoveryKit,kit.transform,Vector3.zero);
                     _kitModels.Add(kit);
                 }
-                _kitModels[i].transform.position = _match.GroundKits[i];
-                _kitModels[i].SetActive(!publicOnly);
+                _kitModels[i].transform.position = kits[i];
+                _kitModels[i].SetActive(true);
             }
-            for (int i = _match.GroundKits.Count; i < _kitModels.Count; i++) _kitModels[i].SetActive(false);
+            for (int i = kits.Count; i < _kitModels.Count; i++) _kitModels[i].SetActive(false);
         }
 
-        private void DrawDroppedGuns(float frame)
+        private void DrawDroppedGuns(IReadOnlyList<GroundPickup> items,float frame)
         {
-            _retired.Clear();
-            foreach (var item in _drops) _retired.Add(item.Key);
-            foreach (var pickup in _match.GroundWeapons)
+            _presentDrops.Clear();
+            for(int i=0;i<items.Count;i++)
             {
-                _retired.Remove(pickup);
+                var pickup=items[i];
+                _presentDrops.Add(pickup);
                 var position=pickup.At(frame);
                 if (_drops.TryGetValue(pickup,out var existing)) { if(existing.transform.position!=position) existing.transform.position=position; continue; }
                 var root = AppearancePresenter.NewRoot("Dropped " + pickup.Item.DisplayName, transform);
@@ -604,13 +668,18 @@ namespace AnimeCS.Play
                 if(pickup.Weapon!=null) AppearancePresenter.ApplySkin(model, pickup.Weapon.Definition, _catalog.Find<WeaponSkinDefinition>(pickup.Weapon.SkinId));
                 root.SetActive(true); _drops.Add(pickup, root);
             }
+            if (_drops.Count==_presentDrops.Count) return;
+            _retired.Clear();
+            foreach(var key in _drops.Keys) if(!_presentDrops.Contains(key)) _retired.Add(key);
             foreach (var key in _retired) { AppearancePresenter.Retire(_drops[key]); _drops.Remove(key); }
         }
 
         private void OnDestroy()
         {
+            Account?.Dispose();
             if(_navigation.valid)_navigation.Remove();
             if (_runtimeCatalog) Destroy(_runtimeCatalog);
+            _online?.Dispose();
             _remote?.Dispose();
             _world?.Dispose();
             GraphicsOptions?.Dispose();

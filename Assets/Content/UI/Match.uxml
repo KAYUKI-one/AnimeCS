@@ -15,6 +15,13 @@
         <ui:VisualElement name="wound" class="wound" picking-mode="Ignore"/>
         <ui:Button name="open-shop" class="buy-key" text="B   购买装备"/>
         <ui:VisualElement name="shop" class="shop"><ui:VisualElement class="sheet-heading"><ui:Label class="section-heading" text="购买装备"/><ui:Button name="close-shop" text="关闭  B" class="quiet-button"/></ui:VisualElement><ui:Label name="shop-keys" class="shop-keys" /><ui:ScrollView name="offers" /><ui:VisualElement name="protection-offers" class="protection-offers offers" /></ui:VisualElement>
-        <ui:VisualElement name="menu" class="pause"><ui:Label name="pause-title" class="section-heading"/><ui:Button name="resume" text="继续比赛"/><ui:Button name="restart" text="重新开赛"/><ui:Button name="to-lobby" text="返回主界面"/></ui:VisualElement>
+        <ui:VisualElement name="menu" class="pause">
+            <ui:Label name="pause-title" class="section-heading"/>
+            <ui:Label name="room-feedback" picking-mode="Ignore"/>
+            <ui:Button name="resume" text="继续比赛"/>
+            <ui:Button name="restart" text="重新开赛"/>
+            <ui:Button name="to-lobby" text="返回大厅"/>
+            <ui:Button name="end-room" text="结束小队房间并返回"/>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

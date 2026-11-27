@@ -22,6 +22,7 @@ namespace AnimeCS.Play
         private readonly AudioClip[] _clips;
         private readonly MatchPresentation _preset;
         private int _stepIndex,_shotIndex;
+        private int _inspectTick = -100000;
         private readonly AudioClip _quiet;
         private readonly bool[] _generated = new bool[7];
         private int _seat = -1, _lastEvent = -1;
@@ -36,7 +37,7 @@ namespace AnimeCS.Play
             int next=view.Match.Tick+1;
             if(_predictedRound==view.Match.Round && _predictedTick==next && _predictedSeat==view.Seat)return;
             _predictedRound=view.Match.Round; _predictedTick=next; _predictedSeat=view.Seat;
-            Play(new SoundClue{Kind=SoundKind.Gun,Own=true,Suppressed=suppressed,WeaponClass=category},view.Yaw);
+            Play(new SoundClue{Kind=SoundKind.Gun,Own=true,Suppressed=suppressed,WeaponClass=category,ItemId=view.WeaponId},view.Yaw);
         }
         public void Stop() { _source.Stop(); _lastEvent=-1; _seat=-1;_predictedTick=-1; }
 
@@ -78,8 +79,16 @@ namespace AnimeCS.Play
                 _paused = view.Match.Paused;
                 if (_paused) _source.Pause(); else _source.UnPause();
             }
-            if (view.Seat != _seat) { _source.Stop(); _seat = view.Seat; _lastEvent = -1; _sequence=0;_confirmation=-100000; }
+            if (view.Seat != _seat) { _source.Stop(); _seat = view.Seat; _lastEvent = -1; _sequence=0;_confirmation=-100000;_inspectTick=-100000; }
             if(_paused || view.Seat<0)return;
+            if (view.InspectTick >= 0 && view.InspectTick != _inspectTick && view.Match.Tick - view.InspectTick < 5)
+            {
+                _inspectTick = view.InspectTick;
+                string id = view.Held == HeldSlot.Objective ? HeldItemLibrary.ObjectiveId :
+                    view.Held == HeldSlot.Utility ? view.UtilityId : view.WeaponId;
+                var cue = Library ? Library.Find(id)?.inspectSound : null;
+                if (cue) { _source.panStereo = 0; _source.PlayOneShot(cue, .34f); }
+            }
             if(_confirm && view.LastConfirmationTick>=0 && view.LastConfirmationTick!=_confirmation && view.Match.Tick-view.LastConfirmationTick<6)
             { _confirmation=view.LastConfirmationTick;_source.panStereo=0;_source.PlayOneShot(_ping,.52f); }
             if(world!=null)
@@ -98,11 +107,28 @@ namespace AnimeCS.Play
             _lastEvent = clue.Tick;
             Play(clue,view.Yaw);
         }
+        private HeldItemLibrary Library => _preset ? _preset.heldItems : null;
+
+        private AudioClip ItemCue(SoundClue clue)
+        {
+            if (!Library) return null;
+            if (clue.Kind == SoundKind.DevicePulse) return Library.devicePulse;
+            if (clue.Kind == SoundKind.DeviceBurst) return Library.deviceBurst;
+            var actions = Library.Find(clue.Kind == SoundKind.Objective ? HeldItemLibrary.ObjectiveId : clue.ItemId);
+            if (actions == null) return null;
+            if (clue.Kind == SoundKind.Gun && clue.WeaponClass == WeaponClass.Knife)
+                return clue.Melee == MeleeAction.Rear ? actions.rearSound :
+                    clue.Melee == MeleeAction.Heavy ? actions.heavySound : actions.activateSound;
+            return actions.activateSound;
+        }
+
         private void Play(SoundClue clue,float yaw)
         {
             _source.panStereo = clue.Own ? 0 : Mathf.Sin((clue.Bearing * 45f - yaw) * Mathf.Deg2Rad) * 0.7f;
             var clip=_clips[(int)clue.Kind];
-            if(clue.Kind==SoundKind.Step && _preset && _preset.bootSteps is {Length:>0})
+            var authored = ItemCue(clue);
+            if (authored) clip = authored;
+            else if(clue.Kind==SoundKind.Step && _preset && _preset.bootSteps is {Length:>0})
             {
                 var steps=_preset.bootSteps; clip=steps[_stepIndex++%steps.Length] ?? clip;
             }

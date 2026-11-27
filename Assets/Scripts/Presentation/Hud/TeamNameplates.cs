@@ -40,17 +40,19 @@ namespace AnimeCS.Play
         }
 
         public void Present(in SeatView self, in SeatView watched, Camera camera, ISeatPort[] ports,
-            ArenaPawn[] actors, AppearancePresenter[] models, ArenaWorld world, bool assist, float alpha)
+            ArenaPawn[] actors, AppearancePresenter[] models, ArenaWorld world, bool assist, float alpha,
+            bool[] visibleAllies=null,bool menuOpen=false)
         {
             float width=_layer.contentRect.width, height=_layer.contentRect.height;
-            bool active=watched.Seat>=0 && !watched.Blinded && !watched.InsideSmoke && !self.Match.Paused &&
+            bool active=watched.Seat>=0 && !watched.Blinded && !watched.InsideSmoke && !menuOpen && !self.Match.Paused &&
                 self.Match.Phase!=RoundPhase.Finished && width>1 && height>1;
             int first=self.Seat/LocalMatch.TeamSize*LocalMatch.TeamSize;
             int placed=0;
             for(int slot=0;slot<_tags.Length;slot++)
             {
                 int seat=first+slot;var tag=_tags[slot];var mark=_chevrons[slot];
-                bool show=active && seat!=watched.Seat && actors[seat].Alive;
+                bool show=active && seat!=watched.Seat &&
+                    (visibleAllies!=null ? visibleAllies[seat] : actors[seat].Alive);
                 if(show)
                 {
                     var head=models[seat].LabelAnchor(alpha);

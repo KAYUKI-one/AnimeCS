@@ -58,7 +58,9 @@ namespace AnimeCS.Play
         public void Throw(int seat, UtilityDefinition item) => _signals.Throw(seat, item);
         public void Emit(int seat, SoundKind kind, float radius, bool suppressed = false) =>
             _signals.Emit(_actors[seat].Eye, kind, radius, seat, suppressed);
-        public void EmitGun(int seat,WeaponDefinition gun)=>_signals.Emit(_actors[seat].Eye,SoundKind.Gun,gun.SoundRadius,seat,gun.Suppressed,gun.Class);
+        public void EmitGun(int seat,WeaponDefinition gun)=>_signals.Emit(_actors[seat].Eye,SoundKind.Gun,gun.SoundRadius,seat,gun.Suppressed,gun.Class,gun.Id);
+        public void EmitMelee(int seat,WeaponDefinition gun,MeleeAction action)=>
+            _signals.Emit(_actors[seat].Eye,SoundKind.Gun,8f,seat,false,gun.Class,gun.Id,action);
         public SoundClue? Heard(int seat) => _signals.Heard(seat);
         public bool Blinded(int seat) => _signals.Blinded(seat);
         public bool InSmoke(int seat) => _signals.Occludes(_actors[seat].Eye, _actors[seat].Eye);

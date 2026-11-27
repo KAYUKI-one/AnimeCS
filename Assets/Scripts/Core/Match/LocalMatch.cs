@@ -9,19 +9,20 @@ namespace AnimeCS.Match
     /// <summary>Owns the match clock, ten seats and all mutations. Step exactly once per simulation tick.</summary>
     public sealed partial class LocalMatch
     {
-        public const int Seats = 10;
-        public const int TeamSize = 5;
+        public const int Seats = MatchFormat.Seats;
+        public const int TeamSize = MatchFormat.TeamSize;
         private sealed class SeatState
         {
             public SeatInventory Bag;
             public string DisplayId;
-            public int Health, NextShot, ReloadAt, ReloadStart, EquipTick, InspectTick, Burst;
+            public int Health, ActionReadyTick, ReloadAt, ReloadStart, EquipTick, InspectTick, Burst;
             public int ShotSequence;
             public bool FiredLastTick;
             public float Yaw, Pitch;
             public MotionContact Motion;
             public bool JustStopped;
             public int LastHitTick, LastShotTick, LastConfirmationTick;
+            public MeleeAction LastMelee;
             public ScopeState Scope;
             public HitZone LastHitZone;
             public Contact? Visible;
@@ -61,6 +62,10 @@ namespace AnimeCS.Match
         private int _practiceKills, _practiceHeadshots;
         public static FirstSide OpeningFor(MatchMode mode, FirstSide choice) =>
             mode==MatchMode.BotMatch ? choice : mode==MatchMode.Online ? FirstSide.Random : FirstSide.Attack;
+        private static System.Random MatchRandom(int seed) => new System.Random(seed ^ 0x51EA72);
+        private static int OpeningAttackTeam(FirstSide side,System.Random random) =>
+            side == FirstSide.Random ? random.Next(2) : side == FirstSide.Attack ? 0 : 1;
+        internal static int PreviewAttackTeam(FirstSide side,int seed) => OpeningAttackTeam(side,MatchRandom(seed));
         private readonly IMatchWorld _world;
         private readonly IMatchSignals _signals;
         private readonly System.Random _draw;
@@ -87,13 +92,13 @@ namespace AnimeCS.Match
         };
 
         public LocalMatch(ContentCatalog catalog, MatchRules rules, IMatchWorld world, int seed,
-            FirstSide openingSide, WardrobeProfile player, MatchMode mode=MatchMode.BotMatch)
+            FirstSide openingSide, WardrobeProfile player, MatchMode mode=MatchMode.BotMatch, WardrobeLoadout[] seatLoadouts=null)
         {
             Mode=mode; openingSide=OpeningFor(mode,openingSide);
             _catalog = catalog; _rules = rules; _world = world; Seed = seed;
             _signals = world as IMatchSignals;
-            _draw = new System.Random(seed ^ 0x51EA72);
-            _attackTeam = openingSide == FirstSide.Random ? _draw.Next(2) : openingSide == FirstSide.Attack ? 0 : 1;
+            _draw = MatchRandom(seed);
+            _attackTeam = OpeningAttackTeam(openingSide,_draw);
             var skins = new List<WeaponSkinDefinition>();
             foreach (var entry in catalog.Entries)
             {
@@ -101,8 +106,8 @@ namespace AnimeCS.Match
             }
             for (int i = 0; i < Seats; i++)
             {
-                var appearance = i == 0 && player != null ? player.Resolve(player.current, catalog) :
-                    new WardrobeLoadout();
+                var appearance = seatLoadouts != null && i < seatLoadouts.Length && seatLoadouts[i] != null ? seatLoadouts[i] :
+                    i == 0 && player != null ? player.Resolve(player.current, catalog) : new WardrobeLoadout();
                 if (i > 0 && skins.Count > 0)
                 {
                     var skin = skins[(i - 1) % skins.Count];
@@ -243,11 +248,12 @@ namespace AnimeCS.Match
                 var s = _seats[i];
                 if (reset) s.Bag.Wallet = decider ? _rules.deciderCredits : _rules.openingCredits;
                 var side = SideOf(i);
-                s.Bag.Dress(_catalog.OutfitForSide(side,i==0?s.Bag.PreferredOutfit(side):null,i%TeamSize));
+                s.Bag.Dress(_catalog.OutfitForSide(side,s.Bag.PreferredOutfit(side),i%TeamSize));
                 s.Bag.BeginRound(side, reset || s.Health == 0);
                 s.Bag.CarriesObjective = i == _carrier;
+                s.LastMelee = MeleeAction.Light;
                 s.EquipTick = s.InspectTick = -100000; s.ReloadStart = 0;
-                s.Scope = default; s.Health = 100; s.NextShot = s.ReloadAt = s.Burst = 0; s.FiredLastTick = false;
+                s.Scope = default; s.Health = 100; s.ActionReadyTick = s.ReloadAt = s.Burst = 0; s.FiredLastTick = false;
                 s.Yaw = _catalog.Map.SpawnYaw(SideOf(i), i % TeamSize); s.Pitch = 0;
                 s.Motion = MotionContact.Standing; s.JustStopped = false;
                 s.LastHitTick = s.LastShotTick = s.LastConfirmationTick = -100000;
@@ -320,8 +326,9 @@ namespace AnimeCS.Match
                 ScopeStability = gun?.Definition.Optics is SniperOptics lens ? s.Scope.Stability(lens,_tick) : 0,
                 Bolting = s.Scope.ResumeLevel != 0,
                 CanStartShot = !_paused && _phase!=RoundPhase.Buy && _phase!=RoundPhase.Finished && s.Health>0 && _operator!=i &&
-                    gun!=null && gun.Definition.Class!=WeaponClass.Knife && gun.Magazine>0 && s.ReloadAt==0 && _tick+1>=s.NextShot,
-                EquipTick = s.EquipTick, InspectTick = s.InspectTick, ReloadStart = s.ReloadStart, ReloadEnd = s.ReloadAt,
+                    gun!=null && gun.Definition.Class!=WeaponClass.Knife && gun.Magazine>0 && s.ReloadAt==0 &&
+                    _tick+1>=Math.Max(s.ActionReadyTick,gun.NextFireTick),
+                LastMelee = s.LastMelee, EquipTick = s.EquipTick, InspectTick = s.InspectTick, ReloadStart = s.ReloadStart, ReloadEnd = s.ReloadAt,
                 LastConfirmationTick=s.LastConfirmationTick, LastHitTick = s.LastHitTick, LastHitZone = s.LastHitZone, LastShotTick = s.LastShotTick,
                 PrimaryId = bag.Primary?.Definition.Id, SidearmId = bag.Sidearm?.Definition.Id, KnifeId = bag.Knife?.Definition.Id,
                 WeaponId = gun?.Definition.Id, SkinId = gun?.SkinId, Magazine = gun?.Magazine ?? 0, Reserve = gun?.Reserve ?? 0,

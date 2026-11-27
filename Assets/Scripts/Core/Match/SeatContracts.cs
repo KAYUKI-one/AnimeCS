@@ -8,6 +8,7 @@ namespace AnimeCS.Match
     public enum HeldSlot { Current, Primary, Sidearm, Knife, Objective, Utility }
     public interface IDeviceFeedback { void DeviceSound(Vector3 point, bool expired); }
     public interface IMeleeWorld { ArenaHit? Swing(int seat); }
+    public enum MeleeAction : byte { Light, Heavy, Rear }
     public enum BuySlot { None, Primary, Sidearm, Armor, Utility, Kit, Knife, Helmet }
     public enum MatchMode { BotMatch, AimPractice, Online }
     public enum FirstSide { Attack, Defend, Random }
@@ -62,6 +63,7 @@ namespace AnimeCS.Match
         public float Magnification, ScopeStability;
         public bool Bolting, CanStartShot;
         public HitZone LastHitZone;
+        public MeleeAction LastMelee;
         public bool Armor, Helmet, HasObjective, HasKit, CanBuy;
         public HeldSlot Held;
         public int EquipTick, InspectTick, ReloadStart, ReloadEnd, BuyRemaining;
@@ -88,6 +90,8 @@ namespace AnimeCS.Match
     {
         public SoundKind Kind;
         public WeaponClass WeaponClass;
+        public MeleeAction Melee;
+        public string ItemId;
         public bool Own, Suppressed;
         public string Region;
         public int Bearing, Tick, Expires; // Eight directions; never an exact source position.
@@ -100,6 +104,7 @@ namespace AnimeCS.Match
         void Advance(int tick);
         void Throw(int seat, UtilityDefinition item);
         void EmitGun(int seat,WeaponDefinition gun)=>Emit(seat,SoundKind.Gun,gun.SoundRadius,gun.Suppressed);
+        void EmitMelee(int seat,WeaponDefinition weapon,MeleeAction action)=>Emit(seat,SoundKind.Gun,8);
         void Emit(int seat, SoundKind kind, float radius, bool suppressed = false);
         SoundClue? Heard(int seat);
         bool Blinded(int seat);

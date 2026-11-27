@@ -1,0 +1,774 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6e2e3313ab75b04898f7756fe91acbd, type: 3}
+  m_Name: HeldItemLibrary
+  m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Play.HeldItemLibrary
+  items:
+  - itemId: weapon.whitefalcon12s
+    inspect:
+      seconds: 2.0700002
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.063, y: 0.045, z: 0.032}
+        angles: {x: -18, y: -33, z: -42}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.06489, y: 0.046350002, z: 0.03296}
+        angles: {x: -18.539999, y: -33.989998, z: -43.26}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -20.460001, z: 25.2}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -20.460001, z: 25.2}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: 471abc6a71e138a4ebaa10511db2ca91, type: 3}
+    activateSound: {fileID: 8300000, guid: 0b5da1e08d485d043a6e68c30dd9e63d, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.street20
+    inspect:
+      seconds: 2.22
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.063, y: 0.045, z: 0.032}
+        angles: {x: -18, y: -33, z: -36}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.06489, y: 0.046350002, z: 0.03296}
+        angles: {x: -18.539999, y: -33.989998, z: -37.079998}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -20.460001, z: 21.6}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -20.460001, z: 21.6}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: 471abc6a71e138a4ebaa10511db2ca91, type: 3}
+    activateSound: {fileID: 8300000, guid: 69ccea4da24c9774a83d6fe3292e8193, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.verdict57
+    inspect:
+      seconds: 2.22
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.063, y: 0.045, z: 0.032}
+        angles: {x: -18, y: -33, z: -36}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.06489, y: 0.046350002, z: 0.03296}
+        angles: {x: -18.539999, y: -33.989998, z: -37.079998}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -20.460001, z: 21.6}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -20.460001, z: 21.6}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: 471abc6a71e138a4ebaa10511db2ca91, type: 3}
+    activateSound: {fileID: 8300000, guid: 5693533f12a171144a9f3467a123ded4, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.dash9
+    inspect:
+      seconds: 2.3200002
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.063, y: 0.045, z: 0.032}
+        angles: {x: -18, y: -33, z: -32}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.06489, y: 0.046350002, z: 0.03296}
+        angles: {x: -18.539999, y: -33.989998, z: -32.96}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -20.460001, z: 19.2}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -20.460001, z: 19.2}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: 471abc6a71e138a4ebaa10511db2ca91, type: 3}
+    activateSound: {fileID: 8300000, guid: 6b430a577801d2a418806ca62ce6394f, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.heavy50
+    inspect:
+      seconds: 2.2450001
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.063, y: 0.045, z: 0.032}
+        angles: {x: -18, y: -33, z: -35}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.06489, y: 0.046350002, z: 0.03296}
+        angles: {x: -18.539999, y: -33.989998, z: -36.05}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -20.460001, z: 21}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -20.460001, z: 21}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: 471abc6a71e138a4ebaa10511db2ca91, type: 3}
+    activateSound: {fileID: 8300000, guid: a1fbbd953e859bf49913c99f7d5cf342, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.hummingbird9
+    inspect:
+      seconds: 2.45
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.063, y: 0.045, z: 0.032}
+        angles: {x: -18, y: -25, z: -34}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.06489, y: 0.046350002, z: 0.03296}
+        angles: {x: -18.539999, y: -25.75, z: -35.02}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -15.5, z: 20.400002}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -15.5, z: 20.400002}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: 85b4fab8d5d71a34ea6d3323ae49dbbf, type: 3}
+    activateSound: {fileID: 8300000, guid: 2d5affc8fdcc43844ade7e56d44522ce, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.spark10
+    inspect:
+      seconds: 2.4
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.063, y: 0.045, z: 0.032}
+        angles: {x: -18, y: -25, z: -36}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.06489, y: 0.046350002, z: 0.03296}
+        angles: {x: -18.539999, y: -25.75, z: -37.079998}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -15.5, z: 21.6}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -6.2999997, y: -15.5, z: 21.6}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: 85b4fab8d5d71a34ea6d3323ae49dbbf, type: 3}
+    activateSound: {fileID: 8300000, guid: 499ee810fc3161247b7f57f0708fe96b, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.watch41s
+    inspect:
+      seconds: 2.575
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.063, y: 0.045, z: 0.032}
+        angles: {x: -10, y: -36, z: -24}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.06489, y: 0.046350002, z: 0.03296}
+        angles: {x: -10.299999, y: -37.079998, z: -24.72}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -3.5, y: -22.32, z: 14.400001}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -3.5, y: -22.32, z: 14.400001}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: 85b4fab8d5d71a34ea6d3323ae49dbbf, type: 3}
+    activateSound: {fileID: 8300000, guid: f00d68feafbd1be44b311fd7a4e24c0e, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.fold44
+    inspect:
+      seconds: 2.525
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.063, y: 0.045, z: 0.032}
+        angles: {x: -10, y: -36, z: -26}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.06489, y: 0.046350002, z: 0.03296}
+        angles: {x: -10.299999, y: -37.079998, z: -26.779999}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -3.5, y: -22.32, z: 15.6}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -3.5, y: -22.32, z: 15.6}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: 85b4fab8d5d71a34ea6d3323ae49dbbf, type: 3}
+    activateSound: {fileID: 8300000, guid: 3dd78b484bae1a1409e4d5e814fc1cb4, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.ember47
+    inspect:
+      seconds: 2.45
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.063, y: 0.045, z: 0.032}
+        angles: {x: -10, y: -36, z: -29}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.06489, y: 0.046350002, z: 0.03296}
+        angles: {x: -10.299999, y: -37.079998, z: -29.869999}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -3.5, y: -22.32, z: 17.400002}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.05229, y: 0.03735, z: 0.026560001}
+        angles: {x: -3.5, y: -22.32, z: 17.400002}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: 85b4fab8d5d71a34ea6d3323ae49dbbf, type: 3}
+    activateSound: {fileID: 8300000, guid: 83982ab49a236184e9783ee7fd436ea5, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.feather08
+    inspect:
+      seconds: 2.45
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.043, y: 0.032, z: 0.023}
+        angles: {x: -7, y: -25, z: -21}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.04429, y: 0.03296, z: 0.02369}
+        angles: {x: -7.21, y: -25.75, z: -21.63}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.035690002, y: 0.026560001, z: 0.01909}
+        angles: {x: -2.45, y: -15.5, z: 12.6}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.035690002, y: 0.026560001, z: 0.01909}
+        angles: {x: -2.45, y: -15.5, z: 12.6}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: f3dba5ff64d8a4546ab0d84351720873, type: 3}
+    activateSound: {fileID: 8300000, guid: e58b5b0b326c27f49863b4df03b9094c, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.longglass96
+    inspect:
+      seconds: 2.45
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.043, y: 0.032, z: 0.023}
+        angles: {x: -7, y: -25, z: -21}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.04429, y: 0.03296, z: 0.02369}
+        angles: {x: -7.21, y: -25.75, z: -21.63}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.035690002, y: 0.026560001, z: 0.01909}
+        angles: {x: -2.45, y: -15.5, z: 12.6}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.035690002, y: 0.026560001, z: 0.01909}
+        angles: {x: -2.45, y: -15.5, z: 12.6}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: f3dba5ff64d8a4546ab0d84351720873, type: 3}
+    activateSound: {fileID: 8300000, guid: e17cfb1af45e81743b43111491421327, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: utility.smoke
+    inspect:
+      seconds: 1.88
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.031, y: 0.032, z: 0.026}
+        angles: {x: -8, y: 22, z: -38}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.03193, y: 0.03296, z: 0.02678}
+        angles: {x: -8.24, y: 22.66, z: -39.14}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.025729999, y: 0.026560001, z: 0.02158}
+        angles: {x: -6, y: -17.6, z: -17.1}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.025729999, y: 0.026560001, z: 0.02158}
+        angles: {x: -6, y: -17.6, z: -17.1}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: e138eb8b0fc15484d930d43f16d84a4a, type: 3}
+    activateSound: {fileID: 8300000, guid: 484f1a9701014cf44876ce4469af72ab, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: utility.flash
+    inspect:
+      seconds: 1.88
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.031, y: 0.032, z: 0.026}
+        angles: {x: -22, y: 31, z: -14}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.03193, y: 0.03296, z: 0.02678}
+        angles: {x: -22.66, y: 31.929998, z: -14.42}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.025729999, y: 0.026560001, z: 0.02158}
+        angles: {x: -6, y: -24.800001, z: -6.2999997}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.025729999, y: 0.026560001, z: 0.02158}
+        angles: {x: -6, y: -24.800001, z: -6.2999997}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: e138eb8b0fc15484d930d43f16d84a4a, type: 3}
+    activateSound: {fileID: 8300000, guid: a6e939c6afdf5cb4c8bff576f3d21c29, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: utility.echo
+    inspect:
+      seconds: 1.88
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.031, y: 0.032, z: 0.026}
+        angles: {x: -18, y: -29, z: 21}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.03193, y: 0.03296, z: 0.02678}
+        angles: {x: -18.539999, y: -29.869999, z: 21.63}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.025729999, y: 0.026560001, z: 0.02158}
+        angles: {x: -6, y: 23.2, z: 9.45}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.025729999, y: 0.026560001, z: 0.02158}
+        angles: {x: -6, y: 23.2, z: 9.45}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: e138eb8b0fc15484d930d43f16d84a4a, type: 3}
+    activateSound: {fileID: 8300000, guid: 4405acea617f29b42b6af7705ec4ca24, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  - itemId: weapon.rubyedge
+    inspect:
+      seconds: 1.83
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.036, y: 0.042, z: 0.02}
+        angles: {x: -16, y: 28, z: -61}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.037079997, y: 0.043259997, z: 0.020599999}
+        angles: {x: -16.48, y: 28.84, z: -62.829998}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.029879998, y: 0.03486, z: 0.0166}
+        angles: {x: -5.6, y: 17.36, z: 36.600002}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.029879998, y: 0.03486, z: 0.0166}
+        angles: {x: -5.6, y: 17.36, z: 36.600002}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 0.32
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.15
+        offset: {x: 0.018, y: 0.007, z: -0.016}
+        angles: {x: -4, y: 15, z: -12}
+        hinge: 0
+      - time: 0.34
+        offset: {x: -0.068, y: 0.025, z: 0.047}
+        angles: {x: -9, y: -32, z: 34}
+        hinge: 0
+      - time: 0.5
+        offset: {x: -0.0612, y: 0.022499999, z: 0.042299997}
+        angles: {x: -7.38, y: -26.24, z: 27.88}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    heavy:
+      seconds: 0.61
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.15
+        offset: {x: 0.044, y: -0.023, z: -0.051}
+        angles: {x: 4, y: 21, z: -25}
+        hinge: 0
+      - time: 0.34
+        offset: {x: -0.016, y: 0.012, z: 0.117}
+        angles: {x: -11, y: -9, z: 11}
+        hinge: 0
+      - time: 0.5
+        offset: {x: -0.014400001, y: 0.010799999, z: 0.105299994}
+        angles: {x: -9.0199995, y: -7.38, z: 9.0199995}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    rear:
+      seconds: 0.72
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.15
+        offset: {x: 0.038, y: 0.025, z: -0.035}
+        angles: {x: -13, y: 18, z: -38}
+        hinge: 0
+      - time: 0.34
+        offset: {x: -0.03, y: -0.018, z: 0.091}
+        angles: {x: 7, y: -23, z: 27}
+        hinge: 0
+      - time: 0.5
+        offset: {x: -0.026999999, y: -0.016199999, z: 0.08189999}
+        angles: {x: 5.74, y: -18.86, z: 22.14}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    inspectSound: {fileID: 8300000, guid: b348d9401a3d36c4da98c1514acf4565, type: 3}
+    activateSound: {fileID: 8300000, guid: 36e1705195e754040be97f95197a4ce6, type: 3}
+    heavySound: {fileID: 8300000, guid: d041e74f4670374459bcd5b9af437273, type: 3}
+    rearSound: {fileID: 8300000, guid: 8dbe9b78dcaa77547a16742d55fe96ea, type: 3}
+  - itemId: held.objective
+    inspect:
+      seconds: 2.28
+      keys:
+      - time: 0
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+      - time: 0.22
+        offset: {x: -0.006, y: 0.026, z: 0.014}
+        angles: {x: -18, y: 5, z: -7}
+        hinge: 0
+      - time: 0.4
+        offset: {x: -0.00618, y: 0.02678, z: 0.01442}
+        angles: {x: -18.539999, y: 5.1499996, z: -7.21}
+        hinge: 0
+      - time: 0.65
+        offset: {x: -0.0049799997, y: 0.02158, z: 0.01162}
+        angles: {x: -8, y: -16, z: 9}
+        hinge: 0
+      - time: 0.79
+        offset: {x: -0.0049799997, y: 0.02158, z: 0.01162}
+        angles: {x: -8, y: -16, z: 9}
+        hinge: 0
+      - time: 1
+        offset: {x: 0, y: 0, z: 0}
+        angles: {x: 0, y: 0, z: 0}
+        hinge: 0
+    light:
+      seconds: 1
+      keys: []
+    heavy:
+      seconds: 1
+      keys: []
+    rear:
+      seconds: 1
+      keys: []
+    inspectSound: {fileID: 8300000, guid: e138eb8b0fc15484d930d43f16d84a4a, type: 3}
+    activateSound: {fileID: 8300000, guid: b93648f69351e3a45b0073a242db9c3f, type: 3}
+    heavySound: {fileID: 0}
+    rearSound: {fileID: 0}
+  devicePulse: {fileID: 8300000, guid: f20defab039ecfe4791900e1a2905488, type: 3}
+  deviceBurst: {fileID: 8300000, guid: 74e2454003e9e104291d3d93eac118f2, type: 3}

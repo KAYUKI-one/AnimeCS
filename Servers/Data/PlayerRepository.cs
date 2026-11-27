@@ -19,7 +19,7 @@ internal sealed class PlayerRepository
         command.Transaction = transaction;
         command.CommandText = "PRAGMA user_version";
         long version = (long)command.ExecuteScalar()!;
-        if (version > 1) throw new InvalidDataException($"Unsupported player schema {version}");
+        if (version > 2) throw new InvalidDataException($"Unsupported player schema {version}");
         if (version == 0)
         {
             command.CommandText = """
@@ -55,7 +55,7 @@ internal sealed class PlayerRepository
         using var db = Open();
         using var cmd = db.CreateCommand();
         cmd.CommandText = revision == 0
-            ? "INSERT INTO players(id,revision,profile) VALUES($id,1,$profile) ON CONFLICT(id) DO NOTHING"
+            ? "INSERT INTO players(id,revision,profile) SELECT $id,1,$profile WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE id=$id) ON CONFLICT(id) DO NOTHING"
             : "UPDATE players SET revision=revision+1,profile=$profile WHERE id=$id AND revision=$revision";
         if (revision != 0) cmd.Parameters.AddWithValue("$revision", revision);
         cmd.Parameters.AddWithValue("$profile", JsonSerializer.Serialize(body));

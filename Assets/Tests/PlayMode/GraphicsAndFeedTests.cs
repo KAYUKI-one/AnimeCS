@@ -1,5 +1,8 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using AnimeCS.Content;
+using AnimeCS.Match;
 using AnimeCS.Play;
 using NUnit.Framework;
 using UnityEngine;
@@ -16,6 +19,107 @@ namespace AnimeCS.Tests
     public sealed class GraphicsAndFeedTests
     {
         private const string Scene = "Assets/Scenes/Gameplay/LocalMatch.unity";
+
+        private sealed class RemoteFeed : IMatchWorldView
+        {
+            internal Elimination Latest;
+            internal Vector3? Objective;
+            internal readonly List<GroundPickup> Weapons=new();
+            internal readonly List<Vector3> Kits=new();
+            public int EliminationCount=>1;
+            public IReadOnlyList<Vector3> GroundKits=>Kits;
+            public IReadOnlyList<GroundPickup> GroundWeapons=>Weapons;
+            public Vector3? ObjectiveAt(float frame)=>Objective;
+            public bool TryGetElimination(int sequence,out Elimination item) { item=Latest; return sequence==1; }
+        }
+
+        private sealed class HudSeat : ISeatPort
+        {
+            public SeatView State;
+            public SeatView Read()=>State;
+            public SeatView WatchTeam(int direction=0)=>State;
+            public bool Submit(int tick,SeatIntent intent)=>false;
+        }
+
+        [UnityTest] public IEnumerator OnlineHudUsesTheAuthorizedFeedAndSeparatesRoomActionsFromLeaving()
+        {
+            yield return SceneManager.LoadSceneAsync(Scene);
+            var game=Object.FindAnyObjectByType<LocalGame>();
+            while(!game.InLobby) yield return null;
+            const System.Reflection.BindingFlags flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+            var hud=(MatchHud)typeof(LocalGame).GetField("_hud",flags).GetValue(game);
+            var catalog=(ContentCatalog)typeof(LocalGame).GetField("_catalog",flags).GetValue(game);
+            var root=Object.FindAnyObjectByType<UIDocument>().rootVisualElement.Q("hud");
+            var clock=new PublicMatchView { Round=1,Tick=200,Phase=RoundPhase.Contest,Score0=3,Score1=8 };
+            var ports=new ISeatPort[LocalMatch.Seats];
+            for(int i=0;i<ports.Length;i++) ports[i]=new HudSeat { State=new SeatView { Seat=i,Health=100,Match=clock } };
+            var me=ports[6].Read();
+            var feed=new RemoteFeed { Latest=new Elimination(199,1,6,1,"队长","对手",catalog.StartingPistol(Side.Attack),HitZone.Head,false) };
+            hud.StartMatch(null,null,feed,true);
+            hud.Present(me,me,ports);
+            Assert.That(root.Q<Label>("our-score").text,Is.EqualTo("8"));
+            Assert.That(root.Q("kill-feed").Children().First().Q<Label>(className:"kill-player").text,Is.EqualTo("队长"));
+            Assert.That(root.Q("kill-feed").Children().First().ClassListContains("own-kill"),Is.True);
+            for(int local=0;local<=LocalMatch.Seats-1;local++)
+            {
+                var order=Enumerable.Range(0,LocalMatch.Seats).Select(i=>MatchHud.RosterSeat(i,local)).ToArray();
+                Assert.That(order.Distinct().Count(),Is.EqualTo(LocalMatch.Seats));
+                Assert.That(order[0],Is.EqualTo(local));
+                Assert.That(order.Take(LocalMatch.TeamSize).All(i=>i/LocalMatch.TeamSize==local/LocalMatch.TeamSize),Is.True);
+            }
+            hud.Present(me,me,ports,true);
+            Assert.That(root.Q<Label>("pause-title").text,Is.EqualTo("对局菜单"));
+            Assert.That(root.Q("resume").style.display.value,Is.EqualTo(DisplayStyle.Flex));
+            Assert.That(root.Q("end-room").style.display.value,Is.EqualTo(DisplayStyle.Flex));
+            Assert.That(me.Match.Paused,Is.False);
+            me.Match.Phase=RoundPhase.Finished; me.Match.Tick++;
+            hud.Present(me,me,ports);
+            Assert.That(root.Q("restart").style.display.value,Is.EqualTo(DisplayStyle.Flex));
+            Assert.That(root.Q<Label>("pause-title").text,Is.EqualTo("我方获胜"));
+            hud.StartMatch(null,null,feed,false);
+            hud.Present(me,me,ports);
+            Assert.That(root.Q("restart").style.display.value,Is.EqualTo(DisplayStyle.None));
+            Assert.That(root.Q("end-room").style.display.value,Is.EqualTo(DisplayStyle.None));
+            Assert.That(root.Q("to-lobby").enabledSelf,Is.True);
+        }
+
+        [UnityTest] public IEnumerator WorldModelsFollowAuthorizedPickupsAndClearForPublicObservers()
+        {
+            yield return SceneManager.LoadSceneAsync(Scene);
+            var game=Object.FindAnyObjectByType<LocalGame>();
+            while(!game.InLobby) yield return null;
+            var catalog=(ContentCatalog)typeof(LocalGame).GetField("_catalog",
+                System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).GetValue(game);
+            var gun=catalog.StartingPistol(Side.Attack);
+            var rest=new Pose(new Vector3(4,1,6),Quaternion.identity);
+            var pickup=new GroundPickup(rest,new WeaponInstance(gun,null),10,Vector3.up,Vector3.up*2);
+            var feed=new RemoteFeed { Objective=new Vector3(3,1,9) };
+            feed.Weapons.Add(pickup); feed.Kits.Add(new Vector3(2,1,7));
+
+            game.DrawWorld(feed,false,10);
+            var device=game.transform.Find("目标包").gameObject;
+            var kit=game.transform.Find("拆除套件").gameObject;
+            var dropped=game.transform.Find("Dropped "+gun.DisplayName).gameObject;
+            Assert.That(device.activeSelf && kit.activeSelf && dropped.activeSelf,Is.True);
+            Assert.That(device.transform.position,Is.EqualTo(feed.Objective.Value));
+            Assert.That(kit.transform.position,Is.EqualTo(feed.Kits[0]));
+            Assert.That(dropped.transform.position,Is.EqualTo(pickup.Launch));
+
+            game.DrawWorld(feed,false,60);
+            Assert.That(dropped.transform.position,Is.EqualTo(rest.position));
+            Assert.That(game.transform.Find(dropped.name).gameObject,Is.SameAs(dropped));
+            game.DrawWorld(feed,true,61);
+            Assert.That(device.activeSelf || kit.activeSelf || dropped.activeSelf,Is.False);
+            feed.Objective=null; feed.Kits.Clear(); feed.Weapons.Clear();
+            game.DrawWorld(feed,false,62);
+            Assert.That(device.activeSelf || kit.activeSelf || dropped.activeSelf,Is.False);
+        }
+        private static IEnumerator WaitForMatch(LocalGame game)
+        {
+            double deadline = Time.realtimeSinceStartupAsDouble + 75;
+            while (!game.Ready && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
+            Assert.That(game.Ready, Is.True, "Match did not finish loading");
+        }
         private static void Click(VisualElement root, string name)
         {
             var button = root.Q<Button>(name);
@@ -27,10 +131,13 @@ namespace AnimeCS.Tests
 
         [UnityTest] public IEnumerator SettingsApplyToTheRenderPipelineAndSurviveSceneReload()
         {
+            using var services = new LobbyTestServices();
+            yield return services.Ready();
             yield return SceneManager.LoadSceneAsync(Scene);
             var game = Object.FindAnyObjectByType<LocalGame>();
             while (!game.InLobby) yield return null;
             var root = Object.FindAnyObjectByType<UIDocument>().rootVisualElement;
+            yield return services.Register(root);
             var keys = new[]{"AnimeCS.Video.Scale", "AnimeCS.Video.MSAA", "AnimeCS.Video.Shadows"};
             var saved = keys.Select(k => PlayerPrefs.HasKey(k) ? (int?) PlayerPrefs.GetInt(k) : null).ToArray();
             var previous = game.GraphicsOptions.Current;
@@ -61,6 +168,8 @@ namespace AnimeCS.Tests
 
         [UnityTest] public IEnumerator AspectModesKeepTheAimCenteredAndSurviveSceneReload()
         {
+            using var services = new LobbyTestServices();
+            yield return services.Ready();
             const string aspectKey = "AnimeCS.Video.Aspect";
             yield return SceneManager.LoadSceneAsync(Scene);
             var game = Object.FindAnyObjectByType<LocalGame>();
@@ -70,6 +179,7 @@ namespace AnimeCS.Tests
             try
             {
                 var root = Object.FindAnyObjectByType<UIDocument>().rootVisualElement;
+                yield return services.Register(root);
                 Click(root, "settings");
                 var aspect = root.Q<DropdownField>("video-aspect");
                 Assert.That(aspect, Is.Not.Null);
@@ -82,7 +192,7 @@ namespace AnimeCS.Tests
                 }
                 Click(root, "close");
                 game.Restart();
-                while (!game.Ready) yield return null;
+                yield return WaitForMatch(game);
                 var world = Camera.main;
                 var hands = world.GetComponentsInChildren<Camera>(true).Single(camera => camera != world);
                 var center = new Vector3(.5f, .5f, 0f);
@@ -158,12 +268,15 @@ namespace AnimeCS.Tests
 
         [UnityTest] public IEnumerator RightMouseCyclesBothSniperLensesAndLeavesShopLookIndependent()
         {
+            using var services = new LobbyTestServices();
+            yield return services.Ready();
             yield return SceneManager.LoadSceneAsync(Scene);
             var game = Object.FindAnyObjectByType<LocalGame>();
             while (!game.InLobby) yield return null;
             var root=Object.FindAnyObjectByType<UIDocument>().rootVisualElement;
-            Click(root,"mode"); Click(root,"mode-practice"); Click(root,"start");
-            while (!game.Ready) yield return null;
+            yield return services.Register(root);
+            Click(root,"mode"); Click(root,"mode-practice"); Click(root,"close"); Click(root,"start");
+            yield return WaitForMatch(game);
             var camera=Camera.main;
             var hands=camera.GetComponentsInChildren<Camera>(true).Single(c=>c!=camera);
             float baseFov=camera.fieldOfView;
@@ -203,12 +316,15 @@ namespace AnimeCS.Tests
 
         [UnityTest] public IEnumerator RangeHeadshotLightsTheCenteredMedalAndExpiresInTheFeed()
         {
+            using var services = new LobbyTestServices();
+            yield return services.Ready();
             yield return SceneManager.LoadSceneAsync(Scene);
             var game = Object.FindAnyObjectByType<LocalGame>();
             while (!game.InLobby) yield return null;
             var root = Object.FindAnyObjectByType<UIDocument>().rootVisualElement;
-            Click(root,"mode"); Click(root,"mode-practice"); Click(root,"start");
-            while (!game.Ready) yield return null;
+            yield return services.Register(root);
+            Click(root,"mode"); Click(root,"mode-practice"); Click(root,"close"); Click(root,"start");
+            yield return WaitForMatch(game);
             IEnumerator Ticks(int n)
             {
                 int end = game.MatchState.Tick+n;

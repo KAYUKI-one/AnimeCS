@@ -9,8 +9,12 @@ namespace AnimeCS.Play
         [Header("UI Toolkit 布局")]
         public VisualTreeAsset lobby, hud;
         public StyleSheet theme;
+        [InspectorName("大厅界面主题")] public StyleSheet lobbyTheme;
+        public StyleSheet battleLoadingStyle;
         [Header("队伍大厅")]
         public GameObject lobbySet;
+        [InspectorName("大厅背景材质")] public Material lobbyBackdrop;
+        [InspectorName("角色脚下阴影")] public Material lobbyContactShadow;
         public AnimeCS.Content.WeaponDefinition lobbyWeapon;
         [Range(20f,55f)] public float lobbyFieldOfView = 29f;
         [Header("日光环境")] public Material daylightSky;
@@ -28,6 +32,7 @@ namespace AnimeCS.Play
         public Material tracerMaterial, impactMaterial;
         [InspectorName("枪口火光材质")] public Material muzzleMaterial;
         public AudioClip shotSound, suppressedSound, pistolSound, marksmanSound, alternateRifleSound, deviceBurstSound;
+        [InspectorName("持物动作与音效库")] public HeldItemLibrary heldItems;
         public AudioClip[] bootSteps;
         public Material deviceBlast;
         public GameObject recoveryKit;

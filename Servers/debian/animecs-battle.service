@@ -7,6 +7,8 @@ DynamicUser=yes
 StateDirectory=animecs-battle
 WorkingDirectory=/var/lib/animecs-battle
 Environment=HOME=/var/lib/animecs-battle
+Environment=ANIMECS_BATTLE_STATE_DIR=/var/lib/animecs-battle/results
+EnvironmentFile=-/etc/animecs/battle-key.env
 EnvironmentFile=-/etc/animecs/battle.env
 ExecStart=/opt/animecs/Battle/AnimeCS.Battle.x86_64 -batchmode -nographics -logFile -
 Restart=on-failure

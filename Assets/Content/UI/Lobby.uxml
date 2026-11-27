@@ -1,29 +1,55 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
-    <ui:VisualElement name="lobby" class="screen lobby">
+    <ui:VisualElement name="lobby" class="screen lobby sky">
         <ui:VisualElement name="stage-view" class="fill" />
-        <ui:VisualElement name="home-heading" class="lobby-stage" picking-mode="Ignore">
-            <ui:Label text="AnimeCS" class="wordmark" />
-            <ui:Label name="map-title" class="stage-caption" />
+        <ui:VisualElement name="home-heading" class="home-surface" picking-mode="Ignore">
+            <ui:VisualElement class="home-heading-block" picking-mode="Ignore">
+                <ui:Label text="━━   ANIMECS  /  LOBBY" class="eyebrow" />
+                <ui:Label text="晴空中庭" class="home-title" />
+                <ui:Button name="manual" text="任务手册     ›" class="manual" />
+            </ui:VisualElement>
+            <ui:VisualElement class="home-tools" picking-mode="Ignore">
+                <ui:Button name="chat-preview" text="世界信息    欢迎来到晴空中庭" class="chat-preview" />
+                <ui:VisualElement name="dock" class="dock" />
+            </ui:VisualElement>
+            <ui:VisualElement class="play-block">
+                <ui:Button name="mode" class="map-button"><ui:Image name="map-thumb"/><ui:Label name="map-title"/></ui:Button>
+                <ui:Button name="start" text="开始游戏     ↗" class="play-button" />
+            </ui:VisualElement>
+            <ui:VisualElement name="nameplates" class="fill" picking-mode="Ignore"/>
         </ui:VisualElement>
         <ui:VisualElement name="sheet" class="lobby-page">
-            <ui:VisualElement class="sheet-heading page-heading"><ui:Label name="sheet-title" class="section-heading" /><ui:Button name="close" text="返回大厅" class="quiet-button" /></ui:VisualElement>
+            <ui:VisualElement class="sheet-heading page-heading"><ui:Button name="close" text="‹  返回大厅"/><ui:Label name="sheet-title" class="section-heading"/></ui:VisualElement>
             <ui:VisualElement name="page-body" class="page-body">
                 <ui:VisualElement class="loadout-pane">
                     <ui:ScrollView name="loadout-slots" class="loadout-slots"/>
                     <ui:VisualElement name="loadout-actions" class="loadout-controls"/>
                 </ui:VisualElement>
-                <ui:VisualElement name="inspection-stage" class="inspection-stage"><ui:Label text="拖动旋转" class="turn-hint" picking-mode="Ignore" /></ui:VisualElement>
-                <ui:ScrollView name="sheet-content" class="sheet-content" />
-                <ui:Label name="inspect-caption" class="inspect-caption" text="拖动模型旋转" picking-mode="Ignore" />
+                <ui:ScrollView name="wear-rail" class="wear-rail"/>
+                <ui:ScrollView name="character-rail" class="character-rail"/>
+                <ui:VisualElement name="inspection-stage" class="inspection-stage"><ui:Label name="stage-name" class="turn-hint" picking-mode="Ignore"/></ui:VisualElement>
+                <ui:ScrollView name="sheet-content" class="sheet-content"/>
+                <ui:Label name="inspect-caption" class="inspect-caption" text="拖动模型旋转" picking-mode="Ignore"/>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement class="nav-rail">
-            <ui:Button name="settings" text="设置" class="settings nav" />
-            <ui:VisualElement class="nav-group">
-                <ui:Button name="inventory" text="库存" class="nav" />
-                <ui:Button name="equipment" text="装备" class="nav" />
-                <ui:Button name="mode" text="模式选择" class="nav" />
-                <ui:Button name="start" text="开始游戏" class="nav start" />
+        <ui:VisualElement name="topbar" class="topbar" picking-mode="Ignore">
+            <ui:Button name="profile" class="profile-button"><ui:Image name="profile-icon"/><ui:VisualElement class="profile-copy" picking-mode="Ignore"><ui:Label name="profile-name" class="strong"/><ui:Label name="profile-level" class="small"/></ui:VisualElement></ui:Button>
+            <ui:VisualElement name="top-tabs" class="top-tabs"/>
+            <ui:Button name="invite" text="邀请好友" class="invite-button"/>
+        </ui:VisualElement>
+        <ui:VisualElement name="overlay" class="fill overlay"><ui:VisualElement name="dialog" class="dialog">
+            <ui:VisualElement class="dialog-head"><ui:Label name="dialog-title" class="strong"/><ui:Button name="dialog-close" text="关闭  ×"/></ui:VisualElement>
+            <ui:ScrollView name="dialog-content" class="dialog-content"/>
+        </ui:VisualElement></ui:VisualElement>
+        <ui:Label name="notice" class="notice" picking-mode="Ignore"/>
+        <ui:VisualElement name="auth" class="fill auth">
+            <ui:VisualElement class="auth-card">
+                <ui:Label text="ANIMECS   /   ACCOUNT" class="eyebrow"/>
+                <ui:Label text="晴空中庭" class="auth-title"/>
+                <ui:Label name="auth-heading" text="登录游戏" class="section-heading"/>
+                <ui:TextField name="auth-id" label="玩家 ID" max-length="32"/>
+                <ui:TextField name="auth-password" label="密码" is-password-field="true" max-length="128"/>
+                <ui:Label name="auth-status" class="form-status"/>
+                <ui:VisualElement class="action-line"><ui:Button name="auth-login" text="登录" class="accent"/><ui:Button name="auth-register" text="注册并进入"/><ui:Button name="auth-retry" text="重新检查更新" class="accent"/></ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

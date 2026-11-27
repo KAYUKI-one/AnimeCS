@@ -6,28 +6,42 @@ using UnityEngine;
 
 namespace AnimeCS.Match
 {
-    public sealed class SeatDatagramClient : IDisposable
+    public sealed partial class SeatDatagramClient : IDisposable
     {
         private readonly Socket _socket;
         private readonly byte[] _incoming = new byte[65536];
-        private readonly byte[] _hello = SeatWire.Packet(SeatWire.Hello, SeatWire.Header, 0);
-        private readonly byte[][] _history = new byte[3][];
-        private readonly int[] _lengths = new int[3];
+        private byte[] _hello = SeatWire.Packet(SeatWire.Hello, SeatWire.Header, 0);
+        private string _ticket;
+        private readonly byte[][] _history = new byte[SeatWire.InputWindow][];
+        private readonly int[] _lengths = new int[SeatWire.InputWindow];
         private readonly SnapshotClock _clock = new SnapshotClock();
         private readonly SeatMotionPrediction _prediction;
         private readonly byte[] _heartbeat = new byte[SeatWire.Header + 8];
-        private double _helloAt, _lastState, _lastSend;
-        private ulong _token;
+        private const double HelloIntervalSeconds = .5;
+        internal const int ReconnectWindowSeconds = 2 * SeatWire.PeerTimeoutSeconds;
+        private double _helloAt, _lastState, _lastSend, _reconnectUntil;
+        private readonly byte[] _handlingRequest = new byte[SeatWire.Header];
+        private bool _hasHandling, _orderedInput;
+        private double _requestAt, _retryAt;
+        private ulong _token, _retiredToken;
         private int _sequence, _accepted;
 
         public Vector3 PredictedPosition => _prediction.Position;
-        public bool Connected => _token != 0;
+        public bool Connected => _token != 0 && !Reconnecting;
+        internal bool Reconnecting => _reconnectUntil > 0;
+        public bool Finished => View.Match.Phase == RoundPhase.Finished;
+        internal bool CanQueueInput => Connected && !Finished && (!_orderedInput || _sequence-_accepted<_history.Length);
         public SeatView View { get; private set; }
         public SeatSnapshotBuffer Poses { get; } = new SeatSnapshotBuffer();
+#if ANIMECS_RENDER_PROBE
+        internal long ReceivedPayloadBytes { get; private set; }
+        internal long SentPayloadBytes { get; private set; }
+#endif
 
         public SeatDatagramClient(IPEndPoint server) : this(server, null) { }
-        public SeatDatagramClient(IPEndPoint server, MovementTuning tuning)
+        public SeatDatagramClient(IPEndPoint server, MovementTuning tuning, string ticket = null)
         {
+            RenewTicket(ticket);
             _prediction = new SeatMotionPrediction(tuning);
             _socket = new Socket(server.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             try
@@ -36,7 +50,7 @@ namespace AnimeCS.Match
                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                     _socket.IOControl(unchecked((int)0x9800000C), new byte[4], null);
                 for (int i = 0; i < _history.Length; i++) _history[i] = new byte[SeatWire.MaxInputBytes];
-                Hello();
+                Hello(SnapshotClock.Now);
             }
             catch { _socket.Dispose(); throw; }
         }
@@ -44,29 +58,42 @@ namespace AnimeCS.Match
         public bool SamplePose(out Vector3 position, out float yaw, out float pitch) =>
             Poses.Sample(_clock.Sample(SnapshotClock.Now), out position, out yaw, out pitch);
 
-        private void Hello()
+        internal void RenewTicket(string ticket)
         {
-            _helloAt = SnapshotClock.Now;
+            if (string.IsNullOrEmpty(ticket) || ticket==_ticket) return;
+            if (ticket.Length > 512) throw new ArgumentException("Invalid join ticket",nameof(ticket));
+            var hello=SeatWire.Packet(SeatWire.Hello,SeatWire.Header+ticket.Length,0);
+            Encoding.ASCII.GetBytes(ticket,0,ticket.Length,hello,SeatWire.Header);
+            _ticket=ticket;
+            _hello=hello;
+        }
+
+        private void Hello(double now)
+        {
+            _helloAt = now;
             Send(_hello, _hello.Length);
         }
 
         private bool Send(byte[] packet, int size)
         {
-            try { return _socket.Send(packet, 0, size, SocketFlags.None) == size; }
+            try
+            {
+                int sent = _socket.Send(packet, 0, size, SocketFlags.None);
+#if ANIMECS_RENDER_PROBE
+                SentPayloadBytes += sent;
+#endif
+                return sent == size;
+            }
             catch (SocketException ex) when (ex.SocketErrorCode == SocketError.ConnectionRefused ||
                                               ex.SocketErrorCode == SocketError.ConnectionReset) { return false; }
         }
 
-        public void Poll()
+        public void Poll() => Poll(SnapshotClock.Now);
+
+        internal void Poll(double now)
         {
-            double now = SnapshotClock.Now;
-            if (Connected && now - _lastState > 5)
-            {
-                _token = 0;
-                Poses.Clear();
-                _clock.Reset(); _prediction.Clear();
-            }
-            if (!Connected && now - _helloAt > .5) Hello();
+            if (_reconnectUntil < 0) return;
+            if (!Connected && !Finished && now-_helloAt >= HelloIntervalSeconds && (!Reconnecting || now < _reconnectUntil)) Hello(now);
             if (Connected && now - _lastSend >= 1)
             {
                 SeatWire.HeaderFor(_heartbeat,SeatWire.KeepAlive,SeatWire.Magic,_token);
@@ -81,27 +108,27 @@ namespace AnimeCS.Match
                 try { size = _socket.Receive(_incoming); }
                 catch (SocketException ex) when (ex.SocketErrorCode == SocketError.ConnectionRefused ||
                                                   ex.SocketErrorCode == SocketError.ConnectionReset) { break; }
+#if ANIMECS_RENDER_PROBE
+                ReceivedPayloadBytes += size;
+#endif
                 var p = _incoming;
-                if (size != SeatWire.ExtendedStateBytes || SeatWire.U32(p,0) != SeatWire.Magic || p[4] != SeatWire.State) continue;
+                if (size >= SeatWire.Header && p[4] == SeatRoster.Kind) { ReceiveRoster(p,size); continue; }
+                if (size >= SeatWire.Header && (p[4] == 40 || p[4] == 41)) { ReceiveMatchWorld(p,size); continue; }
+                if (size < SeatWire.ExtendedStateBytes || size > SeatWire.MaxHandlingBytes || SeatWire.U32(p,0) != SeatWire.Magic || p[4] != SeatWire.State) continue;
                 ulong token = SeatWire.Token(p);
                 int tick = SeatWire.I32(p,17), round = SeatWire.I32(p,13);
-                if (token == 0 || tick < 0 || round < 0 || p[21] >= LocalMatch.Seats || p[22] > (byte)RoundPhase.Practice ||
+                bool newBinding = token != _token;
+                if (token == 0 || token == _retiredToken || tick < 0 || round < 0 || p[21] >= LocalMatch.Seats || p[22] > (byte)RoundPhase.Practice ||
                     p[23] > (byte)Content.Side.Defend || p[42] > (byte)HeldSlot.Utility ||
-                    Connected && (token != _token || tick <= View.Match.Tick || round < View.Match.Round)) continue;
-                if (!Connected || View.Match.Round != round)
-                {
-                    _sequence = _accepted = 0;
-                    Array.Clear(_lengths, 0, _lengths.Length);
-                    Poses.Clear();
-                    _clock.Reset(); _prediction.Clear();
-                }
-                if (Connected && (View.Health == 0) != (p[40] == 0)) { Poses.Clear(); _clock.Reset(); _prediction.Clear(); }
-                _token = token; _lastState = now;
-                _accepted = Math.Max(_accepted, Math.Min(_sequence, SeatWire.I32(p,52)));
+                    _token != 0 && (newBinding && !Reconnecting || p[21] != View.Seat ||
+                                    tick < View.Match.Tick || round < View.Match.Round)) continue;
+                bool final = (RoundPhase)p[22] == RoundPhase.Finished;
+                if (Finished && (!Connected || !final || round != View.Match.Round || tick != View.Match.Tick)) continue;
+                if (!newBinding && tick == View.Match.Tick && !final) continue;
                 int visible = SeatWire.I32(p,72);
-                View = new SeatView
+                var received = new SeatView
                 {
-                    Seat=p[21], Side=(Content.Side)p[23], Position=Position(p,24),
+                    EquipTick=-100000, InspectTick=-100000, Seat=p[21], Side=(Content.Side)p[23], Position=Position(p,24),
                     Match=new PublicMatchView { Round=round, Tick=tick, Phase=(RoundPhase)p[22], RemainingTicks=SeatWire.I32(p,56),
                         Score0=SeatWire.I32(p,60), Score1=SeatWire.I32(p,64) },
                     Motion=new MotionContact { Velocity=new Vector2(SeatWire.I16(p,88),SeatWire.I16(p,90))*.01f,
@@ -112,23 +139,78 @@ namespace AnimeCS.Match
                     LastShotTick=SeatWire.I32(p,44), LastConfirmationTick=SeatWire.I32(p,48),
                     VisibleEnemy=(uint)visible<LocalMatch.Seats ? new Contact(visible,Position(p,76)) : (Contact?)null
                 };
+                bool handling = size > SeatWire.ExtendedStateBytes;
+                if (handling && !SeatWire.ReadHandling(p,size,ref received,View)) continue;
+                if (newBinding || View.Match.Round != round)
+                {
+                    ResetWorld();
+                    _rosterRound = _rosterTick = -1;
+                    _sequence = _accepted = 0;
+                    _retryAt = 0;
+                    Array.Clear(_lengths, 0, _lengths.Length);
+                    Poses.Clear();
+                    _clock.Reset(); _prediction.Clear();
+                }
+                if (newBinding)
+                {
+                    _retiredToken = _token;
+                    _hasHandling = false;
+                    _requestAt = 0;
+                }
+                if (handling) _hasHandling = true;
+                if (_token != 0 && (View.Health == 0) != (p[40] == 0)) { Poses.Clear(); _clock.Reset(); _prediction.Clear(); }
+                _reconnectUntil = 0;
+                _token = token; _lastState = now;
+                _orderedInput = (p[95] & SeatWire.OrderedInputCapability) != 0;
+                _accepted = Math.Max(_accepted, Math.Min(_sequence, SeatWire.I32(p,52)));
+                View = received;
                 Poses.Push(tick, View.Position, View.Yaw, View.Pitch);
                 _clock.Observe(tick,now);
                 _prediction.Reconcile(View,_accepted);
+            }
+            if (Connected && now - _lastState > SeatWire.PeerTimeoutSeconds)
+            {
+                if (Finished) { _token = 0; return; }
+                // Keep the previous token and its ordered history until the authority identifies this binding.
+                _reconnectUntil = now + ReconnectWindowSeconds;
+                Hello(now);
+            }
+            if (Reconnecting && now >= _reconnectUntil)
+            {
+                _token = 0;
+                _reconnectUntil = -1;
+                return;
+            }
+            if (Connected && !Finished && _orderedInput) RetryPending(now);
+            if (Connected) TickWatch(now);
+            if (Connected && !_hasHandling && now >= _requestAt)
+            {
+                SeatWire.HeaderFor(_handlingRequest,SeatWire.RequestHandling,SeatWire.Magic,_token);
+                Send(_handlingRequest,_handlingRequest.Length);
+                _requestAt = now + 1;
             }
         }
 
         private static Vector3 Position(byte[] p, int at) =>
             new Vector3(SeatWire.I32(p,at), SeatWire.I32(p,at+4), SeatWire.I32(p,at+8)) * .01f;
 
+        // A driver may dequeue a purchase or consume a button edge as soon as Decide is called.
+        internal bool SubmitFrom(ISeatDriver driver,in SeatView view) => CanQueueInput && Submit(driver.Decide(view));
+
         public bool Submit(SeatIntent intent)
         {
-            if (!Connected) return false;
+            if (!Connected || Finished) return false;
             int size = string.IsNullOrEmpty(intent.ItemId) ? 0 : Encoding.UTF8.GetByteCount(intent.ItemId);
             if (size > 80) return false;
+            double now = SnapshotClock.Now;
+            if (_orderedInput)
+            {
+                RetryPending(now);
+                if (!CanQueueInput) return false;
+            }
             int sequence = ++_sequence, slot = sequence % _history.Length;
             var p = _history[slot];
-            SeatWire.HeaderFor(p,SeatWire.Input,SeatWire.Magic,_token);
+            SeatWire.HeaderFor(p,_orderedInput ? SeatWire.OrderedInput : SeatWire.Input,SeatWire.Magic,_token);
             SeatWire.I32(p,13,View.Match.Round); SeatWire.I32(p,17,View.Match.Tick);
             SeatWire.I32(p,21,sequence); SeatWire.U32(p,25,SeatWire.Flags(intent));
             SeatWire.I16(p,29,SeatWire.Angle(intent.Yaw)); SeatWire.I16(p,31,SeatWire.Angle(intent.Pitch));
@@ -138,21 +220,38 @@ namespace AnimeCS.Match
             p[44]=(byte)(intent.CancelPurchase?1:0); p[45]=(byte)size;
             if (size > 0) Encoding.UTF8.GetBytes(intent.ItemId,0,intent.ItemId.Length,p,SeatWire.InputBytes);
             int at = SeatWire.InputBytes + size;
-            double now = SnapshotClock.Now;
             double observed = _clock.Sample(now);
             int tick = (int)Math.Floor(observed);
             SeatWire.I32(p,at,tick);
             SeatWire.I16(p,at+4,(int)((observed-tick)*65536));
             _lengths[slot] = at + SeatWire.TimestampBytes;
-            for (int seq = Math.Max(_accepted + 1, sequence - 2); seq < sequence; seq++)
+            if (!_orderedInput)
             {
-                int previous = seq % _history.Length;
-                if (_lengths[previous] > 0) Send(_history[previous], _lengths[previous]);
+                for (int seq = Math.Max(_accepted + 1, sequence - 2); seq < sequence; seq++)
+                {
+                    int previous = seq % _history.Length;
+                    if (_lengths[previous] > 0) Send(_history[previous], _lengths[previous]);
+                }
             }
-            if (!Send(p, _lengths[slot])) return false;
+            if (!Send(p, _lengths[slot]) && !_orderedInput) return false;
             _prediction.Record(_clock.InputTick(now),sequence,intent);
             _lastSend=now;
             return true;
+        }
+
+        private void RetryPending(double now)
+        {
+            if (_accepted >= _sequence || now < _retryAt) return;
+            _retryAt = now + 3d / MatchRules.TickRate;
+            int last = Math.Min(_sequence, _accepted + 3);
+            for (int seq = _accepted + 1; seq <= last; seq++)
+            {
+                int slot = seq % _history.Length;
+                var packet = _history[slot];
+                // Refresh proof of the received snapshot, keeping the action's original observation timestamp.
+                SeatWire.I32(packet,17,View.Match.Tick);
+                Send(packet,_lengths[slot]);
+            }
         }
         public void Dispose() => _socket.Dispose();
     }

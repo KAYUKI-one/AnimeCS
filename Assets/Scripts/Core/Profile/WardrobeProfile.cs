@@ -73,12 +73,19 @@ namespace AnimeCS.Profile
             var outfit = catalog.Find<OutfitDefinition>(source?.outfitId);
             bool Allowed(OutfitDefinition f) => f && !f.Archived && f.Character && !f.Character.Archived && owned.Contains(f.Id);
             if (Allowed(outfit)) result.outfitId = outfit.Id;
+            else if (!Allowed(catalog.Outfit))
+                foreach (var entry in catalog.Entries)
+                    if (entry is OutfitDefinition ownedOutfit && Allowed(ownedOutfit)) { result.outfitId=ownedOutfit.Id; break; }
             string ResolveSide(Side side)
             {
                 var saved = catalog.Find<OutfitDefinition>(source?.OutfitFor(side));
                 if (Allowed(saved) && saved.Character.Faction==side) return saved.Id;
                 if (Allowed(outfit) && outfit.Character.Faction==side) return outfit.Id;
-                return catalog.OutfitForSide(side)?.Id;
+                var fallback = catalog.OutfitForSide(side);
+                if (Allowed(fallback)) return fallback.Id;
+                foreach (var entry in catalog.Entries)
+                    if (entry is OutfitDefinition candidate && Allowed(candidate) && candidate.Character.Faction==side) return candidate.Id;
+                return null;
             }
             result.attackOutfitId=ResolveSide(Side.Attack);
             result.defendOutfitId=ResolveSide(Side.Defend);

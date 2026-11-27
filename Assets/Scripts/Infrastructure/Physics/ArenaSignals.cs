@@ -84,18 +84,18 @@ namespace AnimeCS.Play
                         if (e.Cloud == null)
                         {
                             e.Cloud=new SmokeField(e.Position, e.Item.Radius, e.Thrown, e.Visual?.CreateSmoke(e.Position, e.Item.Radius));
-                            Emit(e.Position, SoundKind.Utility, 12);
+                            Emit(e.Position, SoundKind.Utility, 12, itemId:e.Item.Id);
                         }
                         e.Cloud.Advance(age*SeatMovement.StepTime,e.Item.Duration-age*SeatMovement.StepTime);
                         done = age >= MatchRules.Ticks(e.Item.Duration);
                         break;
                     case UtilityEffect.Flash:
-                        Emit(e.Position, SoundKind.Utility, 12); Flash(e); done = true; break;
+                        Emit(e.Position, SoundKind.Utility, 12, itemId:e.Item.Id); Flash(e); done = true; break;
                     default:
                         int interval = MatchRules.Ticks(0.3f);
                         if (e.Pulse < 3 && age >= e.Pulse * interval) { Emit(e.Position, SoundKind.Step, e.Item.Radius); e.Pulse++; }
                         done = age >= 3 * interval;
-                        if (done) Emit(e.Position, SoundKind.EchoTail, 7);
+                        if (done) Emit(e.Position, SoundKind.EchoTail, 7, itemId:e.Item.Id);
                         break;
                 }
                 if (done) { Remove(e); _effects.RemoveAt(i); }
@@ -144,7 +144,7 @@ namespace AnimeCS.Play
             }
         }
 
-        public void Emit(Vector3 source, SoundKind kind, float radius, int sourceSeat = -1, bool suppressed = false, WeaponClass category=WeaponClass.Rifle)
+        public void Emit(Vector3 source, SoundKind kind, float radius, int sourceSeat = -1, bool suppressed = false, WeaponClass category=WeaponClass.Rifle, string itemId=null, MeleeAction melee=default)
         {
             for (int i = 0; i < _actors.Length; i++)
             {
@@ -156,7 +156,7 @@ namespace AnimeCS.Play
                 float reach = radius;
                 for (int k = 0; k < count; k++) if (!_bodies.ContainsKey(_walls[k].collider)) reach *= 0.5f;
                 if (delta.sqrMagnitude > reach * reach) continue;
-                var clue = new SoundClue { Kind = kind, WeaponClass=category, Own = i == sourceSeat, Suppressed = suppressed, Region = _map.NearestRegion(source),
+                var clue = new SoundClue { Kind = kind, WeaponClass=category, ItemId=itemId, Melee=melee, Own = i == sourceSeat, Suppressed = suppressed, Region = _map.NearestRegion(source),
                     Bearing = Mathf.RoundToInt(Mathf.Repeat(Mathf.Atan2(delta.x, delta.z) * Mathf.Rad2Deg, 360f) / 45f) % 8,
                     Tick = _tick, Expires = _tick + 3 * MatchRules.TickRate };
                 _events[i,_sequence[i]++%SoundCapacity]=clue;

@@ -53,6 +53,20 @@ namespace AnimeCS.Content
             WeaponClass.Knife=>InspectStyle.StraightBlade, WeaponClass.Pistol=>InspectStyle.Sidearm,
             WeaponClass.LightSniper or WeaponClass.HeavySniper=>InspectStyle.Precision,_=>InspectStyle.LongGun
         };
+        [SerializeField, Min(1), InspectorName("近战轻击伤害")] private int _lightDamage = 40;
+        [SerializeField, Min(1), InspectorName("近战重击伤害")] private int _heavyDamage = 65;
+        [SerializeField, Min(.05f), InspectorName("轻击恢复（秒）")] private float _lightRecovery = .52f;
+        [SerializeField, Min(.05f), InspectorName("重击恢复（秒）")] private float _heavyRecovery = .90f;
+        [SerializeField, Range(0, 89), InspectorName("背面判定半角")] private float _rearHalfAngle = 54;
+        public int MeleeDamage(bool heavy) => heavy ? _heavyDamage : _lightDamage;
+        public float MeleeRecovery(bool heavy) => heavy ? _heavyRecovery : _lightRecovery;
+        public bool InRearArc(Vector3 offsetFromTarget, float targetYaw)
+        {
+            offsetFromTarget.y = 0;
+            if (offsetFromTarget.sqrMagnitude < .0001f) return false;
+            var rear = Quaternion.Euler(0, targetYaw, 0) * Vector3.back;
+            return Vector3.Dot(rear, offsetFromTarget.normalized) >= Mathf.Cos(_rearHalfAngle * Mathf.Deg2Rad);
+        }
         public WeaponClass Class => _class;
         public int Price => _price;
         public int Magazine => _magazine;

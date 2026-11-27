@@ -16,6 +16,20 @@ namespace AnimeCS.Play
             _left = new Arm(animator, true);
         }
 
+        public void RestAtSides(Transform body)
+        {
+            if (!Valid) return;
+            Rest(_right,1);
+            Rest(_left,-1);
+            void Rest(Arm arm,float side)
+            {
+                var outward=body.right*side;
+                var down=(-body.up+outward*.18f+body.forward*.045f).normalized;
+                var palm=Quaternion.LookRotation(down,body.forward);
+                arm.Solve(arm.Shoulder.position+down*(arm.Reach*.965f),outward-body.forward*.6f,palm);
+            }
+        }
+
         public void Pose(Transform body, Transform mount, WeaponDefinition weapon, Quaternion aim, bool view, float swing=0, WeaponActionPose action=default, Bounds? insert=null)
         {
             if (!Valid || !mount || !weapon) return;

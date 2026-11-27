@@ -1,7 +1,18 @@
 using AnimeCS.Content;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace AnimeCS.Match
 {
+    public interface IMatchWorldView
+    {
+        Vector3? ObjectiveAt(float frame);
+        IReadOnlyList<GroundPickup> GroundWeapons { get; }
+        IReadOnlyList<Vector3> GroundKits { get; }
+        int EliminationCount { get; }
+        bool TryGetElimination(int sequence, out Elimination elimination);
+    }
+
     /// <summary>Public result of a lethal hit, with the attacker's state at the firing tick.</summary>
     public readonly struct Elimination
     {
@@ -17,7 +28,7 @@ namespace AnimeCS.Match
         }
     }
 
-    public sealed partial class LocalMatch
+    public sealed partial class LocalMatch : IMatchWorldView
     {
         private readonly Elimination[] _recentKills=new Elimination[32];
         private readonly Elimination?[] _lethalHit=new Elimination?[Seats];

@@ -28,9 +28,8 @@ namespace AnimeCS.Play
             foreach(var row in _rows)row.Hide();
         }
 
-        internal void Present(LocalMatch session,int watched,int local,bool visible)
+        internal void Present(IMatchWorldView session,in PublicMatchView clock,int watched,int local,bool visible)
         {
-            var clock=session.Public;
             if (_round!=clock.Round)
             {
                 _round=clock.Round; System.Array.Clear(_counts,0,_counts.Length);

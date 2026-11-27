@@ -25,6 +25,7 @@ MonoBehaviour:
   _controller: {fileID: 9100000, guid: dda641f82b1570747be311378167f262, type: 2}
   _weaponSocket: 
   _faction: 1
+  _battlePortrait: {fileID: 2800000, guid: de9911ad1d27184448afe8907a2de3e4, type: 3}
   _headwearOffset: {x: 0, y: 0.064, z: 0}
   _faceAnchor: {x: -0.00000077268976, y: 0.065394, z: 0.062874734}
   _standingEyes: 1.4585472

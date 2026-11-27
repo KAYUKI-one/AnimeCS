@@ -9,12 +9,33 @@ namespace AnimeCS.Match
         public string SkinId { get; }
         public int Magazine { get; internal set; }
         public int Reserve { get; internal set; }
+        internal int NextFireTick { get; private set; }
+        private const int TicksPerMinute = 60 * MatchRules.TickRate;
+        private readonly int _roundsPerMinute;
+        private long _scheduledShot;
+
         internal WeaponInstance(WeaponDefinition definition, string skin)
         {
             Definition = definition;
             SkinId = skin;
             Magazine = definition.Magazine;
             Reserve = definition.Reserve;
+            _roundsPerMinute = System.Math.Clamp((int)definition.ShotsPerMinute, 1, TicksPerMinute);
+        }
+
+        internal void RecordShot(int tick)
+        {
+            // Keep the exact deadline in tick × RPM units. A late trigger starts a new cadence.
+            if (tick != NextFireTick) _scheduledShot = (long)tick * _roundsPerMinute;
+            _scheduledShot += TicksPerMinute;
+            NextFireTick = (int)((_scheduledShot + _roundsPerMinute - 1) / _roundsPerMinute);
+        }
+
+        internal void BeginRound()
+        {
+            Reserve = Definition.Reserve;
+            NextFireTick = 0;
+            _scheduledShot = 0;
         }
     }
 
@@ -140,8 +161,8 @@ namespace AnimeCS.Match
             if (!knife || knife.Class!=WeaponClass.Knife) knife=_catalog.Knife;
             if (knife) Knife ??= Issue(knife);
             _sidearm ??= Issue(_catalog.StartingPistol(side));
-            _sidearm.Reserve = _sidearm.Definition.Reserve;
-            if (_primary != null) _primary.Reserve = _primary.Definition.Reserve;
+            _sidearm.BeginRound();
+            _primary?.BeginRound();
             _held = Fallback(); _previous = _held == HeldSlot.Primary ? HeldSlot.Sidearm : HeldSlot.Knife;
         }
 

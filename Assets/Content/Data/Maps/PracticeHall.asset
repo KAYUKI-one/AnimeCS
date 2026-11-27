@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d65fc406864287e4a925dbf8417fd5f7, type: 3}
   m_Name: PracticeHall
   m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.MapDefinition
+  _loadingArt: {fileID: 2800000, guid: c3d93700075941129cee37785f718f56, type: 3}
+  _loadingBrief: "在不同射距的靶位练习瞄准、移动和武器切换。"
   _id: map.practice
   _displayName: "\u7EC3\u67AA\u5730\u56FE"
   _thumbnail: {fileID: 0}

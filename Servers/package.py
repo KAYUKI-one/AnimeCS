@@ -7,7 +7,10 @@ root = Path(sys.argv[1]).resolve()
 units = Path(__file__).resolve().parent / "debian"
 archives = root / "Packages"
 archives.mkdir(exist_ok=True)
-for role in ("Battle", "Data", "HotUpdate"):
+roles = sys.argv[2:] or ("Battle", "Data", "HotUpdate")
+if any(role not in ("Battle", "Data", "HotUpdate") for role in roles):
+    raise SystemExit("Expected a role from Battle, Data or HotUpdate")
+for role in roles:
     folder = root / role
     main = f"AnimeCS.{role}" + (".x86_64" if role == "Battle" else "")
     if not (folder / main).is_file():
@@ -24,6 +27,10 @@ for role in ("Battle", "Data", "HotUpdate"):
             with file.open("rb") as content:
                 out.addfile(info, content)
         unit = "animecs-" + role.lower() + ".service"
-        out.add(units / unit, arcname=role + "/" + unit)
+        unit_path = units / unit
+        info = out.gettarinfo(str(unit_path), arcname=role + "/" + unit)
+        info.mode = 0o644
+        with unit_path.open("rb") as content:
+            out.addfile(info, content)
     stage.replace(archives / name)
     print(name)

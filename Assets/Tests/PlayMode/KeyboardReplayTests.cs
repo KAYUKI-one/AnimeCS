@@ -15,6 +15,89 @@ namespace AnimeCS.Tests
 {
     public sealed class KeyboardReplayTests
     {
+        [UnityTest] public IEnumerator SwitchingFocusedMouseKeepsBothPlayersFacingEachOther()
+        {
+            yield return SceneManager.LoadSceneAsync("Assets/Scenes/Gameplay/LocalMatch.unity");
+            var game=Object.FindAnyObjectByType<LocalGame>();
+            var mouse=InputSystem.AddDevice<Mouse>();
+            try
+            {
+                using var first=new KeyboardSeat(game.InputActions);
+                using var second=new KeyboardSeat(game.InputActions);
+                var view=new SeatView { Health=100, Match=new PublicMatchView { Round=1,Phase=RoundPhase.Buy } };
+                first.SyncRound(view);second.SyncRound(view);
+                first.Sample(true);
+                InputSystem.QueueDeltaStateEvent(mouse.delta,new Vector2(900,80));
+                InputSystem.Update();
+                first.Sample(true);second.Sample(false);
+                first.ResetPointer();second.ResetPointer();
+                InputSystem.Update();
+                first.Sample(false);second.Sample(true);
+                InputSystem.QueueDeltaStateEvent(mouse.delta,new Vector2(-900,-80));
+                InputSystem.Update();
+                second.Sample(true);first.Sample(false);
+
+                for(int tick=0;tick<150;tick++)
+                {
+                    InputSystem.Update();
+                    bool focusFirst=tick>=75;
+                    if(tick==75) { first.ResetPointer();second.ResetPointer(); }
+                    first.Sample(focusFirst);second.Sample(!focusFirst);
+                    view.Match.Tick=tick;
+                    var a=first.Decide(view);var b=second.Decide(view);
+                    Assert.That(Mathf.DeltaAngle(90,a.Yaw),Is.EqualTo(0).Within(.01f));
+                    Assert.That(Mathf.DeltaAngle(-90,b.Yaw),Is.EqualTo(0).Within(.01f));
+                    Assert.That(a.Pitch,Is.EqualTo(8).Within(.01f));
+                    Assert.That(b.Pitch,Is.EqualTo(-8).Within(.01f));
+                }
+                view.Match.Round++;
+                view.Yaw=42;view.Pitch=0;
+                Assert.That(first.Decide(view).Yaw,Is.EqualTo(42));
+                Assert.That(second.Decide(view).Pitch,Is.Zero);
+            }
+            finally { InputSystem.RemoveDevice(mouse); }
+        }
+
+        [UnityTest] public IEnumerator LiveBuyClickReachesTheHostWithoutFiring()
+        {
+            yield return SceneManager.LoadSceneAsync("Assets/Scenes/Gameplay/LocalMatch.unity");
+            var game=Object.FindAnyObjectByType<LocalGame>();
+            var mouse=InputSystem.AddDevice<Mouse>();
+            try
+            {
+                using var keyboard=new KeyboardSeat(game.InputActions);
+                var self=new SeatView { Health=100,CanBuy=true, Match=new PublicMatchView { Round=1,Tick=100,Phase=RoundPhase.Contest } };
+                var host=new HostSeatInput();
+                host.ObserveRound(self.Match.Round,self.Match.Tick,.04f);
+                keyboard.Shopping=true;
+                InputSystem.QueueStateEvent(mouse,new MouseState().WithButton(MouseButton.Left));
+                InputSystem.Update();
+                keyboard.Sample(true,false);
+                keyboard.Order(BuySlot.Armor,null,false);
+                var order=keyboard.Decide(self);
+                Assert.That(host.ReceiveOrdered(1,self.Match.Tick,self.Match.Tick,0,order),Is.True);
+                var accepted=host.Decide(self);
+                Assert.That(accepted.Buy,Is.EqualTo(BuySlot.Armor));
+                Assert.That(accepted.FirePressed || accepted.Fire,Is.False);
+
+                keyboard.Shopping=false;
+                keyboard.Sample(true);
+                Assert.That(keyboard.Decide(self).Fire,Is.False,"Closing the shop must not fire while the purchase button is still held.");
+                InputSystem.QueueStateEvent(mouse,new MouseState());
+                InputSystem.Update();
+                keyboard.Sample(true);
+                keyboard.Decide(self);
+                InputSystem.QueueStateEvent(mouse,new MouseState().WithButton(MouseButton.Left));
+                InputSystem.Update();
+                keyboard.Sample(true);
+                Assert.That(keyboard.Decide(self).Fire,Is.True);
+                keyboard.Order(BuySlot.Armor,null,false);
+                self.Match.Round++;
+                Assert.That(keyboard.Decide(self).Buy,Is.EqualTo(BuySlot.None),"An old queued purchase must expire at the round boundary");
+            }
+            finally { InputSystem.RemoveDevice(mouse); }
+        }
+
         [UnityTest] public IEnumerator CounterTapAtThreeRenderRates()
         {
             yield return SceneManager.LoadSceneAsync("Assets/Scenes/Gameplay/LocalMatch.unity");

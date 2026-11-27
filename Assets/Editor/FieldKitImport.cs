@@ -11,15 +11,42 @@ namespace AnimeCS.Editor
     {
         private const string Root="Assets/Content/Art/FieldKit/";
         private static T Load<T>(string path) where T:Object=>AssetDatabase.LoadAssetAtPath<T>(Root+path);
+        private static readonly Dictionary<string,string> Colors = new()
+        {
+            {"Basalt","#424D60"},{"Titanium","#92A9BC"},{"Ceramic","#DCDFED"},{"Copper","#C88F77"},
+            {"Petrol","#4D8A93"},{"Amber","#FFBE70"},{"Glacier","#8ADDE2"},{"Violet","#B49CE0"},
+            {"BlackGlass","#323C53"},{"Ivory","#F2E6D9"}
+        };
+
+        private static void ApplyColor(Material finish, string name, string html)
+        {
+            ColorUtility.TryParseHtmlString(html,out var color);
+            finish.SetColor("_BaseColor",color);
+            bool metal = name is "Titanium" or "Copper";
+            finish.SetFloat("_Metallic",metal ? .46f : name == "Petrol" ? .24f : .08f);
+            finish.SetFloat("_Smoothness",name == "BlackGlass" ? .58f : metal ? .43f : .29f);
+            if (name is "Glacier" or "Amber" or "Violet")
+            {
+                finish.EnableKeyword("_EMISSION");
+                finish.SetColor("_EmissionColor",color*.46f);
+            }
+            EditorUtility.SetDirty(finish);
+        }
+
+        [MenuItem("AnimeCS/美术/应用晴空中庭道具配色")]
+        public static void ApplyCourtyardPalette()
+        {
+            foreach (var pair in Colors)
+            {
+                var finish = Load<Material>("Materials/"+pair.Key+".mat");
+                if (finish) ApplyColor(finish, pair.Key, pair.Value);
+            }
+            AssetDatabase.SaveAssets();
+        }
+
         [MenuItem("AnimeCS/美术/同步科幻道具与声音")]
         internal static void Import()
         {
-            var finishes=new Dictionary<string,string>
-            {
-                {"Basalt","#333D48"},{"Titanium","#869195"},{"Ceramic","#CDD0C1"},{"Copper","#BE8254"},
-                {"Petrol","#256C71"},{"Amber","#FFC04F"},{"Glacier","#78EFF0"},{"Violet","#9978CE"},
-                {"BlackGlass","#26343B"},{"Ivory","#DCD9CE"}
-            };
             foreach(string prop in new[]{"Smoke","Flash","Echo","ObjectiveCase","RecoveryKit"})
             {
                 string path=Root+"Models/"+prop+".fbx";
@@ -30,16 +57,12 @@ namespace AnimeCS.Editor
                 foreach(var source in sources)
                 {
                     string name=source.name;
-                    if(!finishes.TryGetValue(name,out var html))continue;
+                    if(!Colors.TryGetValue(name,out var html))continue;
                     var finish=Load<Material>("Materials/"+name+".mat");
                     if(!finish)
                     {
                         finish=new Material(Shader.Find("Universal Render Pipeline/Lit")){name=name};
-                        ColorUtility.TryParseHtmlString(html,out var color);finish.SetColor("_BaseColor",color);
-                        bool metal=name is "Titanium" or "Copper";
-                        finish.SetFloat("_Metallic",metal?.78f:name=="Petrol"?.42f:.12f);
-                        finish.SetFloat("_Smoothness",metal?.56f:name=="BlackGlass"?.76f:.38f);
-                        if(name is "Glacier" or "Amber" or "Violet"){finish.EnableKeyword("_EMISSION");finish.SetColor("_EmissionColor",color*.58f);}
+                        ApplyColor(finish,name,html);
                         AssetDatabase.CreateAsset(finish,Root+"Materials/"+name+".mat");
                     }
                     if(source==finish)continue;

@@ -7,6 +7,7 @@ DynamicUser=yes
 StateDirectory=animecs-data
 WorkingDirectory=/var/lib/animecs-data
 Environment=ANIMECS_DATA_DIR=/var/lib/animecs-data
+EnvironmentFile=-/etc/animecs/battle-key.env
 EnvironmentFile=-/etc/animecs/data.env
 ExecStart=/opt/animecs/Data/AnimeCS.Data
 Restart=on-failure

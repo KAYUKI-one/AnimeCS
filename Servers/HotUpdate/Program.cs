@@ -7,7 +7,8 @@ if (args.Length > 0 && args[0] == "publish")
     try
     {
         if (args.Length != 3) throw new ArgumentException("Usage: AnimeCS.HotUpdate publish RELEASE SOURCE_DIRECTORY");
-        store.Publish(args[1], args[2]);
+        string fingerprint = store.Publish(args[1], args[2]);
+        Console.WriteLine($"updateManifestSha256={fingerprint}");
     }
     catch (Exception error) when (error is ArgumentException or IOException or InvalidOperationException or UnauthorizedAccessException)
     {
@@ -17,6 +18,7 @@ if (args.Length > 0 && args[0] == "publish")
     return;
 }
 var builder = WebApplication.CreateSlimBuilder(args);
+builder.WebHost.UseKestrelHttpsConfiguration();
 builder.WebHost.UseUrls(Environment.GetEnvironmentVariable("ANIMECS_UPDATE_URL") ?? "http://127.0.0.1:27842");
 var app = builder.Build();
 app.MapGet("/health", () => Results.Ok(new { service = "hot-update", schema = 1 }));

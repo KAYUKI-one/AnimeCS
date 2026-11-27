@@ -15,7 +15,11 @@ MonoBehaviour:
   lobby: {fileID: 9197481963319205126, guid: 1a0ea75dcb245ef459f702f43d08bff3, type: 3}
   hud: {fileID: 9197481963319205126, guid: 5c5fa19e41a218847816bc56b7c03289, type: 3}
   theme: {fileID: 7433441132597879392, guid: 25e562332235fa54a8c3f0f3292bfcdb, type: 3}
+  lobbyTheme: {fileID: 7433441132597879392, guid: 5fa763812b6950d4f9bb82fd95193d6d, type: 3}
+  battleLoadingStyle: {fileID: 7433441132597879392, guid: 5e8f82a0b05f4f3db8169dabbf1bf7df, type: 3}
   lobbySet: {fileID: 919132149155446097, guid: 8ad25121c2d64414f9e550b35c8be65c, type: 3}
+  lobbyBackdrop: {fileID: 2100000, guid: 37b7140a8000e9d439bb895f0ddfd6a1, type: 2}
+  lobbyContactShadow: {fileID: 2100000, guid: 6a204000adea40c4d920a89b7d322f53, type: 2}
   lobbyWeapon: {fileID: 11400000, guid: efaf2cc50cabe634e9adcae18ee47c1e, type: 2}
   lobbyFieldOfView: 29
   daylightSky: {fileID: 2100000, guid: ba56070f1c8d59a4084be9cbe7b333f1, type: 2}
@@ -42,6 +46,7 @@ MonoBehaviour:
   marksmanSound: {fileID: 8300000, guid: 358419c1d51942e4f884e6bc3011d5c2, type: 3}
   alternateRifleSound: {fileID: 8300000, guid: c0ce719dbc4630248ad6a25721c5ffa4, type: 3}
   deviceBurstSound: {fileID: 8300000, guid: ff3b76e8c6ee8d84aab615f09038343d, type: 3}
+  heldItems: {fileID: 11400000, guid: 1c504e03a23c6634792cc2bbe138fee2, type: 2}
   bootSteps:
   - {fileID: 8300000, guid: 606362c1e9d6a1a41a29571b7a3036a9, type: 3}
   - {fileID: 8300000, guid: ba49cc4c4fb74f84a8fa89abf5db0f7f, type: 3}

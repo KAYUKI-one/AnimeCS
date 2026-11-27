@@ -1,0 +1,122 @@
+.sky { color:#193e51; font-size:16px; }
+.sky Label { color:#193e51; }
+.sky Button { color:#193e51; background-color:#eef7fa; border-radius:6px; border-width:1px; border-color:rgba(255,255,255,.92); -unity-text-align:middle-center; }
+.sky Button:hover { background-color:#cceefa; border-color:#68c6dc; }
+.sky Button:focus { border-color:#2396b2; }
+.sky .strong, .sky .section-heading { -unity-font-style:bold; color:#183e51; font-size:23px; }
+.sky .small, .sky .slot-kind, .sky .item-detail { color:#527686; font-size:13px; }
+.sky .eyebrow { color:#247693; font-size:13px; -unity-font-style:bold; letter-spacing:2px; }
+.sky .home-surface { position:absolute; left:0; right:0; top:0; bottom:0; }
+.sky .home-heading-block { position:absolute; left:3.2%; top:19%; align-items:flex-start; }
+.sky .home-title { font-size:50px; -unity-font-style:bold; margin:9px 0 23px 0; color:#143e50; }
+.sky .manual { min-width:172px; height:48px; padding:0 24px; background-color:rgba(245,253,255,.93); border-left-width:4px; border-left-color:#53b3cb; -unity-font-style:bold; }
+.sky .topbar { position:absolute; top:0; left:0; right:0; height:70px; align-items:center; justify-content:center; }
+.sky .profile-button { position:absolute; left:2.5%; flex-direction:row; padding:4px 12px 4px 5px; align-items:center; min-width:146px; height:73%; max-height:60px; background-color:rgba(245,252,255,.93); }
+.sky #profile-icon { width:43px; height:43px; margin-right:9px; border-radius:5px; overflow:hidden; background-color:#dbe9f0; }
+.sky .top-tabs, .sky .dock, .sky .action-line, .sky .dialog-head, .sky .member-row, .sky .store-line { flex-direction:row; align-items:center; }
+.sky .top-tabs { background-color:rgba(213,236,246,.86); border-width:1px; border-color:rgba(255,255,255,.8); border-radius:9px; padding:3px; }
+.sky .top-tabs Button { flex-direction:row; justify-content:center; align-items:center; height:39px; margin:0 1px; padding:2px 9px; color:#284e5e; -unity-font-style:bold; background-color:rgba(242,250,252,.44); border-width:0; }
+.sky .top-tabs Button.active { color:#097697; background-color:#f4fcff; border-bottom-width:3px; border-bottom-color:#3cb6d7; }
+.sky .glyph { width:18px; height:18px; margin:0 5px 0 0; -unity-background-scale-mode:scale-to-fit; }
+.glyph-character { background-image:url('LobbyIcons/character.png'); }
+.glyph-inventory { background-image:url('LobbyIcons/inventory.png'); }
+.glyph-home { background-image:url('LobbyIcons/home.png'); }
+.glyph-equipment { background-image:url('LobbyIcons/equipment.png'); }
+.glyph-shop { background-image:url('LobbyIcons/shop.png'); }
+.glyph-world { background-image:url('LobbyIcons/world.png'); }
+.glyph-friends { background-image:url('LobbyIcons/friends.png'); }
+.glyph-tasks { background-image:url('LobbyIcons/tasks.png'); }
+.glyph-settings { background-image:url('LobbyIcons/settings.png'); }
+.glyph-config { background-image:url('LobbyIcons/config.png'); }
+.sky .invite-button { position:absolute; right:2.5%; height:40px; border-radius:20px; padding:0 15px; background-color:rgba(249,253,255,.92); }
+.sky .home-tools { position:absolute; left:2.5%; bottom:2.7%; width:32%; min-width:294px; align-items:flex-start; }
+.sky .chat-preview { max-width:100%; overflow:hidden; text-overflow:ellipsis; border-left-width:3px; border-left-color:#4bb6ce; height:34px; -unity-text-align:middle-left; padding:4px 12px; margin-bottom:7px; }
+.sky .dock Button { min-width:48px; height:52px; align-items:center; justify-content:center; margin-right:5px; padding:2px 7px; background-color:rgba(246,252,255,.96); font-size:14px; }
+.sky .dock .glyph { margin:0; width:19px; height:19px; }
+.sky .play-block { position:absolute; right:2.5%; bottom:2.7%; width:23%; min-width:170px; }
+.sky .map-button { flex-direction:row; justify-content:flex-start; align-items:center; height:44px; padding:2px; margin-bottom:6px; }
+.sky #map-thumb { height:100%; width:27%; background-color:#b0cbd6; border-radius:3px; }
+.sky #map-title { margin-left:8px; font-size:14px; -unity-text-align:middle-left; }
+.sky .play-button, .sky Button.accent { color:#0c5068; background-color:#8ce1ee; border-bottom-width:3px; border-bottom-color:#3ca5bb; -unity-font-style:bold; }
+.sky .play-button { height:59px; -unity-text-align:middle-left; padding-left:16px; font-size:29px; }
+.sky .nameplate { position:absolute; translate:-50% 0; padding:2px 8px; -unity-font-style:bold; color:#20566d; background-color:rgba(247,253,255,.92); border-radius:4px; font-size:13px; }
+.sky .lobby-page { left:0; right:0; top:70px; bottom:0; padding:0 2.4% 2% 2.4%; background-color:rgba(208,233,243,.92); }
+.sky .page-heading { height:50px; min-height:38px; max-height:54px; padding:0 5px; flex-direction:row-reverse; background-color:rgba(0,0,0,0); border-bottom-color:#a7cad9; margin-bottom:7px; }
+.sky .page-heading Button { font-size:13px; padding:3px 10px; }
+.sky .page-body { flex-direction:row; }
+.sky .lobby-page .sheet-content { padding:4px 8px 12px 9px; }
+.sky .lobby-page.full-page { top:0; background-color:rgba(217,238,246,.98); padding-top:1.5%; }
+.sky .full-page .page-heading { flex-direction:row; justify-content:flex-start; }
+.sky .full-page .page-heading Button { margin-right:17px; }
+.sky .lobby-page.equipment-page, .sky .lobby-page.character-page, .sky .lobby-page.inspect-page { background-color:rgba(222,241,248,.24); }
+.sky .equipment-page .loadout-pane, .sky .wear-rail, .sky .character-rail, .sky .equipment-page .sheet-content, .sky .character-page .sheet-content { border-radius:9px; border-width:1px; border-color:white; padding:9px; background-color:rgba(243,250,253,.95); }
+.sky .equipment-page .loadout-pane { flex-basis:18%; }
+.sky .wear-rail { flex-basis:13%; flex-grow:0; margin-left:6px; }
+.sky .character-rail { flex-basis:26%; flex-grow:0; }
+.sky .equipment-page .sheet-content { flex-grow:0; flex-basis:33%; }
+.sky .character-page .sheet-content { flex-grow:0; flex-basis:23%; }
+.sky .loadout-slots { padding:0; }
+.sky .loadout-controls { background-color:rgba(0,0,0,0); padding:0; }
+.sky .loadout-controls Button { font-size:12px; }
+.sky .subhead, .sky .bag-title { color:#214758; -unity-font-style:bold; font-size:18px; margin:9px 0; }
+.sky .inventory-grid, .sky .choice-row { flex-direction:row; flex-wrap:wrap; }
+.sky .item-tile { padding:0 0 4px 0; justify-content:flex-start; align-items:stretch; border-width:1px; border-color:white; background-color:#f5fbfd; overflow:hidden; border-radius:5px; margin:0 1% 8px 0; }
+.sky .inventory-grid .item-tile { width:15.6%; min-height:82px; }
+.sky .item-tile Image { width:100%; height:60px; background-color:#e0eef4; margin:0 0 3px 0; }
+.sky .item-tile Label { -unity-text-align:middle-left; padding-left:5px; font-size:14px; -unity-font-style:bold; color:#20475b; }
+.sky .item-tile Label.item-detail { font-size:12px; -unity-font-style:normal; color:#527788; }
+.sky .equipment-page .item-tile { width:31.5%; margin-right:1.7%; min-height:52px; }
+.sky .equipment-page .item-tile Image { height:37px; }
+.sky .character-rail .item-tile { width:47%; margin:0 2% 6px 0; }
+.sky .character-rail .item-tile Image { height:69px; }
+.sky Button.selected { border-color:#4da8c3; background-color:#c9edf8; }
+.sky .mount-slot { width:100%; margin:0 0 5px 0; border-color:#c6dfe8; min-height:40px; -unity-text-align:middle-left; }
+.sky .mount-slot Image { width:33%; height:38px; }
+.sky .mount-slot Label { font-size:12px; }
+.sky .turn-hint { display:flex; align-self:center; bottom:8px; color:#255369; background-color:#f2faff; }
+.sky .inspect-caption { background-color:rgba(243,252,255,.84); }
+.sky .choice-row Button { margin:0 6px 5px 0; }
+.sky .overlay { background-color:rgba(16,44,61,.23); align-items:center; justify-content:center; }
+.sky .dialog { width:48%; min-width:305px; height:70%; background-color:#f0f8fb; border-width:1px; border-color:white; border-radius:12px; padding:16px; }
+.sky .overlay.drawer { align-items:flex-start; }
+.sky .drawer .dialog { height:100%; width:50%; border-radius:0; }
+.sky .dialog-head { justify-content:space-between; margin-bottom:12px; border-bottom-width:1px; border-bottom-color:#b3d2dd; padding-bottom:7px; }
+.sky .dialog-content { flex-grow:1; min-height:0; }
+.sky .dialog-content TextField, .sky .auth TextField { margin:6px 0; }
+.sky TextField Label, .sky .video-field Label { color:#345c70; min-width:55px; }
+.sky TextField .unity-text-field__input { border-width:1px; border-color:#afcfdc; background-color:#fff; color:#183948; padding:4px 6px; }
+.sky .video-field .unity-base-popup-field__text, .sky .video-readout { color:#234757; }
+.sky .video-field .unity-base-popup-field__input { background-color:#e9f4fa; }
+.sky .member-row { justify-content:space-between; padding:6px 8px; margin:2px 0; background-color:#e3f1f6; border-radius:4px; }
+.sky .action-line Button { margin:5px 6px 0 0; min-width:80px; }
+.sky .form-status { margin:8px 0; color:#426d83; white-space:normal; }
+.sky .auth { background-image:url('../Art/Lobby/Courtyard.png'); -unity-background-scale-mode:scale-and-crop; align-items:flex-start; justify-content:center; padding-left:9%; background-color:#d4ebf5; }
+.sky .auth-card { width:365px; padding:26px; background-color:rgba(247,252,255,.96); border-radius:12px; border-width:1px; border-color:white; }
+.sky .auth-title { font-size:39px; -unity-font-style:bold; margin:3px 0 20px 0; }
+.sky .notice { position:absolute; align-self:center; top:13%; max-width:80%; background-color:#22556a; color:white; border-radius:5px; padding:6px 14px; }
+.sky .portrait { width:100%; height:170px; background-color:#d7e8f1; border-radius:6px; }
+.sky .full-portrait { width:100%; height:100%; }
+.sky .feature { flex-direction:row; align-items:center; padding:10px; margin:4px 0 10px; background-color:#dcebf6; border-width:1px; border-color:white; border-radius:8px; }
+.sky .feature Image { width:30%; height:144px; }
+.sky .feature-info { flex-grow:1; padding:8px 18px; align-items:flex-start; }
+.sky .task-row { padding:11px; margin-bottom:6px; background-color:#f4fbff; border-radius:6px; }
+.sky .task-row Button { align-self:flex-end; }
+.sky .unity-scroller--vertical, .sky .unity-scroller--vertical .unity-base-slider__tracker { background-color:rgba(204,230,240,.6); }
+.sky .unity-scroller--vertical .unity-base-slider__dragger { background-color:#74b9cc; }
+.compact .sky .top-tabs Button { padding:2px 5px; font-size:13px; }
+.compact .sky .invite-button { padding:0 8px; font-size:12px; }
+.compact .sky .profile-button { min-width:100px; padding-right:5px; }
+.compact .sky .inventory-grid .item-tile { width:18.6%; }
+.compact .sky .home-title { font-size:36px; }
+.compact .sky .top-tabs .glyph { width:15px; height:15px; margin-right:2px; }
+
+.compact .sky .topbar { height:55px; }
+.compact .sky .lobby-page { top:55px; }
+.compact .sky .lobby-page.full-page { top:0; }
+
+.sky .profile-button { max-width:22%; overflow:hidden; height:52px; min-height:40px; }
+.sky .profile-copy { min-width:0; justify-content:center; flex-shrink:1; }
+.sky #profile-name { font-size:21px; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; -unity-text-align:middle-left; }
+.sky #profile-level { margin:0; font-size:12px; -unity-text-align:middle-left; }
+.sky .lobby-page.character-page, .sky .lobby-page.equipment-page { background-color:rgba(222,241,248,.06); }
+.sky .character-page .inspection-stage { border-width:1px; border-color:rgba(255,255,255,.42); margin:0 2%; border-radius:6px; }

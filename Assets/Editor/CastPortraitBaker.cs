@@ -11,6 +11,65 @@ namespace AnimeCS.Editor
 {
     public static class CastPortraitBaker
     {
+        private const string FrontFolder = "Assets/Content/UI/Portraits/Match";
+
+        [MenuItem("AnimeCS/美术/生成角色正面对阵卡")]
+        public static void BakeFronts()
+        {
+            if (!AssetDatabase.IsValidFolder(FrontFolder)) AssetDatabase.CreateFolder("Assets/Content/UI/Portraits", "Match");
+            var characters = ContentLibrary.Catalog.Entries.OfType<CharacterDefinition>().Where(c=>!c.Archived && c.Model);
+            foreach (var character in characters)
+            {
+                string output = FrontFolder + "/" + character.name + ".png";
+                var preview = new PreviewRenderUtility();
+                var graph = PlayableGraph.Create("Frontal portrait");
+                try
+                {
+                    var body = Object.Instantiate(character.Model);
+                    preview.AddSingleGO(body);
+                    var animator = body.GetComponentInChildren<Animator>();
+                    if (!animator || !animator.isHuman) throw new System.InvalidOperationException(character.name+" 缺少人形骨骼");
+                    var idle = character.Controller ? character.Controller.animationClips.FirstOrDefault(c=>c.name=="Idle") : null;
+                    if (idle)
+                    {
+                        var pose=AnimationPlayableOutput.Create(graph,"Portrait",animator);
+                        pose.SetSourcePlayable(AnimationClipPlayable.Create(graph,idle));
+                        animator.cullingMode=AnimatorCullingMode.AlwaysAnimate;
+                        graph.Play(); graph.Evaluate(.15f);
+                    }
+                    var head = animator.GetBoneTransform(HumanBodyBones.Head);
+                    Vector3 target=head.position + Vector3.down*.12f;
+                    var cam=preview.camera;
+                    cam.orthographic=true; cam.orthographicSize=.45f;
+                    cam.nearClipPlane=.04f; cam.farClipPlane=12;
+                    cam.clearFlags=CameraClearFlags.SolidColor;
+                    cam.backgroundColor=character.Faction==Side.Defend ? new Color(.32f,.47f,.59f) : new Color(.51f,.37f,.47f);
+                    cam.transform.position=target+Vector3.forward*2.5f;
+                    cam.transform.LookAt(target);
+                    preview.ambientColor=new Color(.76f,.76f,.82f);
+                    preview.lights[0].intensity=1.28f; preview.lights[0].transform.rotation=Quaternion.Euler(25,153,0);
+                    preview.lights[1].intensity=.72f; preview.lights[1].transform.rotation=Quaternion.Euler(15,-38,0);
+                    preview.BeginStaticPreview(new Rect(0,0,320,576)); preview.Render(true);
+                    var result=preview.EndStaticPreview();
+                    try { File.WriteAllBytes(output,result.EncodeToPNG()); }
+                    finally { Object.DestroyImmediate(result); }
+                }
+                finally { graph.Destroy(); preview.Cleanup(); }
+                AssetDatabase.ImportAsset(output,ImportAssetOptions.ForceSynchronousImport);
+                var importer=(TextureImporter)AssetImporter.GetAtPath(output);
+                importer.npotScale=TextureImporterNPOTScale.None; importer.mipmapEnabled=false;
+                importer.wrapMode=TextureWrapMode.Clamp; importer.textureCompression=TextureImporterCompression.CompressedHQ;
+                importer.SaveAndReimport();
+                var settings=new SerializedObject(character);
+                var field=settings.FindProperty("_battlePortrait");
+                // Re-baking generated files preserves a separately assigned commissioned illustration.
+                if (!field.objectReferenceValue || AssetDatabase.GetAssetPath(field.objectReferenceValue)==output)
+                    field.objectReferenceValue=AssetDatabase.LoadAssetAtPath<Texture2D>(output);
+                settings.ApplyModifiedPropertiesWithoutUndo();
+            }
+            AssetDatabase.SaveAssets();
+        }
+
         [MenuItem("AnimeCS/美术/从当前阵容重拍角色立绘")]
         public static void Bake()
         {

@@ -27,7 +27,9 @@ namespace AnimeCS.Play
         public LobbyScreen(VisualElement host,MatchPresentation style,ContentCatalog catalog,LocalGame game)
         {
             _game=game;_catalog=catalog;style.lobby.CloneTree(host);
-            _screen=host.Q("lobby");_sheet=_screen.Q("sheet");_content=_screen.Q("sheet-content");
+            _screen=host.Q("lobby");
+            if (style.lobbyTheme) _screen.styleSheets.Add(style.lobbyTheme);
+            _sheet=_screen.Q("sheet");_content=_screen.Q("sheet-content");
             _slots=_sheet.Q("loadout-slots"); _stage=_sheet.Q("inspection-stage");
             _stage.RegisterCallback<GeometryChangedEvent>(_=>FrameEquipment());
             void AttachTurntable(VisualElement stage)
@@ -39,36 +41,68 @@ namespace AnimeCS.Play
             AttachTurntable(_screen.Q("stage-view")); AttachTurntable(_screen.Q("inspection-stage"));
             _pages = new Dictionary<string, Action>(StringComparer.Ordinal)
             {
-                ["inventory"] = Inventory, ["equipment"] = Equipment,
-                ["mode"] = ModeOptions, ["settings"] = Settings
+                ["inventory"] = Inventory, ["equipment"] = Equipment, ["character"] = Characters,
+                ["mode"] = ModeOptions, ["settings"] = Settings, ["tasks"] = Tasks, ["shop"] = Shop
             };
-            foreach(var key in _pages.Keys)_screen.Q<Button>(key).clicked+=()=>Open(key);
-            _screen.Q<Button>("start").clicked+=()=>{Close();game.Restart();};_screen.Q<Button>("close").clicked+=Back;
+            BindNavigation();
+            BindAccount();
             RefreshMap();
         }
-        public void RefreshMap()=>_screen.Q<Label>("map-title").text=_game.SelectedMap.DisplayName+(_game.Mode==MatchMode.AimPractice?"   /   自由训练":"   /   本地 5v5");
-        public void Show(){_profile=_game.ReadWardrobe();Close();}
+
+        public void RefreshMap()
+        {
+            var map = _game.SelectedMap;
+            bool party=State?.party is {Length:>1};
+            if(party) map=_catalog.Find<MapDefinition>(State.mapId);
+            _screen.Q<Label>("map-title").text = party
+                ? (map ? map.DisplayName : "服务器选图")+"\n小队爆破"
+                : map.DisplayName+"\n"+(_game.Mode==MatchMode.AimPractice ? "自由训练" : $"{LocalMatch.TeamSize}v{LocalMatch.TeamSize} 攻守拆弹");
+            _screen.Q<Image>("map-thumb").image = map ? (map.LoadingArt ? map.LoadingArt : map.Radar) : null;
+        }
+
+        public void Show()
+        {
+            _profile = _game.ReadWardrobe();
+            Close();
+            SetVisible(_screen.Q("auth"), !_signedIn);
+            if (_signedIn) RefreshHeader(true);
+        }
+
         public void Back()
         {
-            if (_section=="inventory" && _item) { _item=null; _game.EndInspection(); Render(); }
+            if (!_signedIn) return;
+            if (_dialogKey != null) { HideDialog(); return; }
+            if (_section == "inventory" && _item) { _item = null; _game.EndInspection(); Render(); }
             else Close();
         }
+
         public void Close()
         {
-            if(_section=="equipment"||_section=="inventory")_game.EndInspection();
-            _section=null;_draft=null;_item=null;_first=false;_sheet.style.display=DisplayStyle.None;
-            _screen.Q("home-heading").style.display=DisplayStyle.Flex;
-            foreach(var button in _screen.Query<Button>(className:"nav").ToList())button.RemoveFromClassList("active");
+            if (_section == "equipment" || _section == "inventory" || _section == "character") _game.EndInspection();
+            _section = null; _draft = null; _item = null; _first = false;
+            SetVisible(_sheet, false);
+            SetVisible(_screen.Q("home-heading"), true);
+            SetVisible(_screen.Q("topbar"), true);
+            SelectTab("home");
+            HideDialog();
         }
+
         void Open(string key)
         {
-            Close();_section=key;_profile=_game.ReadWardrobe();
-            _draft=_profile.Resolve(_profile.current,_catalog);_gun=_game.LobbyWeaponId;
-            _sheet.style.display=DisplayStyle.Flex;_screen.Q("home-heading").style.display=DisplayStyle.None;
-            if (key=="equipment") { _equipment=0; _game.PreviewWardrobe(_draft,_gun,false); }
-            var button=_screen.Q<Button>(key);button.AddToClassList("active");
-            _sheet.Q<Label>("sheet-title").text=button.text;Render();
+            Close();
+            _section = key;
+            _profile = _game.ReadWardrobe();
+            _draft = _profile.Resolve(_profile.current, _catalog);
+            _gun = _game.LobbyWeaponId;
+            SetVisible(_sheet,true);
+            SetVisible(_screen.Q("home-heading"),false);
+            SetVisible(_screen.Q("topbar"),key != "settings" && key != "tasks");
+            if (key == "equipment") { _allEquipment=true; _equipment=0; _game.PreviewWardrobe(_draft,_gun,false); }
+            if (key == "character") SelectCharacter(_catalog.Find<CharacterDefinition>(_game.Account.State?.showCharacterId) ?? CurrentCharacter);
+            SelectTab(key);
+            Render();
         }
+
         void Preview()
         {
             _draft=_profile.Resolve(_draft,_catalog);
@@ -77,22 +111,42 @@ namespace AnimeCS.Play
         void Apply()
         {
             _profile.current=_profile.Resolve(_draft,_catalog);
-            _game.SetLobbyWeapon(_gun);_game.SaveWardrobe(_profile); Preview();
+            PersistWardrobe();
         }
+
+        void PersistWardrobe()
+        {
+            if (_game.Account.State == null)
+            {
+                _game.SetLobbyWeapon(_gun);
+                _game.SaveWardrobe(_profile);
+                Preview();
+                return;
+            }
+            RunAction(() => _game.Account.SaveLoadoutAsync(_game.SerializeGear(_profile)), () =>
+            {
+                Notice("装备配置已保存");
+                if (_section == "equipment") Preview();
+            });
+        }
+
         void Render()
         {
             _content.Clear();
             bool inspect = _section=="inventory" && _item;
-            bool equipment = _section=="equipment";
+            bool equipment = _section=="equipment", characters = _section=="character";
             _sheet.EnableInClassList("equipment-page", equipment);
+            _sheet.EnableInClassList("character-page", characters);
             _sheet.EnableInClassList("inspect-page", inspect);
-            _sheet.Q("inspection-stage").style.display=equipment||inspect?DisplayStyle.Flex:DisplayStyle.None;
-            _sheet.Q<Button>("close").text=inspect?"返回库存":"返回大厅";
-            _sheet.Q<Label>("sheet-title").text=inspect?_item.DisplayName:_screen.Q<Button>(_section).text;
-            _content.style.display=inspect?DisplayStyle.None:DisplayStyle.Flex;
-            _sheet.Q("inspect-caption").style.display=inspect?DisplayStyle.Flex:DisplayStyle.None;
-            if (inspect) return;
-            _pages[_section]();
+            _sheet.EnableInClassList("full-page", _section=="settings" || _section=="tasks");
+            SetVisible(_sheet.Q("wear-rail"), equipment);
+            SetVisible(_sheet.Q("character-rail"), characters);
+            SetVisible(_stage,equipment || inspect || characters);
+            _sheet.Q<Button>("close").text = inspect ? "‹  返回库存" : "‹  返回大厅";
+            _sheet.Q<Label>("sheet-title").text = inspect ? _item.DisplayName : PageTitles[_section];
+            SetVisible(_content,!inspect);
+            SetVisible(_sheet.Q("inspect-caption"),inspect);
+            if (!inspect) _pages[_section]();
         }
 
         void Settings()
@@ -111,6 +165,13 @@ namespace AnimeCS.Play
 
         void ModeOptions()
         {
+            if(State?.party is {Length:>1})
+            {
+                Header("小队爆破");
+                var assigned=_catalog.Find<MapDefinition>(State.mapId);
+                _content.Add(new Label(assigned ? "房间地图  "+assigned.DisplayName : "队长开赛时，战斗服务器将分配地图。"));
+                return;
+            }
             var modes=Row(); bool practice=_game.Mode==MatchMode.AimPractice;
             var range=_catalog.Entries.OfType<MapDefinition>().FirstOrDefault(m=>m.Practice && !m.Archived);
             var last=_game.LastBombMap ? _game.LastBombMap : _catalog.Entries.OfType<MapDefinition>().FirstOrDefault(m=>!m.Practice && !m.Archived);
@@ -128,18 +189,13 @@ namespace AnimeCS.Play
 
         void Inventory()
         {
-            var row=Row(); row.AddToClassList("inventory-grid");
-            foreach(var item in _catalog.Entries.Where(x=>x && !x.Archived && _profile.owned.Contains(x.Id)))
+            var owned = _catalog.Entries.Where(x => Owned(x) && !(x is MapDefinition) &&
+                !(x is OutfitDefinition fit && fit.Included && !fit.Model && fit.Character && fit.DisplayName==fit.Character.DisplayName));
+            foreach (var group in owned.GroupBy(x=>x.Kind).OrderBy(g=>InventoryOrder(g.Key)))
             {
-                if (item is MapDefinition) continue;
-                if (item is OutfitDefinition baseFit && baseFit.Included && !baseFit.Model && baseFit.Character &&
-                    baseFit.DisplayName==baseFit.Character.DisplayName && _profile.owned.Contains(baseFit.Character.Id)) continue;
-                Texture2D fallback = item switch
-                {
-                    CharacterDefinition character => character.Icon, OutfitDefinition outfit => outfit.Character?.Icon,
-                    WeaponSkinDefinition skin => skin.Weapon?.Thumbnail, _ => null
-                };
-                Tile(row,item,false,()=>Inspect(item),fallback);
+                Header(KindName(group.Key) + "    " + group.Count() + " 件");
+                var row=Row(); row.AddToClassList("inventory-grid");
+                foreach (var item in group) Tile(row,item,false,()=>Inspect(item),Art(item));
             }
             var scroll = (ScrollView)_content;
             scroll.schedule.Execute(()=>{ if (_section=="inventory" && !_item) scroll.scrollOffset=_inventoryScroll; });
@@ -188,7 +244,8 @@ namespace AnimeCS.Play
             var button=new Button(click) {name=item.Id};button.AddToClassList("item-tile");button.EnableInClassList("selected",active);
             var icon=item.Thumbnail?item.Thumbnail:fallback;
             if(icon)button.Add(new Image{image=icon,scaleMode=ScaleMode.ScaleToFit,pickingMode=PickingMode.Ignore});
-            button.Add(new Label(item.DisplayName));row.Add(button);
+            button.Add(new Label(item.DisplayName));
+            var detail=new Label(ItemType(item));detail.AddToClassList("item-detail");button.Add(detail);row.Add(button);
         }
         void Slider(string title,float min,float max,float current,Action<float> change)
         {

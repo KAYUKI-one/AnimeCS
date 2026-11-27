@@ -25,7 +25,7 @@ namespace AnimeCS.Play
         private readonly System.Collections.Generic.Queue<SeatIntent> _orders = new();
         private bool _zoom;
         private HeldSlot _slot;
-        private int _round;
+        private int _round=-1;
         private float _yaw, _pitch;
         public float Sensitivity { get; set; } = .1f;
         public float ViewYaw => _yaw;
@@ -93,6 +93,7 @@ namespace AnimeCS.Play
         public void SyncRound(in SeatView view, bool force=false)
         {
             if (!force && _round == view.Match.Round) return;
+            if(_round>=0 && _round!=view.Match.Round) ResetPointer();
             _round = view.Match.Round; _yaw = view.Yaw; _pitch = view.Pitch;
         }
 
@@ -132,10 +133,16 @@ namespace AnimeCS.Play
             if (!_fire.IsPressed()) _blockFire=false;
             var look = lookAllowed && _canLook && !_skipLook ? _look.ReadValue<Vector2>() : Vector2.zero;
             _canLook=lookAllowed; _skipLook=false;
-            look /= Mathf.Max(1f, magnification);
-            _yaw += look.x * Sensitivity; _pitch = Mathf.Clamp(_pitch + look.y * Sensitivity, -82, 82);
+            ApplyLookDelta(look, magnification);
             _clicked |= _fire.WasPressedThisFrame();
             _jumped |= _jump.WasPressedThisFrame();
+        }
+
+        internal void ApplyLookDelta(Vector2 delta,float magnification)
+        {
+            delta /= Mathf.Max(1f, magnification);
+            _yaw += delta.x * Sensitivity;
+            _pitch = Mathf.Clamp(_pitch + delta.y * Sensitivity, -82, 82);
         }
 
         public void Order(BuySlot slot, string id, bool cancel) =>
@@ -147,6 +154,13 @@ namespace AnimeCS.Play
             var input = _orders.Count > 0 ? _orders.Dequeue() : default;
             input.Yaw = _yaw; input.Pitch = ViewPitch;
             if (!_active || view.Health <= 0 || view.Match.Paused || view.Match.Phase == RoundPhase.Finished) { ClearEdges(); return input; }
+            if (Shopping)
+            {
+                // The shop owns all gameplay controls. Right-button look has already updated the angles.
+                input.LowerScope = true;
+                ClearEdges();
+                return input;
+            }
             var local = _move.ReadValue<Vector2>();
             var world = Quaternion.Euler(0, _yaw, 0) * new Vector3(local.x, 0, local.y);
             input.Move = new Vector2(world.x, world.z);
@@ -156,14 +170,8 @@ namespace AnimeCS.Play
             input.FirePressed = !_blockFire && _clicked;
             input.Fire = !_blockFire && (_fire.IsPressed() || _clicked); input.Interact = _use.IsPressed(); input.Walk = _walk.IsPressed();
             input.Select=_slot;input.SwitchWeapon = _switch; input.DropHeld = _drop; input.Inspect = _inspect; input.Cycle = _cycle; input.Reload = _reload;
-            input.Zoom = _zoom && !Shopping; input.LowerScope = Shopping;
+            input.Zoom = _zoom;
             input.ThrowUtility = _utility;
-            if (Shopping)
-            {
-                input.Move = input.BrakeTap = Vector2.zero; input.Fire = input.Interact = false;
-                input.Crouch = input.Jump = input.ThrowUtility = false;
-                input.Cycle = 0;
-            }
             ClearEdges();
             return input;
         }

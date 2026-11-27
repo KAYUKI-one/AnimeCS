@@ -1,0 +1,185 @@
+{
+  "schema": 1,
+  "initialCredits": 1200,
+  "drawCost": 200,
+  "starterItems": [
+    "character.nora",
+    "outfit.nora",
+    "character.lily",
+    "outfit.lily",
+    "weapon.dash9",
+    "weapon.ember47",
+    "weapon.feather08",
+    "weapon.fold44",
+    "weapon.heavy50",
+    "weapon.hummingbird9",
+    "weapon.longglass96",
+    "weapon.rubyedge",
+    "weapon.spark10",
+    "weapon.street20",
+    "weapon.verdict57",
+    "weapon.watch41s",
+    "weapon.whitefalcon12s",
+    "utility.echo",
+    "utility.flash",
+    "utility.smoke",
+    "skin.ember47.case"
+  ],
+  "characters": [
+    {
+      "id": "character.blackmiku",
+      "outfitId": "outfit.blackmiku",
+      "weight": 1
+    },
+    {
+      "id": "character.flor",
+      "outfitId": "outfit.flor",
+      "weight": 1
+    },
+    {
+      "id": "character.laevatain",
+      "outfitId": "outfit.laevatain",
+      "weight": 1
+    },
+    {
+      "id": "character.lily",
+      "outfitId": "outfit.lily",
+      "weight": 1
+    },
+    {
+      "id": "character.michele",
+      "outfitId": "outfit.michele",
+      "weight": 1
+    },
+    {
+      "id": "character.mornye",
+      "outfitId": "outfit.mornye",
+      "weight": 1
+    },
+    {
+      "id": "character.nora",
+      "outfitId": "outfit.nora",
+      "weight": 1
+    },
+    {
+      "id": "character.rover",
+      "outfitId": "outfit.rover",
+      "weight": 1
+    }
+  ],
+  "offers": [
+    {
+      "id": "offer.skin.dash9.showcase",
+      "itemId": "skin.dash9.showcase",
+      "price": 240
+    },
+    {
+      "id": "offer.skin.ember47.station",
+      "itemId": "skin.ember47.station",
+      "price": 240
+    },
+    {
+      "id": "offer.skin.fold44.station",
+      "itemId": "skin.fold44.station",
+      "price": 240
+    },
+    {
+      "id": "offer.skin.fold44.showcase",
+      "itemId": "skin.fold44.showcase",
+      "price": 240
+    },
+    {
+      "id": "offer.skin.hummingbird9.showcase",
+      "itemId": "skin.hummingbird9.showcase",
+      "price": 240
+    },
+    {
+      "id": "offer.skin.spark10.showcase",
+      "itemId": "skin.spark10.showcase",
+      "price": 240
+    },
+    {
+      "id": "offer.skin.street20.showcase",
+      "itemId": "skin.street20.showcase",
+      "price": 240
+    },
+    {
+      "id": "offer.skin.verdict57.showcase",
+      "itemId": "skin.verdict57.showcase",
+      "price": 240
+    },
+    {
+      "id": "offer.skin.whitefalcon12s.station",
+      "itemId": "skin.whitefalcon12s.station",
+      "price": 240
+    },
+    {
+      "id": "offer.skin.whitefalcon12s.showcase",
+      "itemId": "skin.whitefalcon12s.showcase",
+      "price": 240
+    },
+    {
+      "id": "offer.wear.catband",
+      "itemId": "wear.catband",
+      "price": 160
+    },
+    {
+      "id": "offer.wear.fieldboots",
+      "itemId": "wear.fieldboots",
+      "price": 160
+    },
+    {
+      "id": "offer.wear.fieldjacket",
+      "itemId": "wear.fieldjacket",
+      "price": 160
+    },
+    {
+      "id": "offer.wear.fieldtrousers",
+      "itemId": "wear.fieldtrousers",
+      "price": 160
+    },
+    {
+      "id": "offer.wear.irisgloves",
+      "itemId": "wear.irisgloves",
+      "price": 160
+    }
+  ],
+  "tasks": [
+    {
+      "id": "daily.signin",
+      "title": "晴空签到",
+      "description": "登录游戏一次。",
+      "eventKey": "login",
+      "target": 1,
+      "experience": 30,
+      "credits": 50
+    },
+    {
+      "id": "daily.practice",
+      "title": "热身时间",
+      "description": "进入练枪场一次。",
+      "eventKey": "practice.enter",
+      "target": 1,
+      "experience": 50,
+      "credits": 60
+    },
+    {
+      "id": "daily.match",
+      "title": "集合出发",
+      "description": "进入一场爆破对局。",
+      "eventKey": "match.enter",
+      "target": 1,
+      "experience": 80,
+      "credits": 80
+    },
+    {
+      "id": "daily.rounds",
+      "title": "战术演练",
+      "description": "完成两个爆破回合。",
+      "eventKey": "round.complete",
+      "target": 2,
+      "experience": 120,
+      "credits": 100
+    }
+  ]
+}

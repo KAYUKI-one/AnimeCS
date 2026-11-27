@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d65fc406864287e4a925dbf8417fd5f7, type: 3}
   m_Name: DustII
   m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.MapDefinition
+  _loadingArt: {fileID: 2800000, guid: 2838aa1804ed4e578ac49ca68f1ea309, type: 3}
+  _loadingBrief: "围绕两处目标区域争夺通道与中路控制权。"
   _id: map.dust2
   _displayName: "\u7099\u70ED\u6C99\u57CE II"
   _thumbnail: {fileID: 0}

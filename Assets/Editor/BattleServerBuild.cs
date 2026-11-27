@@ -19,11 +19,14 @@ namespace AnimeCS.Editor
     public static class BattleServerBuild
     {
         // Called in a separate batch editor so the player's active target and open scene are preserved.
-        public static void BuildLinux()
+        public static void BuildLinux() => Build(BuildTarget.StandaloneLinux64);
+        public static void BuildWindows() => Build(BuildTarget.StandaloneWindows64);
+
+        private static void Build(BuildTarget target)
         {
             if (!Application.isBatchMode) throw new BuildFailedException("Run the dedicated build through Servers/build.ps1.");
             string output = Environment.GetEnvironmentVariable("ANIMECS_BATTLE_OUTPUT")
-                ?? Path.GetFullPath("Builds/Debian13/Battle/AnimeCS.Battle.x86_64");
+                ?? Path.GetFullPath(target == BuildTarget.StandaloneLinux64 ? "Builds/Debian13/Battle/AnimeCS.Battle.x86_64" : "Builds/Windows/Services/Battle/AnimeCS.Battle.exe");
             var source = ContentLibrary.Catalog;
             if (!source)
                 throw new BuildFailedException("Cannot load ContentCatalog at " + ContentLibrary.CatalogPath + " (imported type: " +
@@ -70,7 +73,7 @@ namespace AnimeCS.Editor
                 Directory.CreateDirectory(Path.GetDirectoryName(output));
                 var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
                 {
-                    scenes = new[] { scenePath }, locationPathName = output, target = BuildTarget.StandaloneLinux64,
+                    scenes = new[] { scenePath }, locationPathName = output, target = target,
                     subtarget = (int)StandaloneBuildSubtarget.Server, options = BuildOptions.None
                 });
                 if (report.summary.result != BuildResult.Succeeded) throw new BuildFailedException(report.summary.result.ToString());
@@ -107,6 +110,7 @@ namespace AnimeCS.Editor
                 {
                     if (it.propertyType != SerializedPropertyType.ObjectReference || it.propertyPath == "m_Script") continue;
                     var referenced = it.objectReferenceValue;
+                    if (asset is MapDefinition && referenced is UnityEngine.AI.NavMeshData) continue;
                     if (referenced) it.objectReferenceValue = copies.TryGetValue(referenced, out var replacement) ? replacement : null;
                 }
                 data.ApplyModifiedPropertiesWithoutUndo();

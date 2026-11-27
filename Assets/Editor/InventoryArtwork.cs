@@ -16,13 +16,6 @@ namespace AnimeCS.Editor
         {
             ContentLibrary.EnsureFolder(Folder);
             var catalog=ContentLibrary.Catalog;
-            foreach(var fit in catalog.SeatOutfits)
-            {
-                var name=fit.Character.name;var s=new SerializedObject(fit.Character);
-                foreach(var pair in new[]{("_portrait",".png"),("_icon","Icon.png")})
-                    s.FindProperty(pair.Item1).objectReferenceValue=AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/UI/Portraits/"+name+pair.Item2);
-                s.ApplyModifiedPropertiesWithoutUndo();
-            }
             foreach(var item in catalog.Entries)
             {
                 if(item is not WeaponDefinition && item is not WeaponSkinDefinition && item is not WearableDefinition && item is not UtilityDefinition)continue;
@@ -47,32 +40,63 @@ namespace AnimeCS.Editor
                     preview.ambientColor=new Color(.74f,.76f,.79f);preview.lights[0].intensity=1.7f;preview.lights[0].transform.rotation=Quaternion.Euler(44,145,0);
                     preview.lights[1].intensity=.85f;preview.lights[1].transform.rotation=Quaternion.Euler(15,-34,0);
                     preview.BeginStaticPreview(new Rect(0,0,300,144));preview.Render(true);var image=preview.EndStaticPreview();
-                    string path=Folder+"/"+item.Id+".png";File.WriteAllBytes(path,image.EncodeToPNG());Object.DestroyImmediate(image);
-                    AssetDatabase.ImportAsset(path);
-                    var s=new SerializedObject(item);s.FindProperty("_thumbnail").objectReferenceValue=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-                    if(item is WeaponDefinition || item is UtilityDefinition)s.FindProperty("_glyph").objectReferenceValue=Glyph(preview,renderers,item);
-                    s.ApplyModifiedPropertiesWithoutUndo();
+                    var matte=Mask(preview,renderers,image.width,image.height);
+                    try
+                    {
+                        var color=image.GetPixels32();
+                        var alpha=matte.GetPixels32();
+                        var background=color[0];
+                        for (int i=0;i<color.Length;i++)
+                        {
+                            byte coverage=alpha[i].r;
+                            if (coverage==0) { color[i]=new Color32(0,0,0,0); continue; }
+                            byte Unmix(byte value,byte backdrop) => (byte)Mathf.Clamp(Mathf.RoundToInt((value*255f-backdrop*(255-coverage))/coverage),0,255);
+                            color[i]=new Color32(Unmix(color[i].r,background.r),Unmix(color[i].g,background.g),Unmix(color[i].b,background.b),coverage);
+                        }
+                        var thumbnail=SaveRgba(item.Id,image.width,image.height,color);
+                        var record=new SerializedObject(item);
+                        record.FindProperty("_thumbnail").objectReferenceValue=thumbnail;
+                        if (item is WeaponDefinition || item is UtilityDefinition)
+                        {
+                            for (int i=0;i<alpha.Length;i++) alpha[i]=new Color32(255,255,255,alpha[i].r);
+                            record.FindProperty("_glyph").objectReferenceValue=SaveRgba(item.Id+"-hud",image.width,image.height,alpha);
+                        }
+                        record.ApplyModifiedPropertiesWithoutUndo();
+                    }
+                    finally {Object.DestroyImmediate(image);Object.DestroyImmediate(matte);}
                 }
                 finally{preview.Cleanup();}
             }
             AssetDatabase.SaveAssets();
         }
 
-        static Texture2D Glyph(PreviewRenderUtility preview,Renderer[] renderers,ContentDefinition item)
+        static Texture2D SaveRgba(string name,int width,int height,Color32[] pixels)
         {
-            var white=new Material(Shader.Find("Universal Render Pipeline/Unlit"));white.SetColor("_BaseColor",Color.white);
-            Texture2D image=null;
+            var rgba=new Texture2D(width,height,TextureFormat.RGBA32,false);
+            string path=Folder+"/"+name+".png";
+            try {rgba.SetPixels32(pixels);rgba.Apply();File.WriteAllBytes(path,rgba.EncodeToPNG());}
+            finally {Object.DestroyImmediate(rgba);}
+            AssetDatabase.ImportAsset(path);
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        static Texture2D Mask(PreviewRenderUtility preview,Renderer[] renderers,int width,int height)
+        {
+            var white=new Material(Shader.Find("Universal Render Pipeline/Unlit"));
             try
             {
-                foreach(var r in renderers){r.SetPropertyBlock(null);r.sharedMaterials=Enumerable.Repeat(white,r.sharedMaterials.Length).ToArray();}
+                white.SetColor("_BaseColor",Color.white);
+                foreach(var renderer in renderers)
+                {
+                    renderer.SetPropertyBlock(null);
+                    renderer.sharedMaterials=Enumerable.Repeat(white,renderer.sharedMaterials.Length).ToArray();
+                }
                 preview.camera.backgroundColor=Color.black;
-                preview.BeginStaticPreview(new Rect(0,0,220,100));preview.Render(true);image=preview.EndStaticPreview();
-                var pixels=image.GetPixels32();for(int i=0;i<pixels.Length;i++)pixels[i]=new Color32(255,255,255,pixels[i].r);
-                var rgba=new Texture2D(image.width,image.height,TextureFormat.RGBA32,false);
-                rgba.SetPixels32(pixels);rgba.Apply();string path=Folder+"/"+item.Id+"-hud.png";File.WriteAllBytes(path,rgba.EncodeToPNG());Object.DestroyImmediate(rgba);
-                AssetDatabase.ImportAsset(path);return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                preview.BeginStaticPreview(new Rect(0,0,width,height));
+                preview.Render(true);
+                return preview.EndStaticPreview();
             }
-            finally{Object.DestroyImmediate(white);if(image)Object.DestroyImmediate(image);}
+            finally{Object.DestroyImmediate(white);}
         }
     }
 }

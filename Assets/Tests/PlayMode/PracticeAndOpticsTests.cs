@@ -20,12 +20,15 @@ namespace AnimeCS.Tests
 
         [UnityTest] public IEnumerator RangeOpensFromLobbyAndChangesItsTargetsAndEquipment()
         {
+            using var services=new LobbyTestServices();
+            yield return services.Ready();
             yield return SceneManager.LoadSceneAsync("Assets/Scenes/Gameplay/LocalMatch.unity");
             var game=Object.FindAnyObjectByType<LocalGame>();
             while(!game.InLobby) yield return null;
             string bombScenePath = game.SelectedMap.PlayScenePath;
             Assert.That(SceneManager.GetSceneByPath(bombScenePath).isLoaded,Is.False);
             var root=Object.FindAnyObjectByType<UIDocument>().rootVisualElement;
+            yield return services.Register(root);
             void Click(string name)
             {
                 var button=root.Q<Button>(name); Assert.That(button,Is.Not.Null,name);
@@ -36,7 +39,7 @@ namespace AnimeCS.Tests
             var openingChoices = root.Q("sheet-content").Query<Button>().ToList().Select(button => button.text);
             Assert.That(openingChoices, Does.Not.Contain(AttackOpening));
             Assert.That(openingChoices, Does.Not.Contain(DefendOpening));
-            Click("start");for(int i=0;i<150 && !game.Ready;i++)yield return null;
+            Click("close");Click("start");for(int i=0;i<150 && !game.Ready;i++)yield return null;
             Assert.That(game.MatchState.Phase,Is.EqualTo(RoundPhase.Practice));yield return null;
             string practiceScenePath = game.SelectedMap.PlayScenePath;
             Assert.That(game.SelectedMap.Id, Is.EqualTo("map.practice"));

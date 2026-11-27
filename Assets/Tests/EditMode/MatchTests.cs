@@ -4,6 +4,7 @@ using System.Linq;
 using AnimeCS.Content;
 using AnimeCS.Editor;
 using AnimeCS.Match;
+using AnimeCS.Play;
 using AnimeCS.Profile;
 using NUnit.Framework;
 using UnityEngine;
@@ -12,8 +13,9 @@ namespace AnimeCS.Tests
 {
     public sealed class MatchTests
     {
-        private sealed class Arena : IMatchWorld, IMeleeWorld, IMatchSignals
+        private sealed class Arena : IMatchWorld, IMeleeWorld, IMatchSignals, IDropWorld
         {
+            public bool PlacementAllowed = true;
             public readonly Vector3[] Points = new Vector3[10];
             public readonly int[] Targets = Enumerable.Repeat(-1, 10).ToArray();
             public readonly bool[] Alive = new bool[10];
@@ -27,6 +29,16 @@ namespace AnimeCS.Tests
             public void SetAlive(int seat, bool alive) => Alive[seat] = alive;
             public Vector3 Position(int seat) => Points[seat];
             public Vector3 LastGround(int seat) => Points[seat];
+            public bool TryRestingPose(int seat, ContentDefinition item, bool thrown, IReadOnlyList<GroundPickup> occupied, out Pose rest)
+            {
+                rest = new Pose(Points[seat], Quaternion.identity);
+                return PlacementAllowed;
+            }
+            public bool WithinReach(int seat, Vector3 point) => true;
+            public void DropPath(int seat, ContentDefinition item, Pose rest, out Vector3 launch, out Vector3 apex)
+            {
+                launch = apex = rest.position;
+            }
             public Contact? Observe(int seat, int firstEnemy, int count) => null;
             public bool SeesPoint(int seat, Vector3 point) => false;
             public HitZone Zone = HitZone.Head;
@@ -230,6 +242,33 @@ namespace AnimeCS.Tests
             Assert.That(kill.WeaponId,Is.EqualTo(_seats[0].Read().KnifeId));
         }
 
+        [TestCase(false, -1f, 5, 60, MeleeAction.Light)]
+        [TestCase(true, 1f, 5, 35, MeleeAction.Heavy)]
+        [TestCase(true, -1f, 5, 0, MeleeAction.Rear)]
+        [TestCase(true, -1f, 1, 100, MeleeAction.Heavy)]
+        [TestCase(true, 0f, 5, 35, MeleeAction.Heavy)]
+        public void MeleeChecksSecondaryRearArcAndRecovery(bool secondary, float offsetZ, int target, int health, MeleeAction action)
+        {
+            _rules.contestSeconds = 12;
+            Until(RoundPhase.Contest);
+            Input(0, new SeatIntent { Select=HeldSlot.Knife });
+            _match.Step();
+            for (int i = 0; i < 30; i++) _match.Step();
+            _arena.Points[target] = Vector3.zero;
+            _arena.Points[0] = Vector3.forward * offsetZ;
+            _arena.Targets[0] = target;
+            Input(target, new SeatIntent { Yaw=0 });
+            _match.Step();
+            Input(0, new SeatIntent { Zoom=secondary, Fire=!secondary });
+            _match.Step();
+            Assert.That(_seats[0].Read().LastMelee, Is.EqualTo(action));
+            Assert.That(_seats[target].Read().Health, Is.EqualTo(health));
+            int tick = _seats[0].Read().LastShotTick;
+            Input(0, new SeatIntent { Fire=true, Zoom=true });
+            _match.Step();
+            Assert.That(_seats[0].Read().LastShotTick, Is.EqualTo(tick), "Both buttons share the recovery timer");
+        }
+
         [TestCase("weapon.feather08", .18f, .045f)]
         [TestCase("weapon.longglass96", 4.62f, .10f)]
         public void SniperRoundsUseTheCurrentStanceAndResumeTheSelectedLensAfterBolting(string id,float hip,float scoped)
@@ -303,6 +342,145 @@ namespace AnimeCS.Tests
             Assert.That(_match.Public.Phase, Is.EqualTo(phase));
         }
         private void Input(int i, SeatIntent input) => Assert.That(_seats[i].Submit(_match.Public.Tick + 1, input), Is.True);
+        private void StepWithInput(int seat, SeatIntent input)
+        {
+            Input(seat, input);
+            _match.Step();
+        }
+
+        private WeaponDefinition PracticeWithGun(string id)
+        {
+            _match = new LocalMatch(_catalog, _rules, _arena, 29, FirstSide.Attack, null, MatchMode.AimPractice);
+            _seats = Enumerable.Range(0, LocalMatch.Seats).Select(_match.BindSeat).ToArray();
+            var gun = _catalog.Find<WeaponDefinition>(id);
+            StepWithInput(0, new SeatIntent { Buy=gun.Class == WeaponClass.Pistol ? BuySlot.Sidearm : BuySlot.Primary, ItemId=id });
+            return gun;
+        }
+
+        [TestCase("weapon.ember47")] [TestCase("weapon.watch41s")] [TestCase("weapon.fold44")]
+        [TestCase("weapon.hummingbird9")] [TestCase("weapon.spark10")] [TestCase("weapon.heavy50")]
+        [TestCase("weapon.longglass96")]
+        public void EarliestLegalShotsFollowTheConfiguredRateAcrossTheMagazine(string id)
+        {
+            var gun = PracticeWithGun(id);
+            int rate = (int)gun.ShotsPerMinute, target = Math.Min(20,gun.Magazine);
+            int first = 0, shots = 0;
+            int limit = MatchRules.TickRate + target * (int)Math.Ceiling(60d * MatchRules.TickRate / rate);
+            for (int i = 0; i < limit && shots < target; i++)
+            {
+                bool ready = _seats[0].Read().CanStartShot;
+                StepWithInput(0, new SeatIntent { Fire=gun.Automatic || ready, FirePressed=!gun.Automatic && ready });
+                var view = _seats[0].Read();
+                bool fired = view.LastShotTick == view.Match.Tick;
+                Assert.That(fired, Is.EqualTo(ready));
+                if (!fired) continue;
+                if (shots == 0) first = view.Match.Tick;
+                int elapsed = (shots * 60 * MatchRules.TickRate + rate - 1) / rate;
+                Assert.That(view.Match.Tick - first, Is.EqualTo(elapsed), $"Shot {shots + 1}");
+                shots++;
+            }
+            Assert.That(shots, Is.EqualTo(target));
+        }
+
+        [Test] public void WeaponRecoverySurvivesSwitchingAndPausing()
+        {
+            var gun = PracticeWithGun("weapon.longglass96");
+            for (int i = 0; i < MatchRules.TickRate && !_seats[0].Read().CanStartShot; i++) _match.Step();
+            Assert.That(_seats[0].Read().CanStartShot, Is.True);
+            StepWithInput(0, new SeatIntent { Fire=true });
+            int fired = _match.Public.Tick;
+            int next = fired + (int)Math.Ceiling(60d * MatchRules.TickRate / gun.ShotsPerMinute);
+            StepWithInput(0, new SeatIntent { Select=HeldSlot.Sidearm });
+            StepWithInput(0, new SeatIntent { Select=HeldSlot.Primary });
+            int paused = _match.Public.Tick;
+            _match.SetPaused(true);
+            for (int i = 0; i <= next - fired; i++) _match.Step();
+            Assert.That(_match.Public.Tick, Is.EqualTo(paused));
+            _match.SetPaused(false);
+            while (_match.Public.Tick + 1 < next)
+            {
+                Assert.That(_seats[0].Read().CanStartShot, Is.False);
+                StepWithInput(0, new SeatIntent { Fire=true, FirePressed=true });
+                Assert.That(_seats[0].Read().LastShotTick, Is.EqualTo(fired));
+            }
+            Assert.That(_seats[0].Read().CanStartShot, Is.True);
+            StepWithInput(0, new SeatIntent { Fire=true, FirePressed=true });
+            Assert.That(_seats[0].Read().LastShotTick, Is.EqualTo(next));
+        }
+
+        [Test] public void ReleasingAndRestartingAnAutomaticWeaponStartsAFreshCadence()
+        {
+            var gun = PracticeWithGun("weapon.hummingbird9");
+            for (int i = 0; i < 50; i++) StepWithInput(0, new SeatIntent { Fire=true });
+            for (int i = 0; i < MatchRules.TickRate; i++) _match.Step();
+            StepWithInput(0, new SeatIntent { Fire=true });
+            int first = _match.Public.Tick;
+            int interval = (int)Math.Ceiling(60d * MatchRules.TickRate / gun.ShotsPerMinute);
+            for (int i = 1; i < interval; i++)
+            {
+                StepWithInput(0, new SeatIntent { Fire=true });
+                Assert.That(_seats[0].Read().LastShotTick, Is.EqualTo(first));
+            }
+            StepWithInput(0, new SeatIntent { Fire=true });
+            Assert.That(_seats[0].Read().LastShotTick, Is.EqualTo(first + interval));
+        }
+
+        [Test] public void FailedFreezeDropKeepsThePurchaseRefundable()
+        {
+            var opening = _seats[0].Read();
+            const string ordered = "weapon.dash9";
+            StepWithInput(0, new SeatIntent { Buy=BuySlot.Sidearm, ItemId=ordered });
+            _arena.PlacementAllowed=false;
+            StepWithInput(0, new SeatIntent { DropHeld=true });
+            Assert.That(_match.GroundWeapons, Is.Empty);
+            Assert.That(_seats[0].Read().Draft.Sidearm, Is.EqualTo(ordered));
+            StepWithInput(0, new SeatIntent { Buy=BuySlot.Sidearm, CancelPurchase=true });
+            var final = _seats[0].Read();
+            Assert.That(final.WeaponId, Is.EqualTo(opening.WeaponId));
+            Assert.That(final.Credits, Is.EqualTo(opening.Credits));
+        }
+
+        [Test] public void FailedGunSwapPreservesBothItemsAndCanBeRetried()
+        {
+            _arena.Points[1] = _arena.Points[0];
+            var previous = _seats[1].Read();
+            StepWithInput(0, new SeatIntent { Buy=BuySlot.Sidearm, ItemId="weapon.dash9" });
+            StepWithInput(0, new SeatIntent { DropHeld=true });
+            var ground = _match.GroundWeapons.Single();
+            _arena.PlacementAllowed = false;
+            StepWithInput(1, new SeatIntent { Interact=true });
+            Assert.That(_match.GroundWeapons.Single(), Is.SameAs(ground));
+            Assert.That(_seats[1].Read().SidearmId, Is.EqualTo(previous.SidearmId));
+            _match.Step();
+            _arena.PlacementAllowed = true;
+            StepWithInput(1, new SeatIntent { Interact=true });
+            Assert.That(_seats[1].Read().SidearmId, Is.EqualTo(ground.Weapon.Definition.Id));
+            Assert.That(_match.GroundWeapons.Single().Weapon.Definition.Id, Is.EqualTo(previous.SidearmId));
+        }
+
+        [Test] public void BotUsesTheMatchReactionWindowAndTurnRate()
+        {
+            var tuning = new BotTuning { minReactionSeconds=.1f, maxReactionSeconds=.1f, turnDegreesPerSecond=30 };
+            var bot = new ObjectiveBot(_catalog, 17, tuning);
+            var view = _seats[0].Read();
+            view.Match.Phase = RoundPhase.Contest;
+            view.Match.Tick = 0;
+            view.Yaw = view.Pitch = 0;
+            var eye = view.Position + Vector3.up * SeatMovement.EyeHeight(view.Motion.Crouch);
+            view.VisibleEnemy = new Contact(5, eye + Vector3.forward * 12);
+            int reaction = MatchRules.Ticks(tuning.minReactionSeconds);
+            for (int tick = 0; tick <= reaction; tick++)
+            {
+                view.Match.Tick = tick;
+                var input = bot.Decide(view);
+                Assert.That(input.Fire, Is.EqualTo(tick == reaction));
+                view.Yaw = input.Yaw;
+                view.Pitch = input.Pitch;
+            }
+            view.VisibleEnemy = new Contact(6, eye + Vector3.right * 12);
+            var turn = bot.Decide(view);
+            Assert.That(Mathf.DeltaAngle(view.Yaw, turn.Yaw), Is.EqualTo(tuning.turnDegreesPerSecond * SeatMovement.StepTime).Within(.001f));
+        }
         private void Hold(int i, int ticks)
         {
             for (int t = 0; t < ticks; t++) { Input(i, new SeatIntent { Interact = true }); _match.Step(); }

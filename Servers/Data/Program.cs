@@ -3,13 +3,28 @@ using System.Text;
 using AnimeCS.Data;
 
 var builder = WebApplication.CreateSlimBuilder(args);
+builder.WebHost.UseKestrelHttpsConfiguration();
 builder.WebHost.UseUrls(Environment.GetEnvironmentVariable("ANIMECS_DATA_URL") ?? "http://127.0.0.1:27841");
 builder.WebHost.ConfigureKestrel(server => server.Limits.MaxRequestBodySize = 256 * 1024);
-var repository = new PlayerRepository(Environment.GetEnvironmentVariable("ANIMECS_DATA_DIR") ?? "state");
+var directory = Environment.GetEnvironmentVariable("ANIMECS_DATA_DIR") ?? "state";
+var repository = new PlayerRepository(directory);
+var accounts = new AccountService(new AccountDb(directory), EconomyConfig.Load());
 var credential = Environment.GetEnvironmentVariable("ANIMECS_DATA_TOKEN");
 var digest = string.IsNullOrEmpty(credential) ? null : SHA256.HashData(Encoding.UTF8.GetBytes("Bearer " + credential));
 var app = builder.Build();
-app.MapGet("/health", () => Results.Ok(new { service = "data", schema = 1 }));
+app.MapGet("/health", () => Results.Ok(new { service = "data", schema = 2 }));
+app.MapGet("/v2/state", (Func<HttpContext, Task<IResult>>)(context => accounts.Route("state", context)));
+app.MapPost("/v2/{action}", (string action, HttpContext context) => accounts.Route(action, context));
+app.MapPost("/internal/battles/{room}/settle/{winningTeam:int}", (string room,int winningTeam,HttpContext context) =>
+    accounts.Settle(room,winningTeam,0,context));
+app.MapPost("/internal/battles/{room}/settle/{winningTeam:int}/{rounds:int}", (string room,int winningTeam,int rounds,HttpContext context) =>
+    accounts.Settle(room,winningTeam,rounds,context));
+app.MapPost("/internal/battles/{room}/settle/{winningTeam:int}/{rounds:int}/{enteredSeats:int}",
+    (string room,int winningTeam,int rounds,int enteredSeats,HttpContext context) => accounts.Settle(room,winningTeam,rounds,context,enteredSeats));
+app.MapPost("/internal/battles/{room}/progress/{roundOrdinal:int}/{seatMask:int}/{occurredAt:long}",
+    (string room,int roundOrdinal,int seatMask,long occurredAt,HttpContext context) =>
+        accounts.BattleProgress(room,roundOrdinal,seatMask,occurredAt,context));
+app.MapGet("/internal/battles/{room}/lineup", (string room,HttpContext context) => accounts.Lineup(room,context));
 var players = app.MapGroup("/v1/players");
 players.AddEndpointFilter(async (context, next) =>
 {

@@ -135,7 +135,7 @@ namespace AnimeCS.Match
         {
             s.Scope = default;
             s.EquipTick = _tick; s.ReloadAt = 0; s.InspectTick = -100000; s.Burst = 0;
-            s.NextShot = _tick + MatchRules.Ticks(.35f);
+            s.ActionReadyTick = _tick + MatchRules.Ticks(.35f);
         }
 
         private void HandleWeapon(int i, bool frozen)
@@ -150,8 +150,12 @@ namespace AnimeCS.Match
             }
             if (input.DropHeld && (bag.Held == HeldSlot.Primary || bag.Held == HeldSlot.Sidearm))
             {
-                bag.Commit(_rules);
-                if (DropGun(i, bag.Active, true)) { bag.Take(bag.Held); StartDraw(s); }
+                if (DropGun(i, bag.Active, true))
+                {
+                    bag.Commit(_rules);
+                    bag.Take(bag.Held);
+                    StartDraw(s);
+                }
                 return;
             }
             if (input.DropHeld && bag.Held==HeldSlot.Utility)
@@ -159,10 +163,15 @@ namespace AnimeCS.Match
                 if (DropItem(i,null,bag.Utility,true)) { bag.Commit(_rules); bag.TakeUtility(); StartDraw(s); }
                 return;
             }
+            if (bag.Held is HeldSlot.Utility or HeldSlot.Objective && _tick >= s.ActionReadyTick)
+            {
+                if (_operator == i || input.Interact) s.InspectTick = -100000;
+                else if (input.Inspect) s.InspectTick = _tick;
+            }
             if (input.ThrowUtility || bag.Held==HeldSlot.Utility)
             {
                 s.FiredLastTick=input.Fire;
-                if (!frozen && _signals!=null && bag.Utility && (input.ThrowUtility || primaryPressed && _tick>=s.NextShot))
+                if (!frozen && _signals!=null && bag.Utility && (input.ThrowUtility || primaryPressed && _tick>=s.ActionReadyTick))
                 {
                     var item=bag.TakeUtility();
                     if(item){_signals.Throw(i,item);StartDraw(s);}
@@ -174,20 +183,32 @@ namespace AnimeCS.Match
             if (_phase==RoundPhase.Practice) gun.Reserve=gun.Definition.Reserve;
             if (_operator == i && Eligible(i,out _)) { s.Scope=default; s.InspectTick=-100000; s.ReloadAt=0; return; }
             var lens = gun.Definition.Optics;
+            int readyTick = Mathf.Max(s.ActionReadyTick, gun.NextFireTick);
             if (input.LowerScope || input.Inspect) s.Scope = default;
-            else s.Scope.Update(lens,_tick,input.Zoom,s.ReloadAt==0 && _tick>=s.NextShot,gun.Magazine>0);
-            if (input.Inspect && s.ReloadAt == 0 && _tick >= s.NextShot) s.InspectTick = _tick;
+            else s.Scope.Update(lens,_tick,input.Zoom,s.ReloadAt==0 && _tick>=readyTick,gun.Magazine>0);
+            if (input.Inspect && s.ReloadAt == 0 && _tick >= readyTick) s.InspectTick = _tick;
             if (frozen) input.Fire = false;
             if(gun.Definition.Class==WeaponClass.Knife)
             {
-                bool swing=input.Fire && _tick>=s.NextShot;
-                s.FiredLastTick=input.Fire;
-                if(swing)
+                // The existing secondary input is interpreted by the held weapon on the host.
+                bool heavy = input.Zoom;
+                s.FiredLastTick = input.Fire;
+                if (!frozen && (input.Fire || heavy) && _tick >= s.ActionReadyTick)
                 {
-                    s.InspectTick=-100000;s.LastShotTick=_tick;s.NextShot=_tick+MatchRules.Ticks(.52f);
-                    var contact=(_world as IMeleeWorld)?.Swing(i);
-                    if(contact is ArenaHit touch && (uint)touch.Seat<Seats && touch.Seat/TeamSize!=i/TeamSize && _seats[touch.Seat].Health>0)
-                        WeaponDamage(i,touch.Seat,gun.Definition,touch.Zone,40);
+                    var blade = gun.Definition;
+                    s.InspectTick = -100000;
+                    s.LastShotTick = _tick;
+                    s.ActionReadyTick = _tick + MatchRules.Ticks(blade.MeleeRecovery(heavy));
+                    s.LastMelee = heavy ? MeleeAction.Heavy : MeleeAction.Light;
+                    if ((_world as IMeleeWorld)?.Swing(i) is ArenaHit touch && (uint)touch.Seat < Seats &&
+                        touch.Seat / TeamSize != i / TeamSize && _seats[touch.Seat].Health > 0)
+                    {
+                        var target = _seats[touch.Seat];
+                        bool rear = heavy && blade.InRearArc(_world.Position(i) - _world.Position(touch.Seat), target.Yaw);
+                        if (rear) s.LastMelee = MeleeAction.Rear;
+                        WeaponDamage(i, touch.Seat, blade, touch.Zone, rear ? target.Health : blade.MeleeDamage(heavy));
+                    }
+                    _signals?.EmitMelee(i, blade, s.LastMelee);
                 }
                 return;
             }
@@ -204,12 +225,12 @@ namespace AnimeCS.Match
             }
             bool press = input.Fire && (input.FirePressed || !s.FiredLastTick || gun.Definition.Automatic);
             s.FiredLastTick = input.Fire;
-            if (!press || gun.Magazine == 0 || s.ReloadAt != 0 || _tick < s.NextShot) return;
-            if (_tick - s.NextShot > MatchRules.Ticks(0.3f)) s.Burst = 0;
+            if (!press || gun.Magazine == 0 || s.ReloadAt != 0 || _tick < readyTick) return;
+            if (_tick - readyTick > MatchRules.Ticks(0.3f)) s.Burst = 0;
             gun.Magazine--; s.InspectTick = -100000;
             s.LastShotTick = _tick;
             _signals?.EmitGun(i,gun.Definition);
-            s.NextShot = _tick + Mathf.CeilToInt(60f * MatchRules.TickRate / gun.Definition.ShotsPerMinute);
+            gun.RecordShot(_tick);
             bool steady = gun.Definition.IsSteady(s.Motion.Velocity.magnitude, s.Motion.Grounded);
             float speedRatio=s.Motion.Velocity.magnitude/gun.Definition.RunSpeed;
             float moving=Mathf.InverseLerp(.34f,1f,speedRatio);
@@ -359,10 +380,17 @@ namespace AnimeCS.Match
             var pickup=_ground[nearest];
             if(pickup.Utility) { if(bag.AddUtility(pickup.Utility))_ground.RemoveAt(nearest); return; }
             var gun = pickup.Weapon;
+            var slot = gun.Definition.Class == WeaponClass.Pistol ? HeldSlot.Sidearm : HeldSlot.Primary;
+            var previous = slot == HeldSlot.Primary ? bag.Primary : bag.Sidearm;
+            // The incoming item vacates its resting space. Restore it if the swap cannot finish.
             _ground.RemoveAt(nearest);
-            bool primary = gun.Definition.Class != WeaponClass.Pistol;
+            if (previous != null && !DropGun(seat, previous, false))
+            {
+                _ground.Insert(nearest, pickup);
+                return;
+            }
             bag.Commit(_rules);
-            DropGun(seat, bag.Take(primary ? HeldSlot.Primary : HeldSlot.Sidearm), false);
+            bag.Take(slot);
             bag.Equip(gun);
             StartDraw(_seats[seat]);
         }

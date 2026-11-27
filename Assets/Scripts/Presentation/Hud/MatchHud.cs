@@ -26,6 +26,11 @@ namespace AnimeCS.Play
         private int _round = -1, _lastTick = -1;
         private bool _open, _paused;
         private LocalMatch _session;
+        private IMatchWorldView _world;
+        private bool _canManageRoom;
+        private int _lastElimination, _lastWatched;
+        private RoundPhase _lastPhase;
+        private readonly Button _restart, _endRoom;
         private AnimeCS.Profile.WardrobeLoadout _loadout;
         private readonly Button _targetMotion;
         private readonly ScopeOverlay _scope;
@@ -34,7 +39,7 @@ namespace AnimeCS.Play
         public bool ShopOpen => _open;
 
         public MatchHud(VisualElement host, MatchPresentation style, ContentCatalog catalog, MatchRules rules,
-            Action<BuySlot,string,bool> order, Action pause, Action restart, Action lobby)
+            Action<BuySlot,string,bool> order, Action pause, Action restart, Action lobby, Action endRoom)
         {
             _catalog=catalog; _rules=rules; _style=style; _order=order;
             style.hud.CloneTree(host);
@@ -47,7 +52,9 @@ namespace AnimeCS.Play
             foreach(var label in _root.Query<Label>().ToList()) if (!string.IsNullOrEmpty(label.name)) _labels[label.name]=label;
             foreach(var key in new[]{"primary","sidearm","knife","utility"}) _slots.Add(key,(_root.Q(key+"-slot"),_root.Q<Image>(key+"-icon"),_root.Q<Label>(key+"-key")));
             _root.Q<Button>("open-shop").clicked+=ToggleShop; _root.Q<Button>("close-shop").clicked+=ToggleShop;
-            _root.Q<Button>("resume").clicked+=pause; _root.Q<Button>("restart").clicked+=restart; _root.Q<Button>("to-lobby").clicked+=lobby;
+            _restart=_root.Q<Button>("restart"); _restart.clicked+=restart;
+            _endRoom=_root.Q<Button>("end-room"); _endRoom.clicked+=endRoom;
+            _root.Q<Button>("resume").clicked+=pause; _root.Q<Button>("to-lobby").clicked+=lobby;
             _root.Q("map-art").style.backgroundImage=catalog.Map.Radar;
             _radar.RegisterCallback<GeometryChangedEvent>(e => { if (Mathf.Abs(e.newRect.width-e.newRect.height)>.5f) _radar.style.height=e.newRect.width; });
             foreach (var site in new[]{Site.A,Site.B})
@@ -66,17 +73,23 @@ namespace AnimeCS.Play
             }
         }
 
-        public void StartMatch(LocalMatch match, AnimeCS.Profile.WardrobeLoadout loadout=null)
+        public void StartMatch(LocalMatch match, AnimeCS.Profile.WardrobeLoadout loadout=null,IMatchWorldView world=null,bool canManageRoom=false)
         {
             _round=-1; _lastTick=-1; _open=false; _session=match; _loadout=loadout;
+            _world=world ?? match;
+            _canManageRoom=canManageRoom;
+            SetRoomAction(false,null);
             _kills.Reset();
-            bool practice=match.Mode==MatchMode.AimPractice;
+            bool practice=match?.Mode==MatchMode.AimPractice;
             Show(_root.Q("team"),!practice); Show(_root.Q("rivals"),!practice); Show(_root.Q(className:"score-line"),!practice);
             foreach(var site in _sites) Show(site,!practice);
             Show(_targetMotion,practice); _targetMotion.text="靶位移动　关";
             _root.Q("map-art").style.backgroundImage=_catalog.Map.Radar;Place(_sites[0],_catalog.Map.SitePosition(Site.A));Place(_sites[1],_catalog.Map.SitePosition(Site.B));
-            UpdatePortraits(match);
+            if (match != null) UpdatePortraits(match);
+            else for (int i=0;i<_portraits.Length;i++) SetRosterPortrait(i,null);
         }
+
+        internal void SetRosterPortrait(int slot, Texture2D icon) => _portraits[slot].style.backgroundImage = icon;
 
         private void UpdatePortraits(LocalMatch match)
         {
@@ -88,6 +101,43 @@ namespace AnimeCS.Play
         }
 
         public void ToggleShop() { _open=!_open; _lastTick=-1; }
+
+        internal void SetRoomAction(bool busy,string message)
+        {
+            _restart.SetEnabled(!busy);
+            _endRoom.SetEnabled(!busy);
+            var feedback=_labels["room-feedback"];
+            feedback.text=message;
+            Show(feedback,!string.IsNullOrEmpty(message));
+        }
+
+        internal void ShowReconnecting(bool reconnecting)
+        {
+            string message=reconnecting ? "正在重新连接战斗服务器…" : string.Empty;
+            _labels["action"].text=message;
+            if (_paused)
+            {
+                var feedback=_labels["room-feedback"];
+                feedback.text=message;
+                Show(feedback,reconnecting);
+            }
+            if (reconnecting)
+            {
+                _open=false;
+                Show(_shop,false);
+                Show(_root.Q("open-shop"),false);
+            }
+            _lastTick=-1;
+        }
+
+        internal static int RosterSeat(int slot,int local)
+        {
+            int first=local/LocalMatch.TeamSize*LocalMatch.TeamSize;
+            if(slot==0) return local;
+            if(slot>=LocalMatch.TeamSize) return slot-first;
+            int seat=first+slot-1;
+            return seat<local ? seat : seat+1;
+        }
 
         public void NavigateShop(int step, bool confirm, bool undo, bool canUndo)
         {
@@ -103,14 +153,16 @@ namespace AnimeCS.Play
             else if (confirm && offer.button.enabledSelf) _order(offer.slot, offer.id, false);
         }
 
-        public void Present(in SeatView self,in SeatView watched,ISeatPort[] ports)
+        public void Present(in SeatView self,in SeatView watched,ISeatPort[] ports,bool localMenu=false)
         {
             var match=self.Match;
-            if (_lastTick==match.Tick && _paused==match.Paused) return;
-            _lastTick=match.Tick; _paused=match.Paused;
+            bool menu=match.Paused || localMenu;
+            int kills=_world.EliminationCount;
+            if (_lastTick==match.Tick && _lastPhase==match.Phase && _paused==menu && _lastWatched==watched.Seat && _lastElimination==kills) return;
+            _lastTick=match.Tick; _lastPhase=match.Phase; _paused=menu; _lastElimination=kills; _lastWatched=watched.Seat;
             bool practice=match.Phase==RoundPhase.Practice;
             bool buy=match.Phase==RoundPhase.Buy, finished=match.Phase==RoundPhase.Finished;
-            if (match.Round!=_round) { _round=match.Round; _open=false; BuildShop(self.Side); UpdatePortraits(_session); }
+            if (match.Round!=_round) { _round=match.Round; _open=false; BuildShop(self.Side); if (_session != null) UpdatePortraits(_session); }
             if (!self.CanBuy) _open=false;
             Show(_shop,self.CanBuy&&_open&&!_paused); Show(_root.Q("open-shop"),self.CanBuy&&!_open&&!_paused);
             if (self.CanBuy)
@@ -122,18 +174,22 @@ namespace AnimeCS.Play
                     UpdateOffers(self);
                 }
             }
-            Show(_root.Q("menu"),_paused||finished); Show(_root.Q("resume"),_paused); Show(_root.Q("restart"),finished);
-            _labels["pause-title"].text=_paused?"比赛已暂停":match.Score0>match.Score1?"我方获胜":"对方获胜";
+            Show(_root.Q("menu"),_paused||finished); Show(_root.Q("resume"),_paused&&!finished);
+            Show(_restart,finished&&(_session!=null||_canManageRoom));
+            Show(_endRoom,_canManageRoom&&_paused&&!finished);
+            bool teamZero=self.Seat<LocalMatch.TeamSize;
+            int ourScore=teamZero?match.Score0:match.Score1, theirScore=teamZero?match.Score1:match.Score0;
+            _labels["pause-title"].text=finished?(ourScore>theirScore?"我方获胜":"对方获胜"):localMenu?"对局菜单":"比赛已暂停";
             int seconds=Mathf.CeilToInt(match.RemainingTicks/(float)MatchRules.TickRate);
             _labels["clock"].text=practice?"练枪地图":$"{seconds/60:0}:{seconds%60:00}";
-            _labels["our-score"].text=match.Score0.ToString();_labels["their-score"].text=match.Score1.ToString();
+            _labels["our-score"].text=ourScore.ToString();_labels["their-score"].text=theirScore.ToString();
             _labels["phase"].text=practice?$"击倒 {match.PracticeKills}    爆头 {match.PracticeHeadshots}":buy?"冻结时间":match.Phase==RoundPhase.Planted?"已安装 · "+match.PlantedSite:
                 match.Phase==RoundPhase.Settlement?(CharacterDefinition.FactionName(match.Winner)+"胜")+"  ·  "+ResultName(match.Reason):string.Empty;
             bool active=watched.Seat>=0;
             _labels["credits"].text=practice?"自由补给":"$ "+self.Credits;
             _labels["hp"].text=active?watched.Health+"  HP":"公共观战";
             _labels["armour"].text=(watched.Armor?"胸甲 ":"")+(watched.Helmet?"头盔 ":"")+(watched.HasKit?"拆除套件":"");
-            _kills.Present(_session,watched.Seat,self.Seat,active&&!_paused&&!finished&&!_open);
+            _kills.Present(_world,match,watched.Seat,self.Seat,!_paused&&!finished&&!_open);
             _labels["objective"].text=watched.HasObjective?"5  目标包":"";
             _labels["ammo"].text=active && watched.WeaponId!=null && watched.Held!=HeldSlot.Knife?$"{watched.Magazine} / {watched.Reserve}":"";
             _labels["held-name"].text=watched.Held==HeldSlot.Objective?"目标包":watched.Held==HeldSlot.Utility?_catalog.Find<UtilityDefinition>(watched.UtilityId)?.DisplayName:active?_catalog.Find<WeaponDefinition>(watched.WeaponId)?.DisplayName:"";
@@ -146,7 +202,7 @@ namespace AnimeCS.Play
                 self.Health<=0&&active?"观战  "+watched.DisplayId+"   ·   左 / 右键切换":"";
             var clue=watched.Heard;
             _labels["event"].text=clue.HasValue&&!clue.Value.Own&&match.Tick-clue.Value.Tick<45?
-                clue.Value.Region+"  ·  "+SoundName(clue.Value.Kind):"";
+                (string.IsNullOrEmpty(clue.Value.Region)?"":clue.Value.Region+"  ·  ")+SoundName(clue.Value.Kind):"";
             bool aimVisible=active&&!_paused&&!finished&&!_open;
             _scope.Present(aimVisible && watched.ScopeLevel>0,watched.ScopeStability);
             var heldGun=_catalog.Find<WeaponDefinition>(watched.WeaponId);
@@ -158,11 +214,11 @@ namespace AnimeCS.Play
             Show(_root.Q("wound"),active&&_style.hitReaction&&match.Tick-watched.LastHitTick<7);
             for (int i=0;i<_friends.Length;i++)
             {
-                var ally=ports[i].Read();
+                var ally=ports[RosterSeat(i,self.Seat)].Read();
                 _portraits[i].EnableInClassList("out", ally.Health<=0);
-                Place(_friends[i],ally.Position); Show(_friends[i],active&&ally.Health>0&&i!=watched.Seat);
+                Place(_friends[i],ally.Position); Show(_friends[i],active&&ally.Health>0&&ally.Seat!=watched.Seat);
             }
-            for(int i=LocalMatch.TeamSize;i<_portraits.Length;i++) _portraits[i].EnableInClassList("out",ports[i].Read().Health<=0);
+            for(int i=LocalMatch.TeamSize;i<_portraits.Length;i++) _portraits[i].EnableInClassList("out",ports[RosterSeat(i,self.Seat)].Read().Health<=0);
             Show(_me,active); if(active) { Place(_me,watched.Position); _me.style.rotate=new Rotate(new Angle(watched.Yaw+_catalog.Map.RadarYaw)); }
             bool contact=active&&!watched.Blinded&&watched.VisibleEnemy.HasValue;
             Show(_enemy,contact); if(contact) Place(_enemy,watched.VisibleEnemy.Value.Position);
@@ -188,7 +244,7 @@ namespace AnimeCS.Play
         {
             _offersRoot.Clear();_offers.Clear();_offerIndex=0;
             var protection=_shop.Q("protection-offers"); protection.Clear();
-            bool practice=_session.Mode==MatchMode.AimPractice;
+            bool practice=_session?.Mode==MatchMode.AimPractice;
             foreach(var slot in new[]{BuySlot.Sidearm,BuySlot.Primary,BuySlot.Knife,BuySlot.Utility,BuySlot.Armor})
             {
                 if(slot==BuySlot.Knife && !practice) continue;
@@ -214,7 +270,7 @@ namespace AnimeCS.Play
         private void Offer(VisualElement row,string text,int price,BuySlot slot,string id)
         {
             var button=new Button(()=>_order(slot,id,false)){name=id ?? slot.ToString(),focusable=false};
-            bool free=_session.Mode==MatchMode.AimPractice;
+            bool free=_session?.Mode==MatchMode.AimPractice;
             bool favorite=id!=null && (id==_loadout?.primaryId || id==_loadout?.sidearmId);
             var gun=_catalog.Find<WeaponDefinition>(id);
             if (gun && gun.Glyph)
@@ -240,7 +296,7 @@ namespace AnimeCS.Play
                 if(offer.slot==BuySlot.Utility && _catalog.Find<UtilityDefinition>(offer.id) is UtilityDefinition util)
                 {
                     int count=self.Utilities.Count(util.Effect);
-                    bool free=_session.Mode==MatchMode.AimPractice;
+                    bool free=_session?.Mode==MatchMode.AimPractice;
                     offer.button.text=util.DisplayName+(count>0?"  ×"+count:"")+(free?"":"   "+util.Price);
                     offer.button.EnableInClassList("chosen",draft.Utilities.Count(util.Effect)>0);
                     offer.button.SetEnabled(self.Utilities.CanAdd(util.Effect) && (free || self.Credits>=util.Price));
@@ -253,7 +309,7 @@ namespace AnimeCS.Play
                 offer.button.EnableInClassList("chosen",chosen);
                 bool owned = offer.slot switch { BuySlot.Kit => self.HasKit, BuySlot.Armor => self.Armor, BuySlot.Helmet => self.Helmet, BuySlot.Primary => self.PrimaryId==offer.id,
                     BuySlot.Sidearm => self.SidearmId==offer.id, BuySlot.Knife => self.KnifeId==offer.id, BuySlot.Utility => self.UtilityId==offer.id, _ => false };
-                if (_session.Mode==MatchMode.AimPractice)
+                if (_session?.Mode==MatchMode.AimPractice)
                 {
                     offer.button.EnableInClassList("chosen",owned);
                     offer.button.SetEnabled(!owned || offer.slot==BuySlot.Primary || offer.slot==BuySlot.Sidearm || offer.slot==BuySlot.Knife);

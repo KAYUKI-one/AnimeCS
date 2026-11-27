@@ -53,7 +53,8 @@ namespace AnimeCS.Play
         private WeaponDefinition _equipped;
         private readonly GameObject _objectiveModel;
         private UtilityDefinition _utility;
-        private const string Objective = "held.objective";
+        private const string Objective = HeldItemLibrary.ObjectiveId;
+        private HeldItemActions _actions;
         private GameObject CarriedModel => _gun==Objective?_objectiveModel:_utility?_utility.Model:null;
         private Vector3 _tip;
         private GameObject _viewFlash, _worldFlash;
@@ -118,6 +119,7 @@ namespace AnimeCS.Play
             _built = true; _outfit = view.OutfitId; _gun = id; _skin = skinId; _side = view.Side; _worn=view.Worn; _watch = watch;
             var outfit = _catalog.Find<OutfitDefinition>(_outfit);
             var gun = _catalog.Find<WeaponDefinition>(_gun);
+            _actions = _style && _style.heldItems ? _style.heldItems.Find(id) : null;
             _equipped = gun; _utility=_catalog.Find<UtilityDefinition>(id);
             if (gun && gunChanged)
             {
@@ -207,8 +209,8 @@ namespace AnimeCS.Play
             _stanceEyes=_actor.RenderEye(alpha).y-_actor.RenderFeet(alpha).y;
             _feetWeight=view.Motion.Grounded ? 1f-Mathf.InverseLerp(.12f,1.5f,view.Motion.Velocity.magnitude) : 0f;
             float scale = _style ? _style.handlingMotion : 1f;
-            if (_showView) _viewAction = WeaponActionPose.Sample(view, _equipped, alpha, true, scale);
-            _worldAction = WeaponActionPose.Sample(view, _equipped, alpha, false, scale);
+            if (_showView) _viewAction = WeaponActionPose.Sample(view, _equipped, alpha, true, scale, _actions);
+            _worldAction = WeaponActionPose.Sample(view, _equipped, alpha, false, scale, _actions);
             // Several simulation ticks can elapse between rendered frames.
             if (_lastPresentedRound == view.Match.Round && view.LastShotTick > _lastPresentedTick)
                 _shotFrame = Time.frameCount;
@@ -250,7 +252,7 @@ namespace AnimeCS.Play
                 _third.transform.position=_actor.RenderFeet(alpha)-Quaternion.Euler(0,view.Yaw,0)*Vector3.forward*setback;
             }
             bool knife=_equipped && _equipped.Class==WeaponClass.Knife;
-            _swing=knife ? Mathf.Sin(Mathf.PI*Mathf.Clamp01((tick-view.LastShotTick)*SeatMovement.StepTime/.30f)) : 0;
+            _swing=knife && _actions?.Attack(view.LastMelee) == null ? Mathf.Sin(Mathf.PI*Mathf.Clamp01((tick-view.LastShotTick)*SeatMovement.StepTime/.30f)) : 0;
             if(knife)kick=0;
             _aim = Quaternion.Euler(-Mathf.Clamp(view.Pitch+kick,-66,69), view.Yaw, 0);
             if (_first == null || !_showView || view.Match.Paused || _viewTick == view.Match.Tick) return;
@@ -339,6 +341,7 @@ namespace AnimeCS.Play
         public void BeforeAnimation() => _rig?.RestoreHitPose();
         public void Hide()
         {
+            SetFriendlyCue(false);
             if (_first && _first.activeSelf) _first.SetActive(false);
             if (_third && _third.activeSelf) _third.SetActive(false);
         }

@@ -16,6 +16,7 @@ namespace AnimeCS.Content
         private Dictionary<string, ContentDefinition> _index;
         public IReadOnlyList<ContentDefinition> Entries => _entries;
         public MapDefinition Map => _map;
+        public string ContentVersion => Match.MatchFormat.ContentRevision;
         internal void SelectMap(MapDefinition map) => _map=map;
         [SerializeField, InspectorName("默认近战武器")] private WeaponDefinition _knife;
         public WeaponDefinition Knife => _knife;

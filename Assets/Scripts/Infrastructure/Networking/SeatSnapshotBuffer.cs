@@ -32,8 +32,10 @@ namespace AnimeCS.Match
             }
             float t=right.Tick==left.Tick?0:(float)Math.Max(0,(renderTick-left.Tick)/(right.Tick-left.Tick));
             pos=Vector3.LerpUnclamped(left.Position,right.Position,t);
-            yaw=Mathf.Repeat(left.Yaw+Mathf.DeltaAngle(left.Yaw,right.Yaw)*t,360);
-            pitch=Mathf.Clamp(Mathf.LerpUnclamped(left.Pitch,right.Pitch,t),-82,82);return true;
+            // A turn can stop between packets. Hold the last confirmed look while position extrapolates.
+            float turn=Mathf.Min(t,1f);
+            yaw=Mathf.Repeat(left.Yaw+Mathf.DeltaAngle(left.Yaw,right.Yaw)*turn,360);
+            pitch=Mathf.Clamp(Mathf.LerpUnclamped(left.Pitch,right.Pitch,turn),-82,82);return true;
         }
     }
 }

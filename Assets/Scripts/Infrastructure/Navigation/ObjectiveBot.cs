@@ -11,6 +11,7 @@ namespace AnimeCS.Play
         private readonly MapDefinition _map;
         private readonly ContentCatalog _catalog;
         private readonly System.Random _random;
+        private readonly BotTuning _tuning;
         private readonly UnityEngine.AI.NavMeshPath _path=new UnityEngine.AI.NavMeshPath();
         private readonly Vector3[] _corners=new Vector3[192];
         private int _corner,_cornerCount,_replan;
@@ -21,7 +22,13 @@ namespace AnimeCS.Play
         private float _listenYaw;
         private Site _site;
         private bool _clicked;
-        public ObjectiveBot(ContentCatalog catalog, int seed) { _map = catalog.Map; _catalog = catalog; _random = new System.Random(seed); }
+        public ObjectiveBot(ContentCatalog catalog, int seed, BotTuning tuning = null)
+        {
+            _map = catalog.Map;
+            _catalog = catalog;
+            _random = new System.Random(seed);
+            _tuning = tuning ?? new BotTuning();
+        }
         public SeatIntent Decide(in SeatView view)
         {
             var input = new SeatIntent { Yaw = view.Yaw, Pitch = view.Pitch };
@@ -49,21 +56,24 @@ namespace AnimeCS.Play
                 return input;
             }
             if (view.Match.Phase == RoundPhase.Finished) return input;
+            float turnStep = Mathf.Max(0f, _tuning.turnDegreesPerSecond) * SeatMovement.StepTime;
             if (view.VisibleEnemy.HasValue)
             {
                 var contact = view.VisibleEnemy.Value;
                 if (_target != contact.Seat)
                 {
                     _target = contact.Seat;
-                    _readyTick = view.Match.Tick + _random.Next(12, 25);
+                    int minTicks = MatchRules.Ticks(_tuning.minReactionSeconds);
+                    int maxTicks = Mathf.Max(minTicks, MatchRules.Ticks(_tuning.maxReactionSeconds));
+                    _readyTick = view.Match.Tick + _random.Next(minTicks, maxTicks + 1);
                     _error = (float)(0.6 + 1.4 * _random.NextDouble()) * (_random.Next(2) == 0 ? -1 : 1);
                 }
                 var aim = contact.Position - (view.Position + Vector3.up * SeatMovement.EyeHeight(view.Motion.Crouch));
                 float yaw = Mathf.Atan2(aim.x, aim.z) * Mathf.Rad2Deg + _error;
                 float pitch = Mathf.Atan2(aim.y, new Vector2(aim.x, aim.z).magnitude) * Mathf.Rad2Deg;
-                float yawStep = Mathf.Clamp(Mathf.DeltaAngle(view.Yaw, yaw), -4.8f, 4.8f);
+                float yawStep = Mathf.Clamp(Mathf.DeltaAngle(view.Yaw, yaw), -turnStep, turnStep);
                 input.Yaw += yawStep;
-                float pitchBudget = Mathf.Sqrt(Mathf.Max(0, 4.8f * 4.8f - yawStep * yawStep));
+                float pitchBudget = Mathf.Sqrt(Mathf.Max(0, turnStep * turnStep - yawStep * yawStep));
                 input.Pitch = Mathf.MoveTowards(view.Pitch, pitch, pitchBudget);
                 bool sniper = _catalog.Find<WeaponDefinition>(view.WeaponId)?.Optics != null;
                 input.Zoom = sniper && view.ScopeLevel == 0 && !view.Bolting;
@@ -97,9 +107,9 @@ namespace AnimeCS.Play
             {
                 input.Move = delta.normalized;
                 float yaw = Mathf.Atan2(delta.x, delta.y) * Mathf.Rad2Deg;
-                input.Yaw = Mathf.MoveTowardsAngle(view.Yaw, yaw, 4.8f);
+                input.Yaw = Mathf.MoveTowardsAngle(view.Yaw, yaw, turnStep);
             }
-            input.Pitch = Mathf.MoveTowards(view.Pitch, 0, 3);
+            input.Pitch = Mathf.MoveTowards(view.Pitch, 0, Mathf.Max(0f,_tuning.levelPitchDegreesPerSecond)*SeatMovement.StepTime);
             input.Interact = !settling && distanceToGoal < 1.5f;
             if (input.Interact && (view.HasObjective || installed && view.Side == Side.Defend))
                 input.Move = Vector2.zero;
@@ -108,9 +118,9 @@ namespace AnimeCS.Play
                 var clue = view.Heard.Value;
                 if (!clue.Own && clue.Tick != _heardTick)
                 {
-                    _heardTick = clue.Tick; _listenUntil = clue.Tick + 15; _listenYaw = clue.Bearing * 45f;
+                    _heardTick = clue.Tick; _listenUntil = clue.Tick + MatchRules.Ticks(_tuning.listenSeconds); _listenYaw = clue.Bearing * 45f;
                 }
-                if (view.Match.Tick < _listenUntil) input.Yaw = Mathf.MoveTowardsAngle(view.Yaw, _listenYaw, 4.8f);
+                if (view.Match.Tick < _listenUntil) input.Yaw = Mathf.MoveTowardsAngle(view.Yaw, _listenYaw, turnStep);
             }
             input.Reload = view.Magazine == 0;
             return input;
@@ -119,7 +129,7 @@ namespace AnimeCS.Play
         {
             if(tick>=_replan || (goal-_lastGoal).sqrMagnitude>1)
             {
-                _lastGoal=goal;_replan=tick+35+seat;_cornerCount=_corner=0;
+                _lastGoal=goal;_replan=tick+MatchRules.Ticks(_tuning.repathSeconds)+seat;_cornerCount=_corner=0;
                 if(UnityEngine.AI.NavMesh.SamplePosition(from,out var start,2f,-1) &&
                    UnityEngine.AI.NavMesh.SamplePosition(goal,out var end,2f,-1) &&
                    UnityEngine.AI.NavMesh.CalculatePath(start.position,end.position,-1,_path))

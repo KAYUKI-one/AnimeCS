@@ -10,7 +10,7 @@ internal sealed class ContentStore(string root)
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private sealed record Entry(string Path, string Sha256, long Size);
 
-    internal void Publish(string version, string source)
+    internal string Publish(string version, string source)
     {
         if (version.Length is 0 or > 96 || version is "." or ".." ||
             !version.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '.' or '_'))
@@ -57,6 +57,7 @@ internal sealed class ContentStore(string root)
             File.Move(staging, Current, overwrite:true);
         }
         finally { File.Delete(staging); }
+        return Convert.ToHexStringLower(SHA256.HashData(bytes));
     }
 
     private string Temp() => Path.Combine(root, Guid.NewGuid().ToString("N") + ".tmp");

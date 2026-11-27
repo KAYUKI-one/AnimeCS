@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d65fc406864287e4a925dbf8417fd5f7, type: 3}
   m_Name: BroadcastStation
   m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.MapDefinition
+  _loadingBrief: "云端转播设施的连廊连接两个目标区域，高低差使中路视野格外重要。"
+  _loadingArt: {fileID: 2800000, guid: 8d6039c726534ae194c799c493ce684f, type: 3}
   _id: map.broadcast-station
   _displayName: "\u4E91\u4E0A\u8F6C\u64AD\u7AD9"
   _thumbnail: {fileID: 0}

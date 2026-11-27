@@ -1,0 +1,33 @@
+#match-loading { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: rgb(27,43,65); color: white; }
+.load-art, .load-overlay { position: absolute; left: 0; right: 0; top: 0; bottom: 0; }
+.load-art { -unity-background-scale-mode: scale-and-crop; }
+.load-overlay { background-color: rgba(15,29,54,.42); justify-content: space-between; }
+.load-brand-row, .load-teams, .load-bottom, .load-briefing, .load-row { flex-direction: row; align-items: center; }
+.load-brand-row { justify-content: space-between; padding: 12px 20px; }
+.load-brand { -unity-font-style: bold-and-italic; font-size: 19px; letter-spacing: 2px; }
+.load-status { color: rgb(224,241,251); font-size: 14px; }
+.load-heading { align-items: center; padding-bottom: 6px; }
+.load-title { font-size: 34px; -unity-font-style: bold; color: white; }
+.load-mode { background-color: rgba(16,36,61,.85); padding: 2px 18px; font-size: 14px; color: rgb(212,236,245); }
+.load-teams { height: 47%; min-height: 110px; padding: 0 1.4%; }
+.load-team { height: 100%; flex-grow: 1; flex-basis: 0; }
+.load-team-title { background-color: rgba(24,47,76,.82); padding: 4px 8px; font-size: 17px; -unity-font-style: bold; }
+.load-attack .load-team-title { background-color: rgba(88,36,52,.84); -unity-text-align: middle-right; }
+.load-row { flex-grow: 1; align-items: stretch; }
+.load-card { flex-grow: 1; flex-basis: 0; min-width: 0; margin: 3px 1px; border-bottom-width: 5px; border-bottom-color: rgb(83,193,244); background-color: rgba(34,53,76,.9); }
+.load-attack .load-card { border-bottom-color: rgb(239,101,126); background-color: rgba(81,52,72,.9); }
+.load-portrait { flex-grow: 1; -unity-background-scale-mode: scale-and-crop; background-position-y: top; }
+.load-name { color: white; background-color: rgba(18,36,58,.95); font-size: 14px; padding: 4px 1px; -unity-text-align: middle-center; }
+.load-vs { width: 8%; -unity-text-align: middle-center; font-size: 44px; -unity-font-style: bold-and-italic; }
+.load-briefing { background-color: rgba(24,37,60,.91); padding: 8px 4%; height: 18%; }
+.load-radar { width: 16%; height: 100%; -unity-background-scale-mode: scale-to-fit; }
+.load-copy { flex-grow: 1; flex-basis: 0; padding: 0 12px; }
+.load-subhead { font-size: 16px; color: white; -unity-font-style: bold; }
+.load-description, .load-tip { color: rgb(211,227,239); white-space: normal; font-size: 13px; }
+.load-bottom { min-height: 42px; padding: 7px 3%; background-color: rgb(21,36,55); }
+.load-tip { flex-grow: 1; flex-basis: 0; }
+.load-track { width: 36%; height: 6px; background-color: rgb(60,80,101); }
+.load-fill { height: 100%; background-color: rgb(100,230,239); }
+.load-percent { width: 54px; -unity-text-align: middle-right; font-size: 16px; }
+
+.load-player { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px; -unity-text-align: middle-center; color: rgb(184,216,232); background-color: rgb(18,36,58); padding-bottom: 3px; }

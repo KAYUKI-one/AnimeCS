@@ -45,6 +45,16 @@ namespace AnimeCS.Play
             Visuals.SetParent(transform, false);
         }
 
+        internal void PresentReplica(Vector3 position, float yaw, float pitch, float crouch)
+        {
+            _body.enabled = _hitbox.enabled = _headHitbox.enabled = false;
+            Yaw = yaw; Pitch = pitch; _crouch = crouch;
+            transform.SetPositionAndRotation(position,Quaternion.Euler(0,yaw,0));
+            _previousPosition=position; _previousEye=Eye;
+            if (!Visuals.gameObject.activeSelf) Visuals.gameObject.SetActive(true);
+            Visuals.localPosition = Vector3.zero;
+        }
+
         internal void Spawn(Vector3 position, float yaw)
         {
             _body.enabled = false;

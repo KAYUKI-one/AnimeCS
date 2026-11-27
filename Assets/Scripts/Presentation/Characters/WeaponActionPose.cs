@@ -45,7 +45,15 @@ namespace AnimeCS.Play
             pose.Angles=Vector3.Lerp(first,reverse,second)*show;
         }
 
-        internal static WeaponActionPose Sample(in SeatView seat, WeaponDefinition weapon, float alpha, bool view, float scale)
+        private static void Apply(ref WeaponActionPose pose, HandlingTrack track, float elapsed)
+        {
+            if (track == null || !track.Sample(elapsed, out var sample)) return;
+            pose.Offset += sample.offset;
+            pose.Angles += sample.angles;
+            pose.Hinge += sample.hinge;
+        }
+
+        internal static WeaponActionPose Sample(in SeatView seat, WeaponDefinition weapon, float alpha, bool view, float scale, HeldItemActions actions = null)
         {
             var pose = new WeaponActionPose();
             float frame = seat.Match.Tick + alpha;
@@ -62,11 +70,15 @@ namespace AnimeCS.Play
                 pose.Offset = new Vector3(.018f,.031f,.035f)*tilt+Vector3.up*.013f*seatTap;
                 pose.Angles = new Vector3(-10,-14,compact?-32:-25)*tilt+new Vector3(-3,0,4)*seatTap;
             }
-            else if (weapon)
+            else
             {
-                Inspect(ref pose,weapon.Inspect,(frame-seat.InspectTick)*SeatMovement.StepTime);
+                float inspectAge = (frame - seat.InspectTick) * SeatMovement.StepTime;
+                if (actions?.inspect != null) Apply(ref pose, actions.inspect, inspectAge);
+                else if (weapon) Inspect(ref pose, weapon.Inspect, inspectAge);
                 float age=(frame-seat.LastShotTick)*SeatMovement.StepTime;
-                if(weapon.Class!=WeaponClass.Knife && seat.LastShotTick>=seat.EquipTick && age>=0 && age<.24f)
+                if (weapon && weapon.Class == WeaponClass.Knife && seat.LastShotTick >= seat.EquipTick)
+                    Apply(ref pose, actions?.Attack(seat.LastMelee), age);
+                if(weapon && weapon.Class!=WeaponClass.Knife && seat.LastShotTick>=seat.EquipTick && age>=0 && age<.24f)
                 {
                     float kick=Mathf.Exp(-age*28f)*Mathf.Cos(age*40f);
                     float side=(seat.LastShotTick%3-1)*.75f;

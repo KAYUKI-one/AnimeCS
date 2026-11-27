@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AnimeCS.Content;
+using AnimeCS.Match;
 using UnityEngine;
 
 namespace AnimeCS.Play
@@ -10,8 +11,9 @@ namespace AnimeCS.Play
     {
         public string outfitId, weaponId, skinId, displayId;
         public WornItems worn;
-        public LobbyMember(string outfit, string weapon = null, string skin = null, WornItems worn=default,string displayId=null)
-        { outfitId = outfit; weaponId = weapon; skinId = skin; this.worn=worn; this.displayId=displayId; }
+        public bool unarmed;
+        public LobbyMember(string outfit, string weapon = null, string skin = null, WornItems worn=default,string displayId=null,bool unarmed=false)
+        { outfitId = outfit; weaponId = weapon; skinId = skin; this.worn=worn; this.displayId=displayId;this.unarmed=unarmed; }
     }
 
     internal sealed class LobbyPreview
@@ -23,12 +25,12 @@ namespace AnimeCS.Play
         }
 
         private readonly GameObject _stage;
-        private readonly Transform _members;
+        private readonly Transform _members, _backdrop;
         private readonly Camera _camera;
         private readonly MatchPresentation _style;
         private readonly ContentCatalog _catalog;
         private readonly float _matchFov, _matchFar;
-        private readonly List<Avatar> _party = new List<Avatar>(5);
+        private readonly List<Avatar> _party = new List<Avatar>(MatchFormat.TeamSize);
         private float _rotation, _stageCenter = .59f, _itemAngle;
         private Transform _itemPivot;
         private Bounds _itemBounds;
@@ -45,12 +47,48 @@ namespace AnimeCS.Play
             _matchFov = camera.fieldOfView; _matchFar = camera.farClipPlane;
             _stage = AppearancePresenter.NewRoot("队伍大厅",owner);
             _stage.transform.position = new Vector3(2000, 0, 0);
-            if (style.lobbySet) AppearancePresenter.AddVisual(style.lobbySet,_stage.transform,Vector3.zero);
+            if (style.lobbyBackdrop) _backdrop=CreatePlane("晴空中庭背景",_stage.transform,style.lobbyBackdrop);
+            else if (style.lobbySet) AppearancePresenter.AddVisual(style.lobbySet,_stage.transform,Vector3.zero);
             _members = new GameObject("Party").transform;
             _members.SetParent(_stage.transform, false);
             Light("人物主光", new Vector3(-2.0f,3.0f,2.3f), new Color(1,.90f,.78f), 8,9);
             Light("人物补光", new Vector3(2.4f,2.0f,2.6f), new Color(.73f,.86f,1), 5,9);
             Light("背景轮廓光",new Vector3(.4f,2.6f,-2.3f),new Color(.55f,.83f,.91f),7,10);
+        }
+
+        static Transform CreatePlane(string name,Transform parent,Material material)
+        {
+            var quad=GameObject.CreatePrimitive(PrimitiveType.Quad);
+            quad.name=name; quad.transform.SetParent(parent,false);
+            var collider=quad.GetComponent<Collider>();collider.enabled=false;
+            UnityEngine.Object.Destroy(collider);
+            var renderer=quad.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial=material;
+            renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows=false;
+            return quad.transform;
+        }
+
+        void FrameBackdrop()
+        {
+            if (!_backdrop) return;
+            const float distance=36f;
+            float viewportHeight=2*distance*Mathf.Tan(_camera.fieldOfView*.5f*Mathf.Deg2Rad);
+            var texture=_style.lobbyBackdrop.mainTexture;
+            float aspect=texture ? (float)texture.width/texture.height : 1.778f;
+            float height=Mathf.Max(viewportHeight,viewportHeight*_camera.aspect/aspect);
+            _backdrop.localScale=new Vector3(height*aspect,height,1);
+            var eye=_camera.transform;
+            _backdrop.SetPositionAndRotation(eye.position+eye.forward*distance,eye.rotation);
+        }
+
+        public bool NamePosition(int index,out Vector2 viewport)
+        {
+            viewport=default;
+            if ((uint)index>=_party.Count || !_stage.activeSelf) return false;
+            var point=_camera.WorldToViewportPoint(_party[index].root.transform.position);
+            viewport=new Vector2(point.x,point.y-.009f);
+            return point.z>0;
         }
 
         private void Light(string name, Vector3 position, Color color, float intensity, float range)
@@ -65,7 +103,7 @@ namespace AnimeCS.Play
         {
             ClearItem();
             _stage.SetActive(true);
-            int count = 1 + Mathf.Min(4,teammates.Count);
+            int count = 1 + Mathf.Min(MatchFormat.TeamSize - 1, teammates.Count);
             for (int i=_party.Count-1; i>=count; i--)
             { AppearancePresenter.Retire(_party[i].root); _party.RemoveAt(i); }
             for (int i=0; i<count; i++)
@@ -78,7 +116,7 @@ namespace AnimeCS.Play
                 float center = count%2==0 ? .5f : 0f;
                 var avatar = _party[i].root.transform;
                 avatar.localPosition = new Vector3((column+center)*.91f,.008f,-Mathf.Abs(column)*.28f);
-                avatar.localRotation = Quaternion.Euler(0, -29 + (i==0 ? _rotation : column*6), 0);
+                avatar.localRotation = Quaternion.Euler(0, (member.unarmed ? 4 : -15) + (i==0 ? _rotation : column*6), 0);
             }
             Frame();
         }
@@ -126,7 +164,7 @@ namespace AnimeCS.Play
         {
             if(_itemPivot) { _itemAngle=Mathf.Repeat(_itemAngle+degrees,360); return; }
             _rotation = Mathf.Repeat(_rotation+degrees+180,360)-180;
-            if (_party.Count>0) _party[0].root.transform.localRotation=Quaternion.Euler(0,-29+_rotation,0);
+            if (_party.Count>0) _party[0].root.transform.localRotation=Quaternion.Euler(0,(_party[0].member.unarmed?4:-15)+_rotation,0);
         }
 
         public void Hide()
@@ -140,6 +178,7 @@ namespace AnimeCS.Play
             if(_inspection && _hands?.Grip?.Valid==true && _held){_hands.Grip.Pose(_sleeves.transform,_held,_party[0].gun,_sleeves.transform.rotation,true);return;}
             foreach (var entry in _party)
             {
+                if (entry.member.unarmed) { entry.rig.Grip?.RestAtSides(entry.root.transform); continue; }
                 if (entry.rig.Grip?.Valid != true || !entry.mount) continue;
                 var root = entry.root.transform;
                 // A relaxed, angled-away display pose shows the finish and keeps the face visible.
@@ -162,13 +201,13 @@ namespace AnimeCS.Play
                 float fitHeight=1.30f*itemHalfHeight/Mathf.Max(.01f,size.y+.24f*horizontal);
                 _itemPivot.localScale=Vector3.one*Mathf.Min(fitWidth,fitHeight);
                 _itemPivot.localPosition=new Vector3(.16f*itemHalfHeight*_camera.aspect,-.025f,itemDistance);
-                _itemPivot.localRotation=Quaternion.Euler(-9,_itemAngle,-7);
+                _itemPivot.localRotation=Quaternion.Euler(-9,_itemAngle,-7); FrameBackdrop();
                 return;
             }
             if(_inspection)
             {
                 _camera.fieldOfView=_matchFov;_camera.farClipPlane=42;
-                _camera.transform.SetPositionAndRotation(_stage.transform.position+new Vector3(.4f,1.58f,2.7f),Quaternion.Euler(0,178,0));return;
+                _camera.transform.SetPositionAndRotation(_stage.transform.position+new Vector3(.4f,1.58f,2.7f),Quaternion.Euler(0,178,0));FrameBackdrop();return;
             }
             float fov = _style.lobbyFieldOfView;
             float halfHeight = 1.12f;
@@ -179,14 +218,21 @@ namespace AnimeCS.Play
             var eye = focus + new Vector3(.13f*distance,.25f,distance);
             _camera.fieldOfView=fov; _camera.farClipPlane=42;
             _camera.transform.SetPositionAndRotation(eye,Quaternion.LookRotation(focus-eye,Vector3.up));
+            FrameBackdrop();
         }
 
         private Avatar Build(LobbyMember member)
         {
             var outfit = PreviewOutfit(member);
             var character = outfit.Character ? outfit.Character : _catalog.Character;
-            var gun = _catalog.Find<WeaponDefinition>(member.weaponId) ?? _style.lobbyWeapon;
+            var gun = member.unarmed ? null : _catalog.Find<WeaponDefinition>(member.weaponId) ?? _style.lobbyWeapon;
             var root = AppearancePresenter.NewRoot(outfit.DisplayName,_members);
+            if (_style.lobbyContactShadow)
+            {
+                var shadow=CreatePlane("脚下柔影",root.transform,_style.lobbyContactShadow);
+                shadow.localRotation=Quaternion.Euler(90,0,0);
+                shadow.localScale=new Vector3(1.05f,.52f,1);
+            }
             var body=AppearancePresenter.AddVisual(character.Model,root.transform,Vector3.zero);
             var rig=new CharacterRig(body,character,outfit.PoseController);
             WearablePresenter.Apply(_catalog,member.worn,outfit,false,body,rig);
