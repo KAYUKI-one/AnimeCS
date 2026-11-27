@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AnimeCS · 装备</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="../shared/collections.css" />
+    <script src="../shared/catalog.js" defer></script>
+    <script src="../shared/ui.js" defer></script>
+    <script src="view.js" defer></script>
+  </head>
+  <body>
+    <div id="acs-sky-party">
+      <div class="desktop-frame">
+        <main class="lobby" aria-label="AnimeCS 装备">
+          <div class="backdrop" aria-hidden="true"></div>
+          <div class="lightwash" aria-hidden="true"></div>
+          <div class="skygrid" aria-hidden="true"></div>
+          <header class="chrome">
+            <div class="profile glass">
+              <span class="avatar" aria-hidden="true"></span>
+              <div><b>晴野</b><small>LV. 01 · AnimeCS</small></div>
+            </div>
+            <nav class="tabs" aria-label="主导航">
+              <a class="tab" href="../character/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/contact-round.svg"
+                  alt=""
+                  aria-hidden="true"
+                />角色</a
+              >
+              <a class="tab" href="../inventory/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/archive.svg"
+                  alt=""
+                  aria-hidden="true"
+                />库存</a
+              >
+              <a class="tab" href="../lobby/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/house.svg"
+                  alt=""
+                  aria-hidden="true"
+                />大厅</a
+              >
+              <a class="tab" href="../equipment/index.html" aria-current="page"
+                ><img
+                  class="ico"
+                  src="../assets/icons/backpack.svg"
+                  alt=""
+                  aria-hidden="true"
+                />装备</a
+              >
+              <span class="tab" aria-disabled="true"
+                ><img
+                  class="ico"
+                  src="../assets/icons/shopping-bag.svg"
+                  alt=""
+                  aria-hidden="true"
+                />商店</span
+              >
+            </nav>
+            <span class="invite glass"
+              ><img
+                class="ico"
+                src="../assets/icons/user-round-plus.svg"
+                alt=""
+                aria-hidden="true"
+              />邀请好友<span class="count">1/5</span></span
+            >
+          </header>
+          <section class="work-view equipment-page" aria-label="装备">
+            <aside class="work-panel weapons-panel">
+              <h2 class="section-label">武器配置</h2>
+              <div class="slot-list" data-weapon-slots></div>
+            </aside>
+            <aside class="work-panel wardrobe-slots">
+              <h2 class="section-label">服装部位</h2>
+              <div class="slot-list" data-wear-slots></div>
+              <button class="remove-item" type="button" data-clear-wear hidden>
+                恢复角色原装
+              </button>
+            </aside>
+            <div class="actor-stage equip-stage">
+              <div class="stage-grid" aria-hidden="true"></div>
+              <div class="pad" aria-hidden="true"></div>
+              <div class="side-switch" aria-label="装备配置阵营">
+                <button
+                  type="button"
+                  data-choose-side="attack"
+                  data-side="attack"
+                  aria-pressed="true"
+                >
+                  余烬 · 攻方
+                </button>
+                <button
+                  type="button"
+                  data-choose-side="defend"
+                  data-side="defend"
+                  aria-pressed="false"
+                >
+                  苍盾 · 守方
+                </button>
+              </div>
+              <select
+                class="actor-pick"
+                data-equip-person
+                aria-label="试装角色"
+              ></select>
+              <img class="figure" data-equipment-figure alt="" />
+              <div class="inspected" data-stage-item aria-live="polite"></div>
+            </div>
+            <section class="work-panel equip-bag">
+              <h2 class="section-label">
+                可装配库存 <small data-bag-count></small>
+              </h2>
+              <div class="bag-toolbar">
+                <div class="bag-filters" aria-label="库存筛选">
+                  <button
+                    type="button"
+                    data-bag-filter="all"
+                    aria-pressed="true"
+                  >
+                    全部适用
+                  </button>
+                  <button
+                    type="button"
+                    data-bag-filter="slot"
+                    aria-pressed="false"
+                  >
+                    当前槽位
+                  </button>
+                </div>
+                <small>拖到左侧，或点选装备</small>
+              </div>
+              <div class="bag-grid" aria-label="可装备物品"></div>
+              <div class="loadout-foot">
+                <span data-equip-status aria-live="polite"></span>
+                <button class="primary" type="button" data-apply-loadout>
+                  应用配置
+                </button>
+              </div>
+            </section>
+          </section>
+          <div class="sr" aria-live="polite" data-live></div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

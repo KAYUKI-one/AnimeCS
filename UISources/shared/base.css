@@ -1,0 +1,293 @@
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  background: #d6eaf3;
+}
+#acs-sky-party a {
+  color: inherit;
+  text-decoration: none;
+}
+#acs-sky-party a:focus-visible {
+  outline: 3px solid #057aa9;
+  outline-offset: 2px;
+}
+#acs-sky-party .ico {
+  object-fit: contain;
+  filter: invert(38%) sepia(22%) saturate(1207%) hue-rotate(151deg);
+}
+#acs-sky-party {
+  container-type: inline-size;
+  font-family: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  color: #193c50;
+  --blue: #1382b5;
+  --deep: #17445c;
+  --cyan: #66d5ea;
+  --face: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  --mono: Consolas, "Courier New", monospace;
+}
+#acs-sky-party {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+}
+#acs-sky-party .desktop-frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1024px;
+  height: 576px;
+  container-type: inline-size;
+  transform-origin: top left;
+  transform: scale(var(--lobby-scale, 1));
+}
+#acs-sky-party * {
+  box-sizing: border-box;
+}
+#acs-sky-party [hidden] {
+  display: none !important;
+}
+#acs-sky-party button,
+#acs-sky-party select,
+#acs-sky-party input {
+  font: inherit;
+  color: inherit;
+}
+#acs-sky-party button {
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  touch-action: manipulation;
+}
+#acs-sky-party button:focus-visible,
+#acs-sky-party select:focus-visible,
+#acs-sky-party input:focus-visible {
+  outline: 3px solid #057aa9;
+  outline-offset: 2px;
+}
+#acs-sky-party button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+#acs-sky-party .lobby {
+  isolation: isolate;
+  position: relative;
+  height: 576px;
+  overflow: hidden;
+  background: #bbdce8;
+  color: #1b3a4a;
+  font: 14px/1.38 var(--face);
+}
+#acs-sky-party h2,
+#acs-sky-party h3,
+#acs-sky-party p {
+  margin: 0;
+  color: inherit;
+  font-family: inherit;
+  line-height: 1.25;
+}
+#acs-sky-party .ico {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.8;
+  flex: none;
+}
+#acs-sky-party .smallcap {
+  font: 700 10px/1.2 var(--mono);
+  letter-spacing: 0.12em;
+}
+#acs-sky-party .backdrop,
+#acs-sky-party .lightwash,
+#acs-sky-party .skygrid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+#acs-sky-party .backdrop {
+  z-index: -4;
+  background: var(--courtyard) 50% 49% / cover;
+  filter: saturate(1.24) contrast(0.96) brightness(1.05);
+}
+#acs-sky-party .lightwash {
+  z-index: -3;
+  background: linear-gradient(
+      0deg,
+      #b8d8e4b8 0,
+      transparent 23%,
+      transparent 76%,
+      #d5f2ffd4 100%
+    ),
+    linear-gradient(
+      94deg,
+      #d1edf4a3,
+      transparent 34%,
+      transparent 78%,
+      #b5d5e350
+    );
+}
+#acs-sky-party .skygrid {
+  z-index: -2;
+  opacity: 0.43;
+  background:
+    linear-gradient(
+        124deg,
+        transparent 71%,
+        #f4ffffa6 71.15%,
+        transparent 71.31%
+      )
+      left top/100% 24% no-repeat,
+    linear-gradient(61deg, transparent 42%, #fff9 42.12%, transparent 42.25%)
+      left top/80% 23% no-repeat;
+}
+#acs-sky-party .glass {
+  background: linear-gradient(118deg, #f7fefff5, #f2fbffc9);
+  border: 1px solid #fff9;
+  box-shadow:
+    0 4px 16px #1743581b,
+    inset 0 1px 0 #fff9;
+  backdrop-filter: blur(9px);
+}
+#acs-sky-party .chrome {
+  position: absolute;
+  top: 3.3%;
+  left: 2.45%;
+  right: 2.45%;
+  display: grid;
+  grid-template-columns: minmax(138px, 1fr) auto minmax(112px, 1fr);
+  align-items: start;
+  gap: 10px;
+  z-index: 5;
+}
+#acs-sky-party .profile {
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  padding: 4px 15px 4px 4px;
+  gap: 9px;
+  border-radius: 9px 4px 14px 5px;
+}
+#acs-sky-party .avatar {
+  width: 41px;
+  height: 41px;
+  border-radius: 6px;
+  background: #d1e3e8 var(--avatar) center/cover;
+  flex: none;
+}
+#acs-sky-party .profile b {
+  display: block;
+  font-size: 16px;
+  line-height: 1.2;
+}
+#acs-sky-party .profile small {
+  display: block;
+  font: 700 10px/1.4 var(--mono);
+  letter-spacing: 0.06em;
+  color: #517888;
+  margin-top: 2px;
+}
+#acs-sky-party .tabs {
+  display: flex;
+  gap: 3px;
+  background: #e0f5fc48;
+  border: 1px solid #ffffff7a;
+  border-radius: 9px;
+  padding: 3px;
+  backdrop-filter: blur(11px);
+  box-shadow: 0 3px 12px #16384616;
+}
+#acs-sky-party .tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 37px;
+  min-width: clamp(51px, 7.1cqw, 80px);
+  border-radius: 5px;
+  background: #f8fdff42;
+  font-weight: 700;
+  position: relative;
+  color: #234856;
+}
+#acs-sky-party .tab .ico {
+  width: 15px;
+  height: 15px;
+  color: #39768a;
+}
+#acs-sky-party .tab[aria-current="page"] {
+  color: #0b688a;
+  background: #effdffc4;
+}
+#acs-sky-party .tab[aria-current="page"]:after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 22%;
+  right: 22%;
+  height: 3px;
+  background: #47b9de;
+  border-radius: 4px 4px 0 0;
+}
+#acs-sky-party .invite {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 22px !important;
+  padding: 8px 13px !important;
+  font-size: 13px;
+  font-weight: 700;
+}
+#acs-sky-party .invite .ico {
+  color: #328b9f;
+}
+#acs-sky-party .invite .count {
+  padding-left: 7px;
+  border-left: 1px solid #aac9cd;
+  color: #3c7488;
+  font: 700 12px var(--mono);
+}
+
+#acs-sky-party .invite {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 22px !important;
+  padding: 8px 13px !important;
+  font-size: 13px;
+  font-weight: 700;
+}
+#acs-sky-party .invite .ico {
+  color: #328b9f;
+}
+#acs-sky-party .invite .count {
+  padding-left: 7px;
+  border-left: 1px solid #aac9cd;
+  color: #3c7488;
+  font: 700 12px var(--mono);
+}
+#acs-sky-party .basic,
+#acs-sky-party .primary {
+  border-radius: 6px;
+  padding: 7px 12px;
+  background: #e3eff2;
+  font-size: 13px;
+  font-weight: 700;
+}
+#acs-sky-party .primary {
+  background: #197fa2;
+  color: #fff;
+}
+#acs-sky-party .sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

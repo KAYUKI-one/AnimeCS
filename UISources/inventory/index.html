@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AnimeCS · 库存</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="../shared/collections.css" />
+    <script src="../shared/catalog.js" defer></script>
+    <script src="../shared/ui.js" defer></script>
+    <script src="view.js" defer></script>
+  </head>
+  <body>
+    <div id="acs-sky-party">
+      <div class="desktop-frame">
+        <main class="lobby" aria-label="AnimeCS 库存">
+          <div class="backdrop" aria-hidden="true"></div>
+          <div class="lightwash" aria-hidden="true"></div>
+          <div class="skygrid" aria-hidden="true"></div>
+          <header class="chrome">
+            <div class="profile glass">
+              <span class="avatar" aria-hidden="true"></span>
+              <div><b>晴野</b><small>LV. 01 · AnimeCS</small></div>
+            </div>
+            <nav class="tabs" aria-label="主导航">
+              <a class="tab" href="../character/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/contact-round.svg"
+                  alt=""
+                  aria-hidden="true"
+                />角色</a
+              >
+              <a class="tab" href="../inventory/index.html" aria-current="page"
+                ><img
+                  class="ico"
+                  src="../assets/icons/archive.svg"
+                  alt=""
+                  aria-hidden="true"
+                />库存</a
+              >
+              <a class="tab" href="../lobby/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/house.svg"
+                  alt=""
+                  aria-hidden="true"
+                />大厅</a
+              >
+              <a class="tab" href="../equipment/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/backpack.svg"
+                  alt=""
+                  aria-hidden="true"
+                />装备</a
+              >
+              <span class="tab" aria-disabled="true"
+                ><img
+                  class="ico"
+                  src="../assets/icons/shopping-bag.svg"
+                  alt=""
+                  aria-hidden="true"
+                />商店</span
+              >
+            </nav>
+            <span class="invite glass"
+              ><img
+                class="ico"
+                src="../assets/icons/user-round-plus.svg"
+                alt=""
+                aria-hidden="true"
+              />邀请好友<span class="count">1/5</span></span
+            >
+          </header>
+          <section
+            class="work-view inventory-page"
+            aria-labelledby="acs-stock-title"
+          >
+            <div class="inventory-scroll">
+              <header class="inventory-title">
+                <h2 id="acs-stock-title">库存一览</h2>
+                <span data-inventory-count></span>
+              </header>
+              <div data-inventory-groups></div>
+            </div>
+          </section>
+          <div class="sr" aria-live="polite" data-live></div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

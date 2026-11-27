@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AnimeCS · 角色</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="../shared/collections.css" />
+    <script src="../shared/catalog.js" defer></script>
+    <script src="../shared/ui.js" defer></script>
+    <script src="view.js" defer></script>
+  </head>
+  <body>
+    <div id="acs-sky-party">
+      <div class="desktop-frame">
+        <main class="lobby" aria-label="AnimeCS 角色">
+          <div class="backdrop" aria-hidden="true"></div>
+          <div class="lightwash" aria-hidden="true"></div>
+          <div class="skygrid" aria-hidden="true"></div>
+          <header class="chrome">
+            <div class="profile glass">
+              <span class="avatar" aria-hidden="true"></span>
+              <div><b>晴野</b><small>LV. 01 · AnimeCS</small></div>
+            </div>
+            <nav class="tabs" aria-label="主导航">
+              <a class="tab" href="../character/index.html" aria-current="page"
+                ><img
+                  class="ico"
+                  src="../assets/icons/contact-round.svg"
+                  alt=""
+                  aria-hidden="true"
+                />角色</a
+              >
+              <a class="tab" href="../inventory/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/archive.svg"
+                  alt=""
+                  aria-hidden="true"
+                />库存</a
+              >
+              <a class="tab" href="../lobby/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/house.svg"
+                  alt=""
+                  aria-hidden="true"
+                />大厅</a
+              >
+              <a class="tab" href="../equipment/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/backpack.svg"
+                  alt=""
+                  aria-hidden="true"
+                />装备</a
+              >
+              <span class="tab" aria-disabled="true"
+                ><img
+                  class="ico"
+                  src="../assets/icons/shopping-bag.svg"
+                  alt=""
+                  aria-hidden="true"
+                />商店</span
+              >
+            </nav>
+            <span class="invite glass"
+              ><img
+                class="ico"
+                src="../assets/icons/user-round-plus.svg"
+                alt=""
+                aria-hidden="true"
+              />邀请好友<span class="count">1/5</span></span
+            >
+          </header>
+          <section
+            class="work-view character-page"
+            aria-labelledby="acs-roster-title"
+          >
+            <aside class="work-panel">
+              <h2 class="section-label" id="acs-roster-title">
+                角色背包 <small data-roster-count></small>
+              </h2>
+              <div class="roster-grid" aria-label="选择检视的角色"></div>
+            </aside>
+            <div class="actor-stage">
+              <div class="stage-grid" aria-hidden="true"></div>
+              <div class="pad" aria-hidden="true"></div>
+              <img class="figure" data-character-figure alt="" />
+              <span class="stage-name" data-character-stage></span>
+            </div>
+            <div class="bio-col">
+              <section class="work-panel bio-card">
+                <span class="affil" data-character-team></span>
+                <h2 data-character-name></h2>
+                <p data-character-roman></p>
+                <dl>
+                  <dt>所属阵营</dt>
+                  <dd data-character-assignment></dd>
+                  <dt>好感度</dt>
+                  <dd>未记录</dd>
+                </dl>
+              </section>
+              <section class="work-panel">
+                <h3 class="section-label">个人档案</h3>
+                <div class="archive-info">
+                  <p><b>基础造型</b></p>
+                  <p data-character-outfit></p>
+                </div>
+                <h3 class="section-label">立绘相册 <small>1 张</small></h3>
+                <div class="album-shot">
+                  <img data-album-thumb alt="" /><span>角色立绘</span>
+                </div>
+              </section>
+            </div>
+          </section>
+          <div class="sr" aria-live="polite" data-live></div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

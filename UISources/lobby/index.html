@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AnimeCS · 大厅</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <link rel="stylesheet" href="view.css" />
+    <script src="../shared/catalog.js" defer></script>
+    <script src="../shared/ui.js" defer></script>
+    <script src="view.js" defer></script>
+  </head>
+  <body>
+    <div id="acs-sky-party">
+      <div class="desktop-frame">
+        <main class="lobby" aria-label="AnimeCS 大厅">
+          <div class="backdrop" aria-hidden="true"></div>
+          <div class="lightwash" aria-hidden="true"></div>
+          <div class="skygrid" aria-hidden="true"></div>
+          <header class="chrome">
+            <div class="profile glass">
+              <span class="avatar" aria-hidden="true"></span>
+              <div><b>晴野</b><small>LV. 01 · AnimeCS</small></div>
+            </div>
+            <nav class="tabs" aria-label="主导航">
+              <a class="tab" href="../character/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/contact-round.svg"
+                  alt=""
+                  aria-hidden="true"
+                />角色</a
+              >
+              <a class="tab" href="../inventory/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/archive.svg"
+                  alt=""
+                  aria-hidden="true"
+                />库存</a
+              >
+              <a class="tab" href="../lobby/index.html" aria-current="page"
+                ><img
+                  class="ico"
+                  src="../assets/icons/house.svg"
+                  alt=""
+                  aria-hidden="true"
+                />大厅</a
+              >
+              <a class="tab" href="../equipment/index.html"
+                ><img
+                  class="ico"
+                  src="../assets/icons/backpack.svg"
+                  alt=""
+                  aria-hidden="true"
+                />装备</a
+              >
+              <span class="tab" aria-disabled="true"
+                ><img
+                  class="ico"
+                  src="../assets/icons/shopping-bag.svg"
+                  alt=""
+                  aria-hidden="true"
+                />商店</span
+              >
+            </nav>
+            <span class="invite glass"
+              ><img
+                class="ico"
+                src="../assets/icons/user-round-plus.svg"
+                alt=""
+                aria-hidden="true"
+              />邀请好友<span class="count">1/5</span></span
+            >
+          </header>
+          <div class="station-title">
+            <span class="smallcap">ANIMECS / LOBBY</span>
+            <h2>晴空中庭</h2>
+          </div>
+          <aside class="notebook glass">
+            <button
+              class="note-head"
+              aria-expanded="true"
+              aria-controls="acs-sky-missions"
+              data-fold
+            >
+              <span class="pastel"
+                ><img
+                  class="ico"
+                  src="../assets/icons/notebook-tabs.svg"
+                  alt=""
+                  aria-hidden="true" /></span
+              >任务手册<img
+                class="ico fold"
+                src="../assets/icons/chevron-up.svg"
+                alt=""
+                aria-hidden="true"
+              />
+            </button>
+            <div class="note-body" id="acs-sky-missions">
+              <button class="note-row" data-open="config" data-task="gear">
+                <i aria-hidden="true"></i>更换大厅展示搭配</button
+              ><a class="note-row" href="../inventory/index.html"
+                ><i aria-hidden="true"></i>查看武器与涂装</a
+              >
+            </div>
+          </aside>
+          <div class="figures" aria-label="大厅成员"></div>
+          <div class="footer-left">
+            <div class="feed" id="acs-sky-feed">
+              <b>世界信息</b><span data-message>已进入晴空中庭。</span>
+            </div>
+            <nav class="dock" aria-label="大厅快捷操作">
+              <button
+                data-feed
+                aria-expanded="true"
+                aria-controls="acs-sky-feed"
+              >
+                <img
+                  class="ico"
+                  src="../assets/icons/earth.svg"
+                  alt=""
+                  aria-hidden="true"
+                />世界
+              </button>
+              <span class="dock-entry" style="--tone: #8b78ac"
+                ><img
+                  class="ico"
+                  src="../assets/icons/users-round.svg"
+                  alt=""
+                  aria-hidden="true"
+                />好友</span
+              >
+              <button data-fold style="--tone: #b78556">
+                <img
+                  class="ico"
+                  src="../assets/icons/list-checks.svg"
+                  alt=""
+                  aria-hidden="true"
+                />任务
+              </button>
+              <span class="dock-entry" style="--tone: #7d91a4"
+                ><img
+                  class="ico"
+                  src="../assets/icons/settings.svg"
+                  alt=""
+                  aria-hidden="true"
+                />设置</span
+              >
+              <button data-open="config">
+                <img
+                  class="ico"
+                  src="../assets/icons/sliders-horizontal.svg"
+                  alt=""
+                  aria-hidden="true"
+                />配置
+              </button>
+            </nav>
+          </div>
+          <div class="launch">
+            <div class="map-choice glass">
+              <i class="map-thumb" aria-hidden="true"></i
+              ><span
+                ><strong>云上转播站</strong><small>5v5 攻守拆弹</small></span
+              ><img
+                class="ico"
+                src="../assets/icons/chevron-right.svg"
+                alt=""
+                aria-hidden="true"
+              />
+            </div>
+            <div class="go">
+              <strong>开始游戏</strong
+              ><img
+                class="ico"
+                src="../assets/icons/arrow-up-right.svg"
+                alt=""
+                aria-hidden="true"
+              />
+            </div>
+          </div>
+          <div class="overlay" hidden>
+            <section
+              class="sheet"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="lobby-config-title"
+            >
+              <div class="sheet-head">
+                <h3 id="lobby-config-title">大厅展示配置</h3>
+                <button class="x" data-dismiss aria-label="关闭配置">
+                  <img
+                    class="ico"
+                    src="../assets/icons/x.svg"
+                    alt=""
+                    aria-hidden="true"
+                  />
+                </button>
+              </div>
+              <div>
+                <div class="cfg">
+                  <div class="fitting">
+                    <img alt="展台角色与手持武器试搭" />
+                  </div>
+                  <div>
+                    <span class="group-name">大厅展示角色</span>
+                    <div class="choices people" aria-label="选择角色"></div>
+                    <span class="group-name">手持枪械</span>
+                    <div class="choices guns" aria-label="选择手持枪械"></div>
+                  </div>
+                </div>
+                <div class="sheet-foot">
+                  <button class="basic" data-dismiss>取消</button
+                  ><button class="primary" data-apply-fit>应用到大厅</button>
+                </div>
+              </div>
+            </section>
+          </div>
+          <div class="sr" aria-live="polite" data-live></div>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>
