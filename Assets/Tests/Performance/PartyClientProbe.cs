@@ -145,12 +145,30 @@ namespace AnimeCS.Tests.Performance
                 case 1:
                     if(!game.InLobby || !Visible("auth"))return;
                     root.Q<TextField>("auth-id").value=player;
-                    root.Q<TextField>("auth-password").value=Environment.GetEnvironmentVariable("ANIMECS_PROBE_PASSWORD");
-                    Press(phase=="register"?"auth-register":"auth-login");
+                    var password=root.Q<TextField>("auth-password");
+                    if (phase=="auth-register")
+                    {
+                        if (!password.isPasswordField) throw new InvalidOperationException("Password field is unmasked");
+                        password.value="1234";
+                        foreach (var button in new[]{"auth-register","auth-login"})
+                        {
+                            Press(button);
+                            if (!root.Q<Label>("auth-status").text.Contains("8 至 128") ||
+                                !root.Q<Button>("auth-login").enabledSelf || !root.Q<Button>("auth-register").enabledSelf || game.Account.State!=null)
+                                throw new InvalidOperationException("Short password did not leave the form ready to retry");
+                        }
+                    }
+                    password.value=Environment.GetEnvironmentVariable("ANIMECS_PROBE_PASSWORD");
+                    Press(phase=="register" || phase=="auth-register" ? "auth-register":"auth-login");
                     Advance("waiting for account and update");break;
                 case 2:
                     if(state?.id!=player || Visible("auth") || !game.InLobby) return;
-                    if(phase=="register")
+                    if(phase=="auth-login")
+                    {
+                        File.WriteAllText(Own("logged-in"),player);
+                        Quit(0);break;
+                    }
+                    if(phase=="register" || phase=="auth-register")
                     {
                         File.WriteAllText(Own("registered"),player);
                         Quit(0);break;

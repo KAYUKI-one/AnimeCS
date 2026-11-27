@@ -47,8 +47,8 @@
                 <ui:Label text="晴空中庭" class="auth-title"/>
                 <ui:Label name="auth-heading" text="登录游戏" class="section-heading"/>
                 <ui:TextField name="auth-id" label="玩家 ID" max-length="32"/>
-                <ui:TextField name="auth-password" label="密码" is-password-field="true" max-length="128"/>
-                <ui:Label name="auth-status" class="form-status"/>
+                <ui:TextField name="auth-password" label="密码" password="true" max-length="128"/>
+                <ui:Label name="auth-status" class="form-status" text="密码须为 8 至 128 个字符"/>
                 <ui:VisualElement class="action-line"><ui:Button name="auth-login" text="登录" class="accent"/><ui:Button name="auth-register" text="注册并进入"/><ui:Button name="auth-retry" text="重新检查更新" class="accent"/></ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

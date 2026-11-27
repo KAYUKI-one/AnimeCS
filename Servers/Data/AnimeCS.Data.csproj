@@ -2,6 +2,7 @@
   <ItemGroup>
     <Compile Include="../../Assets/Scripts/Core/Match/MatchFormat.cs" Link="Shared/MatchFormat.cs" />
     <Compile Include="../../Assets/Scripts/Infrastructure/Accounts/AccountState.cs" Link="Shared/AccountState.cs" />
+    <Compile Include="../../Assets/Scripts/Infrastructure/Accounts/AccountCredentials.cs" Link="Shared/AccountCredentials.cs" />
     <Compile Include="../../Assets/Scripts/Infrastructure/Networking/BattleTicket.cs" Link="Shared/BattleTicket.cs" />
     <Content Update="game-catalog.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.15" />

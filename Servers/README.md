@@ -12,6 +12,8 @@
 
 在包含 `Services/Data`、`Services/HotUpdate`、`Services/Battle` 的游戏目录启动 `AnimeCS.exe`。编辑器优先使用工程根目录的 `Services`，也支持指向本机配套构建的目录联接。该目录不存在时使用 `Builds/Windows/Services`。默认端点下，登录时启动数据服务，随后检查热更新，队长发起联机时启动战斗服务。服务在后台运行，同一 Windows 用户启动的两个客户端共享数据库。首次没有热更清单时直接使用内置资源。
 
+Unity 的 Windows 客户端构建（包括 Build And Run）会把已构建的三项本机服务复制到游戏旁的 `Services`。首次使用选择“注册并进入”，玩家 ID 支持 2 至 32 个字母、汉字、数字或 `.`、`-`、`_`，密码长度为 8 至 128 个字符。再次启动后用同一组凭据登录即可。
+
 注册时填写 2–32 个字符的唯一 ID 和 8–128 个字符的密码。成员 A 用 B 的 ID 添加好友、邀请，B 在社交面板接受。两人能在大厅看见相同的队伍，队长开始后，两人各持有一个绑定自己席位的票据。密码使用独立随机盐和 PBKDF2 保存。新账号的星币、抽取、商品与每日任务取自发布包 Data 目录里的 `game-catalog.json`，购买只消耗 Demo 星币。任务按 UTC 零点换日，经验与奖励在同一数据库事务内发放。
 
 本机持久数据放在 `%LOCALAPPDATA%/AnimeCS/Services`，其中 `Data/players.db` 是账号库，`HotUpdate` 是发布目录，`battle.key` 是本机服务间密钥，`battle.log` 是战斗日志。游戏退出后保留同机服务，其他客户端可继续联机。需要更新本机服务时，通过任务管理器退出相应的 AnimeCS.Data、AnimeCS.HotUpdate 和 AnimeCS.Battle 进程再替换程序。游戏的已验证更新文件在 Unity 的 `persistentDataPath/Updates`。

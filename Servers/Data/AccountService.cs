@@ -17,9 +17,8 @@ internal sealed class AccountService(AccountDb store,EconomyConfig config)
 
     internal static string NormalizeId(string? raw)
     {
-        string id=(raw??"").Trim().Normalize(NormalizationForm.FormKC);
-        if(id.Length is <2 or >32 || !id.All(c=>char.IsLetterOrDigit(c)||c is '_' or '-' or '.'))
-            throw new Rejection("ID 须为 2 至 32 个字母、汉字、数字或 . - _");
+        if (!AccountCredentials.TryNormalizeId(raw ?? "", out string id))
+            throw new Rejection(AccountCredentials.IdRule);
         return id;
     }
 
@@ -32,7 +31,7 @@ internal sealed class AccountService(AccountDb store,EconomyConfig config)
         if(action is "login" or "register")
         {
             id=NormalizeId(input.id);
-            if(input.password==null || input.password.Length is <8 or >128) throw new Rejection("密码须为 8 至 128 个字符");
+            if(!AccountCredentials.ValidPassword(input.password)) throw new Rejection(AccountCredentials.PasswordRule);
             if(action=="register")
             {
                 salt=RandomNumberGenerator.GetBytes(16);hash=Derive(input.password,salt);

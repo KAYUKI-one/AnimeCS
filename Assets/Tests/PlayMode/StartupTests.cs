@@ -30,6 +30,17 @@ namespace AnimeCS.Tests
                 submit.target=button; button.SendEvent(submit);
             }
             Assert.That(root.Q("auth").resolvedStyle.display,Is.EqualTo(DisplayStyle.Flex));
+            Assert.That(root.Q<TextField>("auth-password").isPasswordField,Is.True);
+            root.Q<TextField>("auth-id").value="1234";
+            root.Q<TextField>("auth-password").value="1234";
+            foreach (string action in new[]{"auth-register","auth-login"})
+            {
+                Press(action);
+                Assert.That(root.Q<Label>("auth-status").text,Does.Contain("8 至 128"));
+                Assert.That(root.Q<Button>("auth-register").enabledSelf,Is.True);
+                Assert.That(root.Q<Button>("auth-login").enabledSelf,Is.True);
+                Assert.That(game.Account.State,Is.Null);
+            }
             yield return LobbyTestServices.Capture("Login");
             yield return services.Register(root);
             Assert.That(root.Q<Button>("start").text,Does.Contain("开始游戏"));

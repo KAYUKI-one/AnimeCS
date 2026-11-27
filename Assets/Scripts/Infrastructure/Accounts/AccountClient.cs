@@ -39,8 +39,17 @@ namespace AnimeCS.Accounts
                 services=new LocalAccountServices(playerRoot);
         }
 
-        public Task RegisterAsync(string id,string password) => Call("register",new AccountRequest{id=id,password=password});
-        public Task LoginAsync(string id,string password) => Call("login",new AccountRequest{id=id,password=password});
+        public Task RegisterAsync(string id,string password) => Authenticate("register",id,password);
+        public Task LoginAsync(string id,string password) => Authenticate("login",id,password);
+
+        private Task Authenticate(string action,string id,string password)
+        {
+            if (!AccountCredentials.TryNormalizeId(id, out var normalized))
+                return Task.FromException(new ArgumentException(AccountCredentials.IdRule));
+            if (!AccountCredentials.ValidPassword(password))
+                return Task.FromException(new ArgumentException(AccountCredentials.PasswordRule));
+            return Call(action,new AccountRequest{id=normalized,password=password});
+        }
         public Task RefreshAsync() => Call("state");
         public Task SaveProfileAsync(string signature,string avatarId,string showCharacterId,string showSkinId) =>
             Call("profile",new AccountRequest{signature=signature,avatarId=avatarId,showCharacterId=showCharacterId,showSkinId=showSkinId});
@@ -103,6 +112,8 @@ namespace AnimeCS.Accounts
                 if(auth) token=reply.token;
                 State=reply.state;
             }
+            catch(OperationCanceledException e) when (!cancel.IsCancellationRequested)
+            { throw new TimeoutException("连接数据服务超时，请检查服务后重试。",e); }
             catch(HttpRequestException e){throw new InvalidOperationException("无法连接数据服务，请检查服务地址与网络。",e);}
             finally {queue.Release();}
         }
