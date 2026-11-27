@@ -69,9 +69,10 @@ namespace AnimeCS.Match
         {
             _outfitId = outfit.Id;
             _worn = default;
+            var selected = _appearance.WornFor(outfit.Character.Faction);
             foreach (WearSlot slot in System.Enum.GetValues(typeof(WearSlot)))
             {
-                var item=_catalog.Find<WearableDefinition>(_appearance.worn.Get(slot));
+                var item=_catalog.Find<WearableDefinition>(selected.Get(slot));
                 if (item && item.Fits(outfit.Character)) _worn.Set(slot,item.Id);
             }
         }
@@ -157,9 +158,9 @@ namespace AnimeCS.Match
                 Armor = Helmet = Kit = false; _utilities.Clear();
             }
             if (side != Side.Defend) Kit = false;
-            var knife=_catalog.Find<WeaponDefinition>(_appearance.knifeId);
+            var knife=_catalog.Find<WeaponDefinition>(_appearance.GearFor(side)?.knifeId ?? _appearance.knifeId);
             if (!knife || knife.Class!=WeaponClass.Knife) knife=_catalog.Knife;
-            if (knife) Knife ??= Issue(knife);
+            if (knife && Knife?.Definition != knife) Knife = Issue(knife);
             _sidearm ??= Issue(_catalog.StartingPistol(side));
             _sidearm.BeginRound();
             _primary?.BeginRound();

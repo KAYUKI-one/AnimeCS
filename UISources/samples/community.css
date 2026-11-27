@@ -1,0 +1,71 @@
+:root {
+  color-scheme: light;
+  font-family: "Microsoft YaHei UI", "Segoe UI", sans-serif;
+  color: #1c4356;
+  background: #e7f3f8;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.studies {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  max-width: 1390px;
+  margin: 0 auto;
+  padding: 24px 28px 28px;
+}
+figure, h2, p { margin: 0; }
+figcaption { margin-bottom: 7px; font-weight: 750; }
+.scene {
+  min-height: 278px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid white;
+  border-radius: 10px 5px 13px 5px;
+  background: linear-gradient(125deg,#2e66767a,#294d5655), url("../assets/scenes/courtyard.webp") center/cover;
+}
+.daytime { background: linear-gradient(125deg,#d2eff6e6,#c3e3e9ac), url("../assets/scenes/courtyard.webp") center/cover; }
+.surface {
+  padding: 15px;
+  border: 1px solid #fff;
+  border-radius: 11px 6px 13px 6px;
+  box-shadow: 0 9px 27px #193c5b31;
+  background: linear-gradient(133deg,#f9fefff7,#eaf7fcf5);
+}
+.mission-screen { width: 84%; margin: auto; }
+.chat { width: 65%; min-width: 310px; margin: auto auto auto 16px; }
+.centered { width: 74%; margin: 15px auto; }
+header, .line, .compose, .profile-row, .edit-field, footer {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+header, .line { justify-content: space-between; }
+header { border-bottom: 1px solid #aacfdc; padding-bottom: 8px; margin-bottom: 9px; }
+header small { color: #43798e; font-size: 12px; }
+h2 { font-size: 21px; }
+.line { padding: 7px 0; }
+.line + .line { border-top: 1px solid #d2e8ef; }
+b { font-size: 14px; }
+p { color: #537686; font-size: 12px; margin-top: 3px; }
+.field, .quiet, .accent {
+  display: inline-block;
+  border-radius: 5px;
+  font-size: 12px;
+  padding: 5px 10px;
+}
+.field { flex: 1; min-width: 0; color: #4b7284; border: 1px solid #b9d8e3; background: white; }
+.quiet { background: #e0eef4; color: #326276; white-space: nowrap; }
+.accent { background: #a8e7f5; border-bottom: 2px solid #4dacbf; font-weight: 750; white-space: nowrap; }
+.message { margin: 5px 0; background: #e9f5fa; padding: 7px 10px; border-radius: 5px; }
+.compose { margin: 8px 0 0; }
+.friend { justify-content: flex-start; }
+.friend>div, .profile-row>div { flex: 1; }
+.friend img, .profile-row img { width: 35px; height: 35px; border-radius: 5px; object-fit: cover; }
+.profile-row img { width: 48px; height: 48px; }
+.friend i { background: #228d82; width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.edit-field { margin-top: 14px; }
+footer { justify-content: end; margin-top: 13px; }
+@media (max-width: 760px) { .studies { grid-template-columns: 1fr; } .chat { min-width: 0; width: 80%; } }

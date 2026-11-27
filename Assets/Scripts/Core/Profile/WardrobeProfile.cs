@@ -26,7 +26,13 @@ namespace AnimeCS.Profile
         }
         public string primaryId, sidearmId, knifeId;
         public WornItems worn;
+        public bool hasFactionGear;
+        public WardrobeSideGear attackGear, defendGear;
         public List<SkinChoice> skins = new List<SkinChoice>();
+
+        public WardrobeSideGear GearFor(Side side) =>
+            !hasFactionGear ? null : side == Side.Attack ? attackGear : defendGear;
+        public WornItems WornFor(Side side) => GearFor(side)?.worn ?? worn;
 
         public string SkinFor(string weaponId)
         {
@@ -102,14 +108,49 @@ namespace AnimeCS.Profile
             result.primaryId=ResolveWeapon(source?.primaryId,HeldSlot.Primary);
             result.sidearmId=ResolveWeapon(source?.sidearmId ?? catalog.StartingPistol(Side.Attack)?.Id,HeldSlot.Sidearm);
             result.knifeId=ResolveWeapon(source?.knifeId ?? catalog.Knife?.Id,HeldSlot.Knife);
-            if (source == null) return result;
-            var character=catalog.Find<OutfitDefinition>(result.outfitId).Character;
-            foreach (WearSlot slot in Enum.GetValues(typeof(WearSlot)))
+            WornItems ResolveWear(WornItems options, CharacterDefinition character)
             {
-                var item=catalog.Find<WearableDefinition>(source.worn.Get(slot));
-                if (item && item.Slot==slot && item.Fits(character) && owned.Contains(item.Id)) result.worn.Set(slot,item.Id);
+                var resolved = new WornItems();
+                foreach (WearSlot slot in Enum.GetValues(typeof(WearSlot)))
+                {
+                    var item = catalog.Find<WearableDefinition>(options.Get(slot));
+                    if (item && !item.Archived && item.Slot == slot && item.Fits(character) && owned.Contains(item.Id))
+                        resolved.Set(slot, item.Id);
+                }
+                return resolved;
             }
-            if (source.skins == null) return result;
+
+            WardrobeSideGear ResolveGear(Side side)
+            {
+                var saved = source?.GearFor(side);
+                var fit = catalog.Find<OutfitDefinition>(result.OutfitFor(side));
+                var gear = new WardrobeSideGear
+                {
+                    worn = ResolveWear(saved?.worn ?? source?.worn ?? default, fit ? fit.Character : null)
+                };
+                foreach (WeaponClass category in Enum.GetValues(typeof(WeaponClass)))
+                {
+                    if (category == WeaponClass.HeavySniper) continue;
+                    bool Eligible(WeaponDefinition w) => w && !w.Archived && owned.Contains(w.Id) &&
+                        WardrobeSideGear.Category(w.Class) == category && WardrobeSideGear.Available(w, side);
+                    var legacy = category == WeaponClass.Knife ? source?.knifeId :
+                        category == WeaponClass.Pistol ? source?.sidearmId : source?.primaryId;
+                    var selected = catalog.Find<WeaponDefinition>(saved?.Weapon(category) ?? legacy);
+                    if (!Eligible(selected) && category == WeaponClass.Pistol)
+                        selected = catalog.StartingPistol(side);
+                    if (!Eligible(selected))
+                        foreach (var entry in catalog.Entries)
+                            if (entry is WeaponDefinition candidate && Eligible(candidate)) { selected = candidate; break; }
+                    if (Eligible(selected)) gear.SetWeapon(category, selected.Id);
+                }
+                return gear;
+            }
+            result.attackGear = ResolveGear(Side.Attack);
+            result.defendGear = ResolveGear(Side.Defend);
+            result.hasFactionGear = true;
+            var activeFit = catalog.Find<OutfitDefinition>(result.outfitId);
+            result.worn = ResolveWear(source?.worn ?? default, activeFit ? activeFit.Character : null);
+            if (source?.skins == null) return result;
             var seen = new HashSet<string>(StringComparer.Ordinal);
             foreach (var choice in source.skins)
             {

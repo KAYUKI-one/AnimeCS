@@ -26,15 +26,18 @@ namespace AnimeCS.Play
 
         private readonly GameObject _stage;
         private readonly Transform _members, _backdrop;
+        private readonly Renderer _backdropRenderer;
+        private readonly MaterialPropertyBlock _backdropProperties;
+        private static readonly int Workbench = Shader.PropertyToID("_Workbench");
         private readonly Camera _camera;
         private readonly MatchPresentation _style;
         private readonly ContentCatalog _catalog;
         private readonly float _matchFov, _matchFar;
         private readonly List<Avatar> _party = new List<Avatar>(MatchFormat.TeamSize);
-        private float _rotation, _stageCenter = .59f, _itemAngle;
+        private float _rotation, _stageCenter = .50f, _itemAngle;
         private Transform _itemPivot;
         private Bounds _itemBounds;
-        private bool _inspection;
+        private bool _inspection, _showcase, _equipmentFraming;
         private GameObject _sleeves;
         private CharacterRig _hands;
         private Transform _held;
@@ -47,7 +50,12 @@ namespace AnimeCS.Play
             _matchFov = camera.fieldOfView; _matchFar = camera.farClipPlane;
             _stage = AppearancePresenter.NewRoot("队伍大厅",owner);
             _stage.transform.position = new Vector3(2000, 0, 0);
-            if (style.lobbyBackdrop) _backdrop=CreatePlane("晴空中庭背景",_stage.transform,style.lobbyBackdrop);
+            if (style.lobbyBackdrop)
+            {
+                _backdrop = CreatePlane("晴空中庭背景", _stage.transform, style.lobbyBackdrop);
+                _backdropRenderer = _backdrop.GetComponent<Renderer>();
+                _backdropProperties = new MaterialPropertyBlock();
+            }
             else if (style.lobbySet) AppearancePresenter.AddVisual(style.lobbySet,_stage.transform,Vector3.zero);
             _members = new GameObject("Party").transform;
             _members.SetParent(_stage.transform, false);
@@ -113,9 +121,8 @@ namespace AnimeCS.Play
                 else if (!_party[i].member.Equals(member))
                 { AppearancePresenter.Retire(_party[i].root); _party[i]=Build(member); }
                 int column = (i+1)/2 * (i%2==0 ? 1 : -1);
-                float center = count%2==0 ? .5f : 0f;
                 var avatar = _party[i].root.transform;
-                avatar.localPosition = new Vector3((column+center)*.91f,.008f,-Mathf.Abs(column)*.28f);
+                avatar.localPosition = new Vector3(column*.91f,.008f,-Mathf.Abs(column)*.28f);
                 avatar.localRotation = Quaternion.Euler(0, (member.unarmed ? 4 : -15) + (i==0 ? _rotation : column*6), 0);
             }
             Frame();
@@ -138,7 +145,19 @@ namespace AnimeCS.Play
             _held=self.gun ? AppearancePresenter.MountGun(_sleeves.transform,new Vector3(.18f,-.19f,.39f),self.gun,_catalog.Find<WeaponSkinDefinition>(member.skinId),true).transform : null;
             _sleeves.SetActive(true);
         }
-        public void SetPageFraming(float center) { _stageCenter=center; Frame(); }
+        public void SetPageFraming(float center, bool showcase = false, bool equipment = false)
+        {
+            _stageCenter = center;
+            _equipmentFraming = equipment;
+            if (_showcase != showcase && _backdropRenderer)
+            {
+                _backdropRenderer.GetPropertyBlock(_backdropProperties);
+                _backdropProperties.SetFloat(Workbench, showcase ? 1f : 0f);
+                _backdropRenderer.SetPropertyBlock(_backdropProperties);
+            }
+            _showcase = showcase;
+            Frame();
+        }
         public void ClearItem()
         {
             if (_itemPivot) AppearancePresenter.Retire(_itemPivot.gameObject);
@@ -210,11 +229,12 @@ namespace AnimeCS.Play
                 _camera.transform.SetPositionAndRotation(_stage.transform.position+new Vector3(.4f,1.58f,2.7f),Quaternion.Euler(0,178,0));FrameBackdrop();return;
             }
             float fov = _style.lobbyFieldOfView;
-            float halfHeight = 1.12f;
+            float halfHeight = _equipmentFraming ? 1.27f : 1.12f;
             float neededWidth = (.65f + Mathf.Floor(_party.Count*.5f)*.91f) / .74f;
             halfHeight = Mathf.Max(halfHeight,neededWidth/Mathf.Max(.5f,_camera.aspect));
             float distance = halfHeight / Mathf.Tan(.5f*fov*Mathf.Deg2Rad);
-            var focus = _stage.transform.position + new Vector3((_stageCenter-.5f)*2f*halfHeight*_camera.aspect,.93f,0);
+            var focus = _stage.transform.position + new Vector3((_stageCenter-.5f)*2f*halfHeight*_camera.aspect,
+                _equipmentFraming ? 1.03f : .93f,0);
             var eye = focus + new Vector3(.13f*distance,.25f,distance);
             _camera.fieldOfView=fov; _camera.farClipPlane=42;
             _camera.transform.SetPositionAndRotation(eye,Quaternion.LookRotation(focus-eye,Vector3.up));

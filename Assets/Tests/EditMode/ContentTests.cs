@@ -95,6 +95,26 @@ namespace AnimeCS.Tests
             finally { if (File.Exists(temp)) File.Delete(temp); if (File.Exists(temp + ".bak")) File.Delete(temp + ".bak"); }
         }
 
+        [Test] public void FactionGearMigratesLegacyWearAndPreservesEachSideOnReload()
+        {
+            var catalog = ContentLibrary.Catalog;
+            var profile = WardrobeProfile.Create(catalog);
+            var legacy = JsonUtility.FromJson<WardrobeLoadout>(
+                "{\"outfitId\":\"outfit.nora\",\"primaryId\":\"weapon.ember47\",\"worn\":{\"headwear\":\"wear.catband\"}}");
+            var resolved = profile.Resolve(legacy, catalog);
+            Assert.That(resolved.WornFor(Side.Attack).headwear, Is.EqualTo("wear.catband"));
+            Assert.That(resolved.WornFor(Side.Defend).headwear, Is.EqualTo("wear.catband"));
+            Assert.That(resolved.attackGear.rifleId, Is.EqualTo("weapon.ember47"));
+            Assert.That(resolved.defendGear.rifleId, Is.Not.EqualTo("weapon.ember47"));
+
+            resolved.defendGear.worn.headwear = null;
+            resolved.defendGear.rifleId = "weapon.fold44";
+            var loaded = profile.Resolve(JsonUtility.FromJson<WardrobeLoadout>(JsonUtility.ToJson(resolved)), catalog);
+            Assert.That(loaded.WornFor(Side.Attack).headwear, Is.EqualTo("wear.catband"));
+            Assert.That(loaded.WornFor(Side.Defend).headwear, Is.Null.Or.Empty);
+            Assert.That(loaded.defendGear.rifleId, Is.EqualTo("weapon.fold44"));
+        }
+
         [Test] public void LegacyProfileReplacesRetiredOutfitsAndPreservesWeaponsAndSkins()
         {
             var catalog = ContentLibrary.Catalog;

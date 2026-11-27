@@ -133,9 +133,11 @@ namespace AnimeCS.Play
             PlayerPrefs.SetString("AnimeCS.LobbyWeapon",id);
             if (InLobby) ShowParty(ReadWardrobe());
         }
-        internal void PreviewWardrobe(WardrobeLoadout wear,string gun,bool first,bool inspectItem=false,bool unarmed=false)
+        internal void PreviewWardrobe(WardrobeLoadout wear,string gun,bool first,bool inspectItem=false,bool unarmed=false,
+            WornItems? previewWorn=null, string previewSkin=null)
         {
-            _preview.Show(new LobbyMember(wear.outfitId,gun,wear.SkinFor(gun),wear.worn,unarmed:unarmed),Array.Empty<LobbyMember>());
+            _preview.Show(new LobbyMember(wear.outfitId,gun,previewSkin??wear.SkinFor(gun),previewWorn??wear.worn,
+                unarmed:unarmed),Array.Empty<LobbyMember>());
             _preview.SetPageFraming(inspectItem ? .55f : .50f);
             _preview.SetInspection(first);
         }
@@ -143,15 +145,21 @@ namespace AnimeCS.Play
         internal void EndInspection()
         {
             if (!InLobby || _preview==null) return;
-            _preview.ClearItem(); _preview.SetPageFraming(.59f); _preview.SetInspection(false); ShowParty(ReadWardrobe());
+            _preview.ClearItem(); _preview.SetPageFraming(.50f); _preview.SetInspection(false); ShowParty(ReadWardrobe());
         }
-        internal void CenterPreview(float viewportX) => _preview.SetPageFraming(viewportX);
+        internal void CenterPreview(float viewportX, bool showcase = false, bool equipment = false) =>
+            _preview.SetPageFraming(viewportX, showcase, equipment);
         internal void RotateLobby(float angle) => _preview.Rotate(angle);
         private void ShowParty(WardrobeProfile profile)
         {
             string id = LobbyWeaponId;
             var state = Account?.State;
-            var self = state == null ? new LobbyMember(profile.current.outfitId,id,profile.current.SkinFor(id),profile.current.worn) : DisplayMember(state.id,state.showCharacterId,state.showSkinId,profile.current.worn);
+            var current = profile.current;
+            var outfit = _catalog.Find<OutfitDefinition>(current.outfitId);
+            var character = state == null ? (outfit ? outfit.Character : null) : _catalog.Find<CharacterDefinition>(state.showCharacterId);
+            var worn = character ? current.WornFor(character.Faction) : current.worn;
+            var self = state == null ? new LobbyMember(current.outfitId,id,current.SkinFor(id),worn) :
+                DisplayMember(state.id,state.showCharacterId,state.showSkinId,worn);
             _preview.Show(self,_teammates);
         }
 

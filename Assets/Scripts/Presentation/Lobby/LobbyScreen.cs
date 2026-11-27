@@ -31,10 +31,11 @@ namespace AnimeCS.Play
             if (style.lobbyTheme) _screen.styleSheets.Add(style.lobbyTheme);
             _sheet=_screen.Q("sheet");_content=_screen.Q("sheet-content");
             _slots=_sheet.Q("loadout-slots"); _stage=_sheet.Q("inspection-stage");
+            _drag = new EquipmentDrag(_screen, ValidSlot, MountItem, (card, item) => ItemCardContent(card, item, Art(item)));
             _stage.RegisterCallback<GeometryChangedEvent>(_=>FrameEquipment());
             void AttachTurntable(VisualElement stage)
             {
-                stage.RegisterCallback<PointerDownEvent>(e=>{if(e.button==0)stage.CapturePointer(e.pointerId);});
+                stage.RegisterCallback<PointerDownEvent>(e=>{if(e.button==0 && e.target==stage)stage.CapturePointer(e.pointerId);});
                 stage.RegisterCallback<PointerMoveEvent>(e=>{if(stage.HasPointerCapture(e.pointerId))game.RotateLobby(-e.deltaPosition.x*.38f);});
                 stage.RegisterCallback<PointerUpEvent>(e=>stage.ReleasePointer(e.pointerId));
             }
@@ -45,6 +46,15 @@ namespace AnimeCS.Play
                 ["mode"] = ModeOptions, ["settings"] = Settings, ["tasks"] = Tasks, ["shop"] = Shop
             };
             BindNavigation();
+            var manual = _screen.Q("manual-summary");
+            bool manualExpanded = true;
+            _screen.Q<Button>("manual-toggle").clicked += () =>
+            {
+                manualExpanded = !manualExpanded;
+                SetVisible(manual, manualExpanded);
+                _screen.Q<Button>("manual-toggle").text = manualExpanded ? "任务手册    −" : "任务手册    +";
+            };
+            _screen.Q<Button>("manual-config").clicked += () => Dialog("config");
             BindAccount();
             RefreshMap();
         }
@@ -71,6 +81,7 @@ namespace AnimeCS.Play
         public void Back()
         {
             if (!_signedIn) return;
+            if (_drag.CancelDrag()) return;
             if (_dialogKey != null) { HideDialog(); return; }
             if (_section == "inventory" && _item) { _item = null; _game.EndInspection(); Render(); }
             else Close();
@@ -78,6 +89,7 @@ namespace AnimeCS.Play
 
         public void Close()
         {
+            _drag.Clear();
             if (_section == "equipment" || _section == "inventory" || _section == "character") _game.EndInspection();
             _section = null; _draft = null; _item = null; _first = false;
             SetVisible(_sheet, false);
@@ -97,7 +109,7 @@ namespace AnimeCS.Play
             SetVisible(_sheet,true);
             SetVisible(_screen.Q("home-heading"),false);
             SetVisible(_screen.Q("topbar"),key != "settings" && key != "tasks");
-            if (key == "equipment") { _allEquipment=true; _equipment=0; _game.PreviewWardrobe(_draft,_gun,false); }
+            if (key == "equipment") BeginEquipment();
             if (key == "character") SelectCharacter(_catalog.Find<CharacterDefinition>(_game.Account.State?.showCharacterId) ?? CurrentCharacter);
             SelectTab(key);
             Render();
@@ -106,7 +118,9 @@ namespace AnimeCS.Play
         void Preview()
         {
             _draft=_profile.Resolve(_draft,_catalog);
-            _game.PreviewWardrobe(_draft,_gun,_first);Render(); FrameEquipment();
+            _game.PreviewWardrobe(_draft,_gun,_first,previewWorn:_draft.WornFor(_equipmentSide));
+            Render();
+            FrameEquipment();
         }
         void Apply()
         {
@@ -132,21 +146,31 @@ namespace AnimeCS.Play
 
         void Render()
         {
+            _drag.Clear();
             _content.Clear();
             bool inspect = _section=="inventory" && _item;
             bool equipment = _section=="equipment", characters = _section=="character";
             _sheet.EnableInClassList("equipment-page", equipment);
             _sheet.EnableInClassList("character-page", characters);
             _sheet.EnableInClassList("inspect-page", inspect);
+            _sheet.EnableInClassList("inventory-page", _section=="inventory" && !inspect);
             _sheet.EnableInClassList("full-page", _section=="settings" || _section=="tasks");
             SetVisible(_sheet.Q("wear-rail"), equipment);
             SetVisible(_sheet.Q("character-rail"), characters);
             SetVisible(_stage,equipment || inspect || characters);
+            SetVisible(_sheet.Q("equipment-stage-controls"), equipment);
+            SetVisible(_sheet.Q("equipment-preview"), equipment);
+            SetVisible(_sheet.Q("stage-name"), characters);
+            SetVisible(_sheet.Q("equipment-toolbar"), equipment);
+            SetVisible(_sheet.Q("loadout-actions"), equipment);
+            SetVisible(_sheet.Q("page-detail"), !inspect);
+            SetVisible(_sheet.Q("sheet-title").parent, !(characters || equipment || (_section=="inventory" && !inspect)));
             _sheet.Q<Button>("close").text = inspect ? "‹  返回库存" : "‹  返回大厅";
             _sheet.Q<Label>("sheet-title").text = inspect ? _item.DisplayName : PageTitles[_section];
             SetVisible(_content,!inspect);
             SetVisible(_sheet.Q("inspect-caption"),inspect);
             if (!inspect) _pages[_section]();
+            if (equipment || characters) FrameEquipment();
         }
 
         void Settings()
@@ -189,8 +213,14 @@ namespace AnimeCS.Play
 
         void Inventory()
         {
-            var owned = _catalog.Entries.Where(x => Owned(x) && !(x is MapDefinition) &&
-                !(x is OutfitDefinition fit && fit.Included && !fit.Model && fit.Character && fit.DisplayName==fit.Character.DisplayName));
+            var owned = _catalog.Entries.Where(x => Owned(x) && !(x is MapDefinition || x is CharacterDefinition) &&
+                !(x is OutfitDefinition fit && fit.Included && !fit.Model && fit.Character && fit.DisplayName==fit.Character.DisplayName)).ToArray();
+            var title = Row();
+            title.AddToClassList("inventory-title");
+            var heading = new Label("库存一览");
+            heading.AddToClassList("section-heading");
+            title.Add(heading);
+            title.Add(new Label($"共 {owned.Length} 件"));
             foreach (var group in owned.GroupBy(x=>x.Kind).OrderBy(g=>InventoryOrder(g.Key)))
             {
                 Header(KindName(group.Key) + "    " + group.Count() + " 件");
@@ -239,13 +269,24 @@ namespace AnimeCS.Play
         VisualElement Row(){var row=new VisualElement();row.AddToClassList("choice-row");_content.Add(row);return row;}
         static void Choice(VisualElement row,string label,bool active,Action click,string name=null)
         {var button=new Button(click){text=label,name=name};button.EnableInClassList("selected",active);row.Add(button);}
-        static void Tile(VisualElement row,ContentDefinition item,bool active,Action click,Texture2D fallback=null)
+        static Button Tile(VisualElement row,ContentDefinition item,bool active,Action click,Texture2D fallback=null)
         {
             var button=new Button(click) {name=item.Id};button.AddToClassList("item-tile");button.EnableInClassList("selected",active);
+            ItemCardContent(button, item, fallback);
+            row.Add(button);
+            return button;
+        }
+
+        static void ItemCardContent(VisualElement card, ContentDefinition item, Texture2D fallback)
+        {
+            card.AddToClassList("item-" + item.Kind.ToString().ToLowerInvariant());
             var icon=item.Thumbnail?item.Thumbnail:fallback;
-            if(icon)button.Add(new Image{image=icon,scaleMode=ScaleMode.ScaleToFit,pickingMode=PickingMode.Ignore});
-            button.Add(new Label(item.DisplayName));
-            var detail=new Label(ItemType(item));detail.AddToClassList("item-detail");button.Add(detail);row.Add(button);
+            if(icon)card.Add(new Image{image=icon,scaleMode=ScaleMode.ScaleToFit,pickingMode=PickingMode.Ignore});
+            var skin = item as WeaponSkinDefinition;
+            card.Add(new Label(skin && skin.Weapon ? skin.Weapon.DisplayName : item.DisplayName) {pickingMode=PickingMode.Ignore});
+            var detail=new Label(skin ? SkinTitle(skin) : ItemType(item)) {pickingMode=PickingMode.Ignore};
+            detail.AddToClassList("item-detail");
+            card.Add(detail);
         }
         void Slider(string title,float min,float max,float current,Action<float> change)
         {

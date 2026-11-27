@@ -11,8 +11,13 @@
 .sky .home-title { font-size:50px; -unity-font-style:bold; margin:9px 0 23px 0; color:#143e50; }
 .sky .manual { min-width:172px; height:48px; padding:0 24px; background-color:rgba(245,253,255,.93); border-left-width:4px; border-left-color:#53b3cb; -unity-font-style:bold; }
 .sky .topbar { position:absolute; top:0; left:0; right:0; height:70px; align-items:center; justify-content:center; }
-.sky .profile-button { position:absolute; left:2.5%; flex-direction:row; padding:4px 12px 4px 5px; align-items:center; min-width:146px; height:73%; max-height:60px; background-color:rgba(245,252,255,.93); }
-.sky #profile-icon { width:43px; height:43px; margin-right:9px; border-radius:5px; overflow:hidden; background-color:#dbe9f0; }
+.sky .profile-button {
+    position:absolute; left:2.45%; top:12px; flex-direction:row; padding:4px 14px 4px 4px;
+    align-items:center; min-width:160px; height:51px; max-width:24%; overflow:hidden;
+    background-color:rgba(245,252,255,.91); border-top-left-radius:9px; border-top-right-radius:4px;
+    border-bottom-left-radius:5px; border-bottom-right-radius:14px;
+}
+.sky #profile-icon { width:41px; height:41px; flex-shrink:0; margin-right:9px; border-radius:6px; overflow:hidden; background-color:#dbe9f0; }
 .sky .top-tabs, .sky .dock, .sky .action-line, .sky .dialog-head, .sky .member-row, .sky .store-line { flex-direction:row; align-items:center; }
 .sky .top-tabs { background-color:rgba(213,236,246,.86); border-width:1px; border-color:rgba(255,255,255,.8); border-radius:9px; padding:3px; }
 .sky .top-tabs Button { flex-direction:row; justify-content:center; align-items:center; height:39px; margin:0 1px; padding:2px 9px; color:#284e5e; -unity-font-style:bold; background-color:rgba(242,250,252,.44); border-width:0; }
@@ -28,7 +33,20 @@
 .glyph-tasks { background-image:url('LobbyIcons/tasks.png'); }
 .glyph-settings { background-image:url('LobbyIcons/settings.png'); }
 .glyph-config { background-image:url('LobbyIcons/config.png'); }
-.sky .invite-button { position:absolute; right:2.5%; height:40px; border-radius:20px; padding:0 15px; background-color:rgba(249,253,255,.92); }
+.sky .invite-button {
+    position:absolute; right:2.45%; top:12px; height:36px; flex-direction:row; align-items:center;
+    border-radius:22px; padding:0 12px; background-color:rgba(249,253,255,.9);
+}
+.sky .profile-button:hover, .sky .invite-button:hover { background-color:#f8fdff; border-color:#a5d5e4; }
+.sky .invite-glyph {
+    width:16px; height:16px; margin-right:6px; background-image:url('LobbyIcons/user-round-plus.svg');
+    -unity-background-scale-mode:scale-to-fit;
+}
+.sky .invite-title { margin:0; font-size:13px; -unity-font-style:bold; }
+.sky #invite-count {
+    margin:0 0 0 7px; padding:0 0 0 7px; border-left-width:1px; border-left-color:#b5ced7;
+    font-size:11px; -unity-font-style:bold; color:#3c7488; letter-spacing:0.6px;
+}
 .sky .home-tools { position:absolute; left:2.5%; bottom:2.7%; width:32%; min-width:294px; align-items:flex-start; }
 .sky .chat-preview { max-width:100%; overflow:hidden; text-overflow:ellipsis; border-left-width:3px; border-left-color:#4bb6ce; height:34px; -unity-text-align:middle-left; padding:4px 12px; margin-bottom:7px; }
 .sky .dock Button { min-width:48px; height:52px; align-items:center; justify-content:center; margin-right:5px; padding:2px 7px; background-color:rgba(246,252,255,.96); font-size:14px; }
@@ -56,8 +74,6 @@
 .sky .equipment-page .sheet-content { flex-grow:0; flex-basis:33%; }
 .sky .character-page .sheet-content { flex-grow:0; flex-basis:23%; }
 .sky .loadout-slots { padding:0; }
-.sky .loadout-controls { background-color:rgba(0,0,0,0); padding:0; }
-.sky .loadout-controls Button { font-size:12px; }
 .sky .subhead, .sky .bag-title { color:#214758; -unity-font-style:bold; font-size:18px; margin:9px 0; }
 .sky .inventory-grid, .sky .choice-row { flex-direction:row; flex-wrap:wrap; }
 .sky .item-tile { padding:0 0 4px 0; justify-content:flex-start; align-items:stretch; border-width:1px; border-color:white; background-color:#f5fbfd; overflow:hidden; border-radius:5px; margin:0 1% 8px 0; }
@@ -65,8 +81,6 @@
 .sky .item-tile Image { width:100%; height:60px; background-color:#e0eef4; margin:0 0 3px 0; }
 .sky .item-tile Label { -unity-text-align:middle-left; padding-left:5px; font-size:14px; -unity-font-style:bold; color:#20475b; }
 .sky .item-tile Label.item-detail { font-size:12px; -unity-font-style:normal; color:#527788; }
-.sky .equipment-page .item-tile { width:31.5%; margin-right:1.7%; min-height:52px; }
-.sky .equipment-page .item-tile Image { height:37px; }
 .sky .character-rail .item-tile { width:47%; margin:0 2% 6px 0; }
 .sky .character-rail .item-tile Image { height:69px; }
 .sky Button.selected { border-color:#4da8c3; background-color:#c9edf8; }
@@ -104,8 +118,9 @@
 .sky .unity-scroller--vertical, .sky .unity-scroller--vertical .unity-base-slider__tracker { background-color:rgba(204,230,240,.6); }
 .sky .unity-scroller--vertical .unity-base-slider__dragger { background-color:#74b9cc; }
 .compact .sky .top-tabs Button { padding:2px 5px; font-size:13px; }
-.compact .sky .invite-button { padding:0 8px; font-size:12px; }
-.compact .sky .profile-button { min-width:100px; padding-right:5px; }
+.compact .sky .invite-button { top:8px; padding:0 8px; }
+.compact .sky .profile-button { top:6px; min-width:124px; height:44px; padding-right:6px; }
+.compact .sky #profile-icon { width:34px; height:34px; }
 .compact .sky .inventory-grid .item-tile { width:18.6%; }
 .compact .sky .home-title { font-size:36px; }
 .compact .sky .top-tabs .glyph { width:15px; height:15px; margin-right:2px; }
@@ -114,9 +129,183 @@
 .compact .sky .lobby-page { top:55px; }
 .compact .sky .lobby-page.full-page { top:0; }
 
-.sky .profile-button { max-width:22%; overflow:hidden; height:52px; min-height:40px; }
 .sky .profile-copy { min-width:0; justify-content:center; flex-shrink:1; }
-.sky #profile-name { font-size:21px; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; -unity-text-align:middle-left; }
-.sky #profile-level { margin:0; font-size:12px; -unity-text-align:middle-left; }
+.sky #profile-name { font-size:17px; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; -unity-text-align:middle-left; }
+.sky #profile-level { margin:1px 0 0 0; font-size:10px; -unity-font-style:bold; letter-spacing:0.55px; -unity-text-align:middle-left; }
 .sky .lobby-page.character-page, .sky .lobby-page.equipment-page { background-color:rgba(222,241,248,.06); }
 .sky .character-page .inspection-stage { border-width:1px; border-color:rgba(255,255,255,.42); margin:0 2%; border-radius:6px; }
+
+/* Shared chrome and the four primary lobby views. */
+.sky .top-tabs { background-color:rgba(224,245,252,.39); }
+.sky .top-tabs Button.active { background-color:rgba(240,253,255,.87); }
+.sky .home-heading-block { top:17%; }
+.sky .home-title { margin-bottom:23px; }
+.sky .home-manual {
+    width:236px; background-color:rgba(245,253,255,.92); border-width:1px; border-color:white;
+    border-top-left-radius:9px; border-bottom-right-radius:12px; padding:5px 10px 7px 10px;
+}
+.sky .manual-toggle {
+    height:37px; -unity-font-style:bold; -unity-text-align:middle-left;
+    background-color:rgba(215,239,247,.83); border-width:0; padding-left:11px;
+}
+.sky .home-manual .manual {
+    min-width:0; height:29px; padding:3px 8px; -unity-text-align:middle-left;
+    margin-top:3px; border-width:0; border-top-width:1px; border-top-color:#d1e6ed;
+    border-radius:0; background-color:rgba(245,253,255,0); font-size:13px;
+}
+.sky .home-manual .manual:hover, .sky .manual-toggle:hover { background-color:#d7eff7; }
+.sky .dock #config { background-color:#d9f4fa; border-color:#a3dbe7; }
+.sky .play-button { border-top-left-radius:9px; border-bottom-right-radius:12px; background-color:#88dfee; }
+.sky .map-button { border-top-left-radius:8px; border-bottom-right-radius:10px; }
+.sky .page-detail { flex-grow:1; flex-basis:0; min-width:0; min-height:0; }
+.sky .inventory-page { background-color:rgba(223,242,248,.97); }
+.sky .inventory-page .sheet-content { padding:0 1px 16px 1px; }
+.sky .inventory-title {
+    flex-direction:row; align-items:flex-end; padding:2px 0 8px 0;
+    border-bottom-width:1px; border-bottom-color:#a3cedc;
+}
+.sky .inventory-title .section-heading { font-size:30px; margin-right:7px; }
+.sky .inventory-title Label { padding-bottom:1px; }
+.sky .inventory-page .inventory-grid, .sky .equipment-grid { margin-right:1px; }
+.sky .inventory-page .item-tile { width:15.8%; min-height:96px; }
+.sky .inventory-page .item-tile Image, .sky .equipment-page .item-tile Image { background-color:#e4f2f7; }
+.sky .inventory-page .item-skin Image, .sky .equipment-page .item-skin Image { background-color:#eae7f6; }
+.sky .inventory-page .item-tile Label, .sky .equipment-page .item-tile Label {
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.sky .lobby-page.character-page, .sky .lobby-page.equipment-page { background-color:rgba(0,0,0,0); }
+.sky .character-page .page-detail { flex-basis:26%; flex-grow:0; flex-shrink:0; }
+.sky .character-page .sheet-content { flex-grow:1; flex-basis:0; background-color:rgba(0,0,0,0); padding:0; border-width:0; }
+.sky .character-rail { flex-basis:27%; flex-shrink:0; }
+.sky .character-rail .subhead, .sky .equipment-page .subhead {
+    margin:0 0 8px 0; padding:1px 1px 6px 1px;
+    border-bottom-width:1px; border-bottom-color:#c1e0e8;
+}
+.sky .character-info {
+    padding:11px; margin:0 0 9px 0; background-color:rgba(248,253,255,.96);
+    border-width:1px; border-color:white; border-top-left-radius:10px; border-bottom-right-radius:12px;
+}
+.sky .character-info .subhead { margin:4px 0 5px 0; }
+.sky .character-title { font-size:28px; -unity-font-style:bold; margin:3px 0 6px 0; }
+.sky .character-faction { align-self:flex-start; padding:2px 8px; border-radius:5px; -unity-font-style:bold; }
+.sky .roster-card { width:47%; margin:0 2% 7px 0; padding:0; align-items:stretch; overflow:hidden; }
+.sky .roster-card Image { height:70px; }
+.sky .roster-card Label { margin:0; height:22px; padding:2px 6px; -unity-text-align:middle-left; font-size:13px; -unity-font-style:bold; }
+.sky .faction-attack, .sky .roster-card.faction-attack Label { color:#794150; background-color:#f1e1e6; border-color:#d7b2bd; }
+.sky .faction-defend, .sky .roster-card.faction-defend Label { color:#28647b; background-color:#def1f9; border-color:#b6d6e4; }
+.sky .roster-card.faction-attack.selected, .sky .faction-switch .faction-attack.selected { border-width:2px; border-color:#a96175; }
+.sky .roster-card.faction-defend.selected, .sky .faction-switch .faction-defend.selected { border-width:2px; border-color:#509bb7; }
+.sky .album-card {
+    flex-direction:row; align-items:center; justify-content:flex-start; height:65px;
+    padding:4px; margin:2px 0; background-color:#deeff5;
+}
+.sky .album-card Image { width:63px; height:54px; border-radius:4px; margin-right:6px; }
+.sky .stage-frame { display:none; position:absolute; left:4px; top:5px; right:4px; bottom:12px; border-radius:9px; border-width:1px; border-color:rgba(248,254,255,.76); }
+.sky .stage-platform {
+    display:none; position:absolute; left:17%; right:17%; bottom:4%; height:10%;
+    border-radius:48%; border-width:1px; border-color:#eafaff;
+    background-color:rgba(113,183,201,.23);
+}
+.sky .character-page .stage-frame, .sky .equipment-page .stage-frame,
+.sky .character-page .stage-platform, .sky .equipment-page .stage-platform { display:flex; }
+.sky .turn-hint { padding:3px 10px; border-radius:5px; -unity-font-style:bold; }
+.sky .equipment-page .loadout-pane { flex-basis:18%; flex-shrink:0; }
+.sky .equipment-page .wear-rail { flex-basis:12%; flex-shrink:0; }
+.sky .equipment-page .inspection-stage { margin:0 7px; min-width:146px; }
+.sky .equipment-page .page-detail {
+    flex-basis:36%; flex-grow:0; flex-shrink:0; border-width:1px; border-color:white;
+    border-radius:10px; background-color:rgba(241,250,253,.94);
+}
+.sky .equipment-page .sheet-content { flex-basis:0; flex-grow:1; padding:6px 6px 7px 7px; border-width:0; background-color:rgba(0,0,0,0); }
+.sky .equipment-heading {
+    flex-direction:row; align-items:center; justify-content:space-between; padding:7px 10px;
+    border-bottom-width:1px; border-bottom-color:#c2e0e8;
+}
+.sky .equipment-heading .subhead { margin:0; padding:0; border-bottom-width:0; }
+.sky #equipment-count { margin:0; font-size:11px; color:#3e7084; letter-spacing:0.6px; }
+.sky .equipment-filters {
+    flex-direction:row; flex-wrap:wrap; align-items:center; padding:4px 8px;
+    border-bottom-width:1px; border-bottom-color:#c2e0e8;
+}
+.sky .equipment-filters Button { margin:0 3px 0 0; font-size:11px; padding:4px 6px; color:#3b6d7f; border-color:rgba(255,255,255,0); background-color:rgba(255,255,255,0); }
+.sky .equipment-filters Button:hover { background-color:#e9f7fa; }
+.sky .equipment-filters Button.selected { background-color:#d9f1f8; color:#175f79; -unity-font-style:bold; }
+.sky #equipment-hint { margin:0 0 0 auto; padding:2px 0; color:#527686; font-size:10px; }
+.sky .equipment-stage-controls { padding:6px 5px; align-items:center; }
+.sky .faction-switch {
+    width:100%; flex-direction:row; align-items:center; padding:4px;
+    border-radius:7px; background-color:rgba(242,251,255,.93); border-width:1px; border-color:white;
+}
+.sky .faction-switch Button { flex-grow:1; flex-basis:0; margin:0; padding:4px 1px; min-height:28px; font-size:12px; -unity-font-style:bold; }
+.sky .equipment-page .faction-switch Button.selected { border-width:1px; border-bottom-width:2px; }
+.sky .equipment-page .faction-switch Button.faction-attack.selected { background-color:#f2e4e8; border-color:#e7ccd5; border-bottom-color:#b76c82; }
+.sky .equipment-page .faction-switch Button.faction-defend.selected { background-color:#dff3fa; border-color:#b8dce8; border-bottom-color:#5aaac3; }
+.sky .faction-switch Button.faction-defend { margin-left:4px; }
+.sky .equipment-stage-controls #equipment-character { max-width:94%; min-width:96px; margin-top:2px; font-size:12px; }
+.sky .equipment-stage-controls .unity-base-popup-field__input { background-color:#eefaff; color:#225871; border-color:#93c0d0; border-radius:5px; }
+.sky .equipment-page .equipment-grid .item-tile {
+    width:31.7%; height:84px; min-height:84px; margin:0 1.6% 6px 0; padding:0 0 3px 0;
+    border-radius:7px; background-color:#f5fbfd;
+}
+.sky .equipment-page .equipment-grid .item-tile:hover { border-color:#85bfd2; background-color:#edf8fc; }
+.sky .equipment-page .equipment-grid .item-tile.selected { border-color:#87c6d9; background-color:#ebf8fc; }
+.sky .equipment-page .equipment-grid .item-tile.drag-source { opacity:.52; }
+.sky .equipment-page .equipment-grid .item-tile Image { height:54px; flex-shrink:0; margin:0 0 1px 0; }
+.sky .equipment-grid .item-tile Label, .sky .equipment-drag-ghost Label {
+    flex-grow:0; flex-shrink:0; height:13px; min-height:13px; padding:0 4px; margin:0;
+    font-size:11px; -unity-font-style:bold; -unity-text-align:middle-left;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.sky .equipment-grid .item-tile Label.item-detail, .sky .equipment-drag-ghost Label.item-detail { font-size:10px; -unity-font-style:normal; }
+.sky .equipment-page .loadout-controls {
+    justify-content:space-between; align-items:center; flex-wrap:nowrap; padding:5px 8px;
+    border-top-width:1px; border-top-color:#c2e0e8; background-color:#eff8fb;
+    border-bottom-left-radius:9px; border-bottom-right-radius:9px;
+}
+.sky .equipment-page .loadout-controls Button { flex-grow:0; margin:0; padding:4px 8px; font-size:11px; }
+.sky .equipment-page #apply-loadout { background-color:#207d9a; border-color:#207d9a; color:white; }
+.sky .equipment-page #apply-loadout:hover { background-color:#186e89; }
+.sky .equipment-preview {
+    position:absolute; left:5px; right:5px; bottom:9px; height:45px;
+    flex-direction:row; align-items:center; padding:3px 6px;
+    border-radius:7px; border-width:1px; border-color:rgba(255,255,255,.84); background-color:rgba(245,252,254,.91);
+}
+.sky #equipment-preview-caption { color:#527686; font-size:10px; }
+.sky .equipment-preview .mount-art { width:62px; height:35px; margin-right:7px; }
+.sky .equipment-page .stage-platform { bottom:43px; }
+.sky .mount-slot { min-height:52px; background-color:#f8fcfe; border-left-width:1px; }
+.sky .mount-slot.selected { background-color:#e1f4fa; border-color:#5ca9c0; }
+.sky .mount-copy { min-width:0; flex-grow:1; flex-shrink:1; justify-content:center; }
+.sky .mount-copy Label { margin:0; padding:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sky .mount-copy .mount-title { font-size:12px; -unity-font-style:bold; }
+.sky .mount-art { background-color:#e1f0f5; border-radius:4px; flex-shrink:0; align-items:center; justify-content:center; }
+.sky .wear-rail .mount-slot { flex-direction:column; justify-content:center; padding:4px; }
+.sky .wear-rail .mount-slot .mount-art { width:94%; height:26px; margin:0 0 2px 0; }
+.sky .wear-rail .mount-slot Label { -unity-text-align:middle-center; }
+.sky .wear-glyph { width:16px; height:16px; -unity-background-scale-mode:scale-to-fit; }
+.sky .wear-sparkles { background-image:url('LobbyIcons/sparkles.svg'); }
+.sky .wear-shirt { background-image:url('LobbyIcons/shirt.svg'); }
+.sky .wear-hand { background-image:url('LobbyIcons/hand.svg'); }
+.sky .wear-layers { background-image:url('LobbyIcons/layers.svg'); }
+.sky .wear-footprints { background-image:url('LobbyIcons/footprints.svg'); }
+.sky .equipment-page .mount-slot.drop-ready { border-color:rgba(49,142,171,0); background-color:#ecf9fb; }
+.sky .equipment-page .mount-slot.drop-snapped { border-color:#4eb0ce; background-color:#d5f2fa; }
+.sky .drop-outline { position:absolute; left:0; right:0; top:0; bottom:0; }
+.sky .equipment-drag-ghost {
+    position:absolute; padding:0 0 3px 0; align-items:stretch; overflow:hidden;
+    background-color:rgba(248,253,255,.79); border-width:1px; border-color:rgba(251,255,255,.9);
+    border-radius:8px; opacity:.88;
+}
+.sky .equipment-drag-ghost.snapped { background-color:#e7f9fd; border-color:#5bacbf; opacity:.9; }
+.sky .equipment-drag-ghost Image { height:65px; flex-shrink:0; margin:0 0 1px 0; background-color:rgba(221,241,247,.58); }
+.sky .equipment-drag-ghost Label { height:17px; min-height:17px; padding:0 5px; font-size:13px; }
+.sky .equipment-drag-ghost Label.item-detail { height:15px; min-height:15px; font-size:11px; }
+.sky .equipment-drag-ghost.item-skin Image { background-color:rgba(233,228,248,.63); }
+.sky .overlay.display-config { align-items:flex-end; padding-right:5%; }
+.sky .overlay.display-config .dialog { width:36%; height:48%; min-height:292px; }
+.sky .display-config .action-line { margin-top:8px; }
+.sky .display-config .config-art { height:92px; background-color:#deeff5; margin:6px 0; border-radius:6px; }
+.compact .sky .home-manual { width:192px; }
+.compact .sky .roster-card Image { height:57px; }
+.compact .sky .equipment-page .mount-slot { min-height:43px; }
+.compact .sky .equipment-page .wear-rail .mount-slot Image { height:22px; }

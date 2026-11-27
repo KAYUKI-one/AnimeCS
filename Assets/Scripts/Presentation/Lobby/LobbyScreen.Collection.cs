@@ -28,6 +28,13 @@ namespace AnimeCS.Play
             WeaponClass.LightSniper=>"轻型狙击枪", WeaponClass.HeavySniper=>"重型狙击枪", _=>"近战刀具"
         } : KindName(item.Kind);
 
+        static string SkinTitle(WeaponSkinDefinition skin)
+        {
+            string prefix = skin.Weapon ? skin.Weapon.DisplayName + " · " : "";
+            return prefix.Length > 0 && skin.DisplayName.StartsWith(prefix, StringComparison.Ordinal)
+                ? skin.DisplayName.Substring(prefix.Length) : skin.DisplayName;
+        }
+
         static Texture2D Art(ContentDefinition item)
         {
             if (!item) return null;
@@ -47,7 +54,7 @@ namespace AnimeCS.Play
             if (!character) return;
             var outfit=_catalog.Entries.OfType<OutfitDefinition>().FirstOrDefault(o=>Owned(o) && o.Character==character);
             if (outfit) _draft.Select(outfit);
-            _game.PreviewWardrobe(_draft,_gun,false,unarmed:true);
+            _game.PreviewWardrobe(_draft,_gun,false,unarmed:true,previewWorn:_draft.WornFor(character.Faction));
         }
 
         void Characters()
@@ -56,23 +63,45 @@ namespace AnimeCS.Play
             var owned=_catalog.Entries.OfType<CharacterDefinition>().Where(Owned).ToArray();
             SectionLabel(rail,"角色背包    "+owned.Length+" 名");
             var grid=new VisualElement();grid.AddToClassList("choice-row");rail.Add(grid);
-            foreach(var entry in owned)
-                Tile(grid,entry,_character==entry,()=>{SelectCharacter(entry);Render();},entry.Icon);
+            foreach (var entry in owned.OrderBy(c => c.Faction))
+            {
+                var card = new Button(() => { SelectCharacter(entry); Render(); }) { name = entry.Id };
+                card.AddToClassList("roster-card");
+                card.AddToClassList(entry.Faction == Side.Attack ? "faction-attack" : "faction-defend");
+                card.EnableInClassList("selected", _character == entry);
+                card.Add(new Image { image = entry.Icon, scaleMode = ScaleMode.ScaleAndCrop, pickingMode = PickingMode.Ignore });
+                card.Add(new Label(entry.DisplayName) { pickingMode = PickingMode.Ignore });
+                grid.Add(card);
+            }
             if (!_character) return;
             _sheet.Q<Label>("stage-name").text=_character.DisplayName;
-            _content.Add(new Label(CharacterDefinition.FactionName(_character.Faction)));
-            var heading=new Label(_character.DisplayName);heading.AddToClassList("section-heading");_content.Add(heading);
-            Header("个人档案");
-            _content.Add(new Label("所属阵营   "+CharacterDefinition.FactionName(_character.Faction)));
+            var profile = new VisualElement();
+            profile.AddToClassList("character-info");
+            _content.Add(profile);
+            var team = new Label(CharacterDefinition.FactionName(_character.Faction));
+            team.AddToClassList("character-faction");
+            team.AddToClassList(_character.Faction == Side.Attack ? "faction-attack" : "faction-defend");
+            profile.Add(team);
+            var heading = new Label(_character.DisplayName);
+            heading.AddToClassList("character-title");
+            profile.Add(heading);
+            profile.Add(new Label("所属阵营   " + (_character.Faction == Side.Attack ? "攻方" : "守方")));
+            profile.Add(new Label("好感度      未记录"));
+
+            var archive = new VisualElement();
+            archive.AddToClassList("character-info");
+            _content.Add(archive);
+            SectionLabel(archive, "个人档案");
             var outfit=_catalog.Find<OutfitDefinition>(_draft.outfitId);
-            _content.Add(new Label("基础造型   "+(outfit?outfit.DisplayName:_character.DisplayName)));
+            archive.Add(new Label("基础造型   "+(outfit?outfit.DisplayName:_character.DisplayName)));
             if (_character.Portrait)
             {
-                Header("立绘相册");
-                var portrait=new Button(()=>Dialog("portrait")){name="open-portrait"};
-                var art=new Image{image=_character.Portrait,scaleMode=ScaleMode.ScaleToFit,pickingMode=PickingMode.Ignore};
-                art.AddToClassList("portrait");portrait.Add(art);portrait.Add(new Label("查看角色立绘  ↗"));
-                _content.Add(portrait);
+                SectionLabel(archive, "立绘相册");
+                var portrait = new Button(() => Dialog("portrait")) { name = "open-portrait" };
+                portrait.AddToClassList("album-card");
+                portrait.Add(new Image { image = _character.Portrait, scaleMode = ScaleMode.ScaleAndCrop, pickingMode = PickingMode.Ignore });
+                portrait.Add(new Label("角色立绘  ↗") { pickingMode = PickingMode.Ignore });
+                archive.Add(portrait);
             }
             _stage.schedule.Execute(FrameEquipment);
         }

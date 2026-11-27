@@ -262,17 +262,18 @@ namespace AnimeCS.Play
                 {
                     if (entry.Archived) continue;
                     if (entry is WeaponDefinition gun && (practice || gun.Class!=WeaponClass.Knife && gun.Price>0 && gun.CanBuy(side)) &&
-                        slot==(gun.Class==WeaponClass.Knife?BuySlot.Knife:gun.Class==WeaponClass.Pistol?BuySlot.Sidearm:BuySlot.Primary)) Offer(row,gun.DisplayName,gun.Price,slot,gun.Id);
+                        slot==(gun.Class==WeaponClass.Knife?BuySlot.Knife:gun.Class==WeaponClass.Pistol?BuySlot.Sidearm:BuySlot.Primary)) Offer(row,gun.DisplayName,gun.Price,slot,gun.Id,side);
                     if (entry is UtilityDefinition util && slot==BuySlot.Utility) Offer(row,util.DisplayName,util.Price,slot,util.Id);
                 }
             }
         }
-        private void Offer(VisualElement row,string text,int price,BuySlot slot,string id)
+        private void Offer(VisualElement row,string text,int price,BuySlot slot,string id,Side side=Side.Attack)
         {
             var button=new Button(()=>_order(slot,id,false)){name=id ?? slot.ToString(),focusable=false};
             bool free=_session?.Mode==MatchMode.AimPractice;
-            bool favorite=id!=null && (id==_loadout?.primaryId || id==_loadout?.sidearmId);
             var gun=_catalog.Find<WeaponDefinition>(id);
+            var gear = _loadout?.GearFor(side);
+            bool favorite = gun && (gear != null ? gear.Weapon(gun.Class)==id : id==_loadout?.primaryId || id==_loadout?.sidearmId);
             if (gun && gun.Glyph)
             {
                 button.AddToClassList("shop-weapon");

@@ -25,8 +25,10 @@ namespace AnimeCS.Play
 
         void HideDialog()
         {
+            bool wasDisplay = _dialogKey == "config";
             _dialogKey=null;
             SetVisible(_screen.Q("overlay"),false);
+            if (wasDisplay) _game.EndInspection();
         }
 
         void Dialog(string kind)
@@ -35,6 +37,7 @@ namespace AnimeCS.Play
             _dialogKey=kind;
             var overlay=_screen.Q("overlay");
             overlay.EnableInClassList("drawer",kind=="world");
+            overlay.EnableInClassList("display-config",kind=="config");
             SetVisible(overlay,true);
             var body=DialogBody;body.Clear();
             var title=_screen.Q<Label>("dialog-title");
@@ -182,10 +185,28 @@ namespace AnimeCS.Play
             var finishes=_catalog.Entries.Where(i=>Owned(i) && (i is WeaponSkinDefinition || i is WeaponDefinition)).ToArray();
             var character=SelectItem(body,"展示角色","display-character",chars,State.showCharacterId);
             var weapon=SelectItem(body,"展示武器","display-skin",finishes,State.showSkinId);
-            var thumb=new Image{scaleMode=ScaleMode.ScaleToFit}; thumb.AddToClassList("portrait");
+            var thumb=new Image{scaleMode=ScaleMode.ScaleToFit}; thumb.AddToClassList("config-art");
             body.Add(thumb);
-            void UpdateArt() { if (weapon.index>=0) thumb.image=Art(finishes[weapon.index]); }
-            weapon.RegisterValueChangedCallback(_=>UpdateArt()); UpdateArt();
+            void UpdateArt()
+            {
+                if (character.index < 0 || weapon.index < 0) return;
+                var selected = finishes[weapon.index];
+                thumb.image = Art(selected);
+                var fit = _catalog.Entries.OfType<OutfitDefinition>()
+                    .FirstOrDefault(o => Owned(o) && o.Character == chars[character.index]);
+                if (!fit) return;
+                var draft = _game.ReadWardrobe().current;
+                draft.Select(fit);
+                var skin = selected as WeaponSkinDefinition;
+                var gun = skin ? skin.Weapon : selected as WeaponDefinition;
+                if (!gun) return;
+                _game.PreviewWardrobe(draft, gun.Id, false, previewWorn: draft.WornFor(fit.Character.Faction),
+                    previewSkin: skin ? skin.Id : "");
+                _game.CenterPreview(.37f);
+            }
+            weapon.RegisterValueChangedCallback(_=>UpdateArt());
+            character.RegisterValueChangedCallback(_=>UpdateArt());
+            UpdateArt();
             var save=ActionButton(body,"应用到大厅","save-display",()=>RunAction(()=>_game.Account.SaveProfileAsync(State.signature,State.avatarId,
                 chars[character.index].Id,finishes[weapon.index].Id),()=>{HideDialog();RefreshHeader(true);Notice("大厅展示已更新");}),true);
             save.SetEnabled(chars.Length>0 && finishes.Length>0);

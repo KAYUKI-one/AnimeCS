@@ -5,7 +5,13 @@
             <ui:VisualElement class="home-heading-block" picking-mode="Ignore">
                 <ui:Label text="━━   ANIMECS  /  LOBBY" class="eyebrow" />
                 <ui:Label text="晴空中庭" class="home-title" />
-                <ui:Button name="manual" text="任务手册     ›" class="manual" />
+                <ui:VisualElement class="home-manual">
+                    <ui:Button name="manual-toggle" text="任务手册    −" class="manual-toggle" />
+                    <ui:VisualElement name="manual-summary" class="manual-summary">
+                        <ui:Button name="manual" text="查看今日任务    ›" class="manual" />
+                        <ui:Button name="manual-config" text="更换大厅展示搭配" class="manual" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="home-tools" picking-mode="Ignore">
                 <ui:Button name="chat-preview" text="世界信息    欢迎来到晴空中庭" class="chat-preview" />
@@ -22,19 +28,32 @@
             <ui:VisualElement name="page-body" class="page-body">
                 <ui:VisualElement class="loadout-pane">
                     <ui:ScrollView name="loadout-slots" class="loadout-slots"/>
-                    <ui:VisualElement name="loadout-actions" class="loadout-controls"/>
                 </ui:VisualElement>
                 <ui:ScrollView name="wear-rail" class="wear-rail"/>
                 <ui:ScrollView name="character-rail" class="character-rail"/>
-                <ui:VisualElement name="inspection-stage" class="inspection-stage"><ui:Label name="stage-name" class="turn-hint" picking-mode="Ignore"/></ui:VisualElement>
-                <ui:ScrollView name="sheet-content" class="sheet-content"/>
+                <ui:VisualElement name="inspection-stage" class="inspection-stage">
+                    <ui:VisualElement class="stage-frame" picking-mode="Ignore"/>
+                    <ui:VisualElement class="stage-platform" picking-mode="Ignore"/>
+                    <ui:VisualElement name="equipment-stage-controls" class="equipment-stage-controls" />
+                    <ui:VisualElement name="equipment-preview" class="equipment-preview" picking-mode="Ignore" />
+                    <ui:Label name="stage-name" class="turn-hint" picking-mode="Ignore"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="page-detail" class="page-detail">
+                    <ui:VisualElement name="equipment-toolbar" class="equipment-toolbar" />
+                    <ui:ScrollView name="sheet-content" class="sheet-content" horizontal-scroller-visibility="Hidden" />
+                    <ui:VisualElement name="loadout-actions" class="loadout-controls"/>
+                </ui:VisualElement>
                 <ui:Label name="inspect-caption" class="inspect-caption" text="拖动模型旋转" picking-mode="Ignore"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="topbar" class="topbar" picking-mode="Ignore">
             <ui:Button name="profile" class="profile-button"><ui:Image name="profile-icon"/><ui:VisualElement class="profile-copy" picking-mode="Ignore"><ui:Label name="profile-name" class="strong"/><ui:Label name="profile-level" class="small"/></ui:VisualElement></ui:Button>
             <ui:VisualElement name="top-tabs" class="top-tabs"/>
-            <ui:Button name="invite" text="邀请好友" class="invite-button"/>
+            <ui:Button name="invite" class="invite-button" tooltip="邀请好友">
+                <ui:VisualElement class="invite-glyph" picking-mode="Ignore"/>
+                <ui:Label text="邀请好友" class="invite-title" picking-mode="Ignore"/>
+                <ui:Label name="invite-count" picking-mode="Ignore"/>
+            </ui:Button>
         </ui:VisualElement>
         <ui:VisualElement name="overlay" class="fill overlay"><ui:VisualElement name="dialog" class="dialog">
             <ui:VisualElement class="dialog-head"><ui:Label name="dialog-title" class="strong"/><ui:Button name="dialog-close" text="关闭  ×"/></ui:VisualElement>

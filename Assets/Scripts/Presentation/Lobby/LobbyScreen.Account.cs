@@ -192,10 +192,10 @@ namespace AnimeCS.Play
         {
             if (State==null) return;
             _screen.Q<Label>("profile-name").text=State.id;
-            _screen.Q<Label>("profile-level").text=$"LV. {State.level:00}   ·   AnimeCS";
+            _screen.Q<Label>("profile-level").text=$"LV. {State.level:00} · AnimeCS";
             _screen.Q<Image>("profile-icon").image=_catalog.Find<CharacterDefinition>(State.avatarId)?.Icon;
             var party=State.party??Array.Empty<string>();
-            _screen.Q<Button>("invite").text=$"邀请好友   {Math.Max(1,party.Length)}/{MatchFormat.TeamSize}";
+            _screen.Q<Label>("invite-count").text=$"{Math.Max(1,party.Length)}/{MatchFormat.TeamSize}";
             bool grouped=party.Length>1;
             bool leader=grouped && party[0]==State.id;
             bool currentRoom=!string.IsNullOrEmpty(State.battleId) && !State.battleFinished;
@@ -209,7 +209,7 @@ namespace AnimeCS.Play
             string partyKey=string.Join("|",members.Select(m=>m.id+" "+m.showCharacterId+" "+m.showSkinId));
             if(force || _headerRoom!=State.battleId || partyKey!=_partySignature) RefreshMap();
             _headerRoom=State.battleId;
-            if ((force || partyKey!=_partySignature) && _section==null)
+            if ((force || partyKey!=_partySignature) && _section==null && _dialogKey!="config")
             {
                 _partySignature=partyKey;
                 _game.SetLobbyTeammates(members.Where(m=>m.id!=State.id).Select(m=>_game.DisplayMember(m.id,m.showCharacterId,m.showSkinId)).ToArray());

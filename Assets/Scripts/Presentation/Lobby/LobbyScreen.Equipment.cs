@@ -1,6 +1,6 @@
-using System;
 using System.Linq;
 using AnimeCS.Content;
+using AnimeCS.Profile;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -8,127 +8,280 @@ namespace AnimeCS.Play
 {
     internal sealed partial class LobbyScreen
     {
-        bool _allEquipment;
-        static readonly string[] Slots={"角色","主武器","副武器","近战","头饰","上衣","手套","下衣","鞋子","预设"};
+        static readonly WeaponClass[] WeaponMounts =
+        {
+            WeaponClass.Knife, WeaponClass.Pistol, WeaponClass.Smg, WeaponClass.Rifle, WeaponClass.LightSniper
+        };
+        static readonly string[] WeaponLabels = { "近战刀具", "手枪", "冲锋枪", "步枪", "狙击枪" };
+        static readonly string[] WearIcons = { "sparkles", "shirt", "hand", "layers", "footprints" };
+        const int RifleMount = 3;
+        const int WearOffset = 5;
+
+        EquipmentDrag _drag;
+        Side _equipmentSide;
+        bool _allEquipment, _showPresets;
+        WardrobeSideGear ActiveGear => _draft.GearFor(_equipmentSide);
 
         void FrameEquipment()
         {
-            if ((_section=="equipment" || _section=="character") && _screen.worldBound.width>1 && _stage.worldBound.width>1)
-                _game.CenterPreview((_stage.worldBound.center.x-_screen.worldBound.xMin)/_screen.worldBound.width);
+            if ((_section == "equipment" || _section == "character") && _screen.worldBound.width > 1 && _stage.worldBound.width > 1)
+                _game.CenterPreview((_stage.worldBound.center.x - _screen.worldBound.xMin) / _screen.worldBound.width,
+                    showcase: true, equipment: _section == "equipment");
         }
 
-        string WeaponSlot(int slot) => slot switch {1=>_draft.primaryId,2=>_draft.sidearmId,3=>_draft.knifeId,_=>null};
-        ContentDefinition Equipped(int slot) => slot==0 ? _catalog.Find<OutfitDefinition>(_draft.outfitId) :
-            slot<=3 ? _catalog.Find<WeaponDefinition>(WeaponSlot(slot)) : slot<=8 ? _catalog.Find<WearableDefinition>(_draft.worn.Get((WearSlot)(slot-4))) : null;
+        void BeginEquipment()
+        {
+            _equipmentSide = CurrentCharacter ? CurrentCharacter.Faction : Side.Attack;
+            _allEquipment = true;
+            _showPresets = false;
+            _equipment = RifleMount;
+            _gun = ActiveGear.Weapon(WeaponClass.Rifle);
+            _game.PreviewWardrobe(_draft, _gun, false, previewWorn: ActiveGear.worn);
+        }
+
+        void SelectEquipmentSide(Side side)
+        {
+            var outfit = _catalog.Find<OutfitDefinition>(_draft.OutfitFor(side));
+            if (!outfit || !Owned(outfit)) return;
+            _equipmentSide = side;
+            _draft.Select(outfit);
+            _equipment = RifleMount;
+            _gun = ActiveGear.Weapon(WeaponClass.Rifle);
+            ((ScrollView)_content).scrollOffset = Vector2.zero;
+            Preview();
+        }
 
         void Equipment()
         {
             _slots.Clear();
-            var wearRail = _sheet.Q<ScrollView>("wear-rail"); wearRail.Clear();
-            SectionLabel(_slots,"武器配置"); SectionLabel(wearRail,"服装部位");
-            _sheet.Q<Label>("stage-name").text = CurrentCharacter ? CurrentCharacter.DisplayName : "拖动旋转";
-            for (int i=0;i<Slots.Length;i++)
+            var wearRail = _sheet.Q<ScrollView>("wear-rail");
+            wearRail.Clear();
+            SectionLabel(_slots, "武器配置");
+            SectionLabel(wearRail, "服装部位");
+            for (int i = 0; i < WeaponMounts.Length; i++) EquipmentSlot(_slots, i, WeaponLabels[i]);
+            for (int i = 0; i < SlotNames.Length; i++) EquipmentSlot(wearRail, WearOffset + i, SlotNames[i]);
+
+            var centerControls = _sheet.Q("equipment-stage-controls");
+            centerControls.Clear();
+            var sideChoices = new VisualElement();
+            sideChoices.AddToClassList("faction-switch");
+            centerControls.Add(sideChoices);
+            foreach (var side in new[] { Side.Attack, Side.Defend })
             {
-                int slot=i; var current=Equipped(slot);
-                var button=new Button(()=>
-                {
-                    _equipment=slot;_allEquipment=false;
-                    if (slot>=1 && slot<=3 && WeaponSlot(slot)!=null) _gun=WeaponSlot(slot);
-                    Preview();
-                }){name="equip-slot-"+slot};
-                button.AddToClassList("mount-slot"); button.EnableInClassList("selected",_equipment==slot);
-                var icon=current ? current.Thumbnail : null;
-                if (!icon && current is OutfitDefinition f) icon=f.Character?.Icon;
-                if (icon) button.Add(new Image{image=icon,scaleMode=ScaleMode.ScaleToFit,pickingMode=PickingMode.Ignore});
-                var text=new VisualElement{pickingMode=PickingMode.Ignore};
-                var kind=new Label(Slots[slot]); kind.AddToClassList("slot-kind"); text.Add(kind);
-                if(slot<9) text.Add(new Label(current?current.DisplayName:slot==4?"未佩戴":"角色原装"));
-                button.Add(text); (slot >= 4 && slot <= 8 ? (VisualElement)wearRail : _slots).Add(button);
+                string role = side == Side.Attack ? "攻方" : "守方";
+                Choice(sideChoices, CharacterDefinition.FactionName(side) + " · " + role,
+                    side == _equipmentSide, () => SelectEquipmentSide(side),
+                    side == Side.Attack ? "faction-attack" : "faction-defend");
+                var button = sideChoices.Children().Last();
+                button.AddToClassList(side == Side.Attack ? "faction-attack" : "faction-defend");
+                button.SetEnabled(!string.IsNullOrEmpty(_draft.OutfitFor(side)));
             }
-            var controls=_sheet.Q("loadout-actions"); controls.Clear();
-            Choice(controls,_first?"看全身":"看手部",false,()=>{_first=!_first;Preview();},"equip-view");
-            Choice(controls,"应用搭配",true,Apply,"apply-loadout");
-            var heading=new Label("可装备库存"); heading.AddToClassList("bag-title"); _content.Add(heading);
-            var filters=Row();
-            Choice(filters,"全部适用",_allEquipment,()=>{_allEquipment=true;Render();},"equip-all");
-            Choice(filters,"当前槽位",!_allEquipment,()=>{_allEquipment=false;Render();},"equip-current");
-            if (_allEquipment) { AllEquipment(); return; }
-            Header(Slots[_equipment]);
-            if(_equipment==9)
+            var outfits = _catalog.Entries.OfType<OutfitDefinition>()
+                .Where(o => Owned(o) && o.Character && o.Character.Faction == _equipmentSide).ToList();
+            int index = outfits.FindIndex(o => o.Id == _draft.outfitId);
+            if (index >= 0)
             {
-                for(int i=0;i<2;i++)
+                var picker = new PopupField<OutfitDefinition>(outfits, index, o => o.DisplayName, o => o.DisplayName)
+                    { name = "equipment-character", tooltip = "更换当前阵营的角色服装" };
+                picker.RegisterValueChangedCallback(evt => { _draft.Select(evt.newValue); Preview(); });
+                centerControls.Add(picker);
+            }
+
+            EquipmentPreview();
+
+            var toolbar = _sheet.Q("equipment-toolbar");
+            toolbar.Clear();
+            var allowed = _catalog.Entries.Where(Owned).Where(item => ValidSlot(item) >= 0).ToArray();
+            var choices = _allEquipment ? allowed : allowed.Where(item => ValidSlot(item) == _equipment).ToArray();
+            var heading = new VisualElement();
+            heading.AddToClassList("equipment-heading");
+            SectionLabel(heading, _showPresets ? "装备预设" : "可装配库存");
+            if (!_showPresets) heading.Add(new Label($"{choices.Length} 件") { name = "equipment-count" });
+            toolbar.Add(heading);
+            var filters = new VisualElement();
+            filters.AddToClassList("equipment-filters");
+            toolbar.Add(filters);
+            Choice(filters, "全部适用", _allEquipment && !_showPresets, () => SetEquipmentFilter(true), "equip-all");
+            Choice(filters, "当前槽位", !_allEquipment && !_showPresets, () => SetEquipmentFilter(false), "equip-current");
+            Choice(filters, "预设", _showPresets, () =>
+            {
+                _showPresets = true;
+                ((ScrollView)_content).scrollOffset = Vector2.zero;
+                Render();
+            }, "equip-presets");
+            if (!_showPresets)
+            {
+                var hint = new Label("拖到左侧，或点击装备") { name = "equipment-hint" };
+                filters.Add(hint);
+            }
+
+            var controls = _sheet.Q("loadout-actions");
+            controls.Clear();
+            Choice(controls, _first ? "看全身" : "看手部", false, () => { _first = !_first; Preview(); }, "equip-view");
+            Choice(controls, "应用配置", false, Apply, "apply-loadout");
+            controls.Q<Button>("apply-loadout").AddToClassList("accent");
+
+            if (_showPresets)
+            {
+                for (int i = 0; i < _profile.presets.Length; i++)
                 {
-                    int index=i; var saved=_profile.presets[i]; var row=Row();
-                    Choice(row,"穿戴预设 "+(i+1),false,()=>{_draft=_profile.Resolve(saved,_catalog);_gun=_draft.primaryId;Preview();});
-                    Choice(row,"保存到 "+(i+1),false,()=>{_profile.presets[index]=_profile.Resolve(_draft,_catalog);PersistWardrobe();});
+                    int preset = i;
+                    var row = Row();
+                    Choice(row, $"穿戴预设 {i + 1}", false, () =>
+                    {
+                        _draft = _profile.Resolve(_profile.presets[preset], _catalog);
+                        _equipmentSide = CurrentCharacter ? CurrentCharacter.Faction : Side.Attack;
+                        _gun = ActiveGear.Weapon(WeaponClass.Rifle);
+                        Preview();
+                    });
+                    Choice(row, $"保存到 {i + 1}", false, () =>
+                    {
+                        _profile.presets[preset] = _profile.Resolve(_draft, _catalog);
+                        PersistWardrobe();
+                    });
                 }
                 return;
             }
-            var bag=Row();bag.name="backpack-items";
-            if (_equipment==0)
-            {
-                var faction=CurrentCharacter ? CurrentCharacter.Faction : Side.Attack;
-                var tabs=new VisualElement();tabs.AddToClassList("choice-row");_content.Insert(_content.IndexOf(bag),tabs);
-                foreach (Side side in new[]{Side.Attack,Side.Defend})
-                    Choice(tabs,CharacterDefinition.FactionName(side),faction==side,()=>{
-                        var selected=_catalog.Entries.OfType<OutfitDefinition>().FirstOrDefault(o=>Owned(o) && o.Character && o.Character.Faction==side && o.Id==_draft.OutfitFor(side)) ?? _catalog.Entries.OfType<OutfitDefinition>().FirstOrDefault(o=>Owned(o) && o.Character && o.Character.Faction==side); if(selected)_draft.Select(selected); Preview();
-                    },side==Side.Attack?"faction-attack":"faction-defend");
-                foreach(var f in _catalog.Entries.OfType<OutfitDefinition>().Where(o=>Owned(o) && o.Character && o.Character.Faction==faction))
-                    Tile(bag,f,_draft.outfitId==f.Id,()=>{_draft.Select(f);Preview();},f.Character.Icon);
-            }
-            else if(_equipment<=3)
-            {
-                foreach(var w in _catalog.Entries.OfType<WeaponDefinition>().Where(o=>Owned(o)))
+
+            if (!_allEquipment && _equipment >= WearOffset && ActiveGear.worn.Get((WearSlot)(_equipment - WearOffset)) != null)
+                Choice(Row(), "恢复角色原装", false, () =>
                 {
-                    bool fits=_equipment==1?w.Class!=WeaponClass.Pistol&&w.Class!=WeaponClass.Knife:_equipment==2?w.Class==WeaponClass.Pistol:w.Class==WeaponClass.Knife;
-                    if (!fits) continue;
-                    Tile(bag,w,WeaponSlot(_equipment)==w.Id,()=>{EquipWeapon(w,_equipment);Preview();});
-                }
-                var gun=_catalog.Find<WeaponDefinition>(WeaponSlot(_equipment));
-                if(!gun) return;
-                var skins=_catalog.Entries.OfType<WeaponSkinDefinition>().Where(s=>s.Weapon==gun && s!=gun.DefaultSkin && Owned(s)).ToArray();
-                if(skins.Length==0)return;
-                Header("涂装");var finishes=Row();Choice(finishes,gun.DefaultSkin?gun.DefaultSkin.DisplayName:"原厂",string.IsNullOrEmpty(_draft.SkinFor(gun.Id)),()=>Skin(gun,null));
-                foreach(var skin in skins) Tile(finishes,skin,_draft.SkinFor(gun.Id)==skin.Id,()=>Skin(gun,skin.Id),gun.Thumbnail);
+                    ActiveGear.worn.Set((WearSlot)(_equipment - WearOffset), null);
+                    Preview();
+                }, "clear-wear");
+
+            var bag = Row();
+            bag.name = "backpack-items";
+            bag.AddToClassList("equipment-grid");
+            if (choices.Length == 0)
+                bag.Add(new Label("此槽位暂无可用物品") { name = "equipment-empty" });
+            foreach (var item in choices)
+            {
+                int slot = ValidSlot(item);
+                bool equipped = IsEquipped(item, slot);
+                var button = Tile(bag, item, slot == _equipment && equipped, () => MountItem(item, slot), Art(item));
+                button.tooltip = item.DisplayName + (equipped ? "（已装备）" : "");
+                _drag.Source(button, item);
             }
+        }
+
+        void EquipmentPreview()
+        {
+            var preview = _sheet.Q("equipment-preview");
+            preview.Clear();
+            preview.tooltip = "拖动角色旋转";
+            var gun = _catalog.Find<WeaponDefinition>(_gun);
+            var skin = gun ? _catalog.Find<WeaponSkinDefinition>(_draft.SkinFor(gun.Id)) : null;
+            bool wearSlot = _equipment >= WearOffset;
+            var item = wearSlot ? Equipped(_equipment) : skin ? (ContentDefinition)skin : gun;
+            AddMountArt(preview, item, wearSlot ? _equipment : -1);
+
+            var details = new VisualElement { pickingMode = PickingMode.Ignore };
+            details.AddToClassList("mount-copy");
+            var caption = wearSlot ? SlotNames[_equipment - WearOffset] : _first ? "手部展示" : "持枪展示";
+            if (!wearSlot && skin) caption += " · " + SkinTitle(skin);
+            details.Add(new Label(caption) { name = "equipment-preview-caption", pickingMode = PickingMode.Ignore });
+            string name = wearSlot ? MountName(item, _equipment) : gun ? gun.DisplayName : "未选择";
+            var title = new Label(name) { pickingMode = PickingMode.Ignore };
+            title.AddToClassList("mount-title");
+            details.Add(title);
+            preview.Add(details);
+        }
+
+        void SetEquipmentFilter(bool all)
+        {
+            _allEquipment = all;
+            _showPresets = false;
+            ((ScrollView)_content).scrollOffset = Vector2.zero;
+            Render();
+        }
+
+        void EquipmentSlot(VisualElement rail, int slot, string title)
+        {
+            var item = Equipped(slot);
+            var button = new Button(() =>
+            {
+                _equipment = slot;
+                _allEquipment = false;
+                _showPresets = false;
+                ((ScrollView)_content).scrollOffset = Vector2.zero;
+                if (slot < WearOffset && item is WeaponDefinition weapon) _gun = weapon.Id;
+                Preview();
+            }) { name = "equip-slot-" + slot };
+            button.AddToClassList("mount-slot");
+            button.EnableInClassList("selected", _equipment == slot);
+            AddMountArt(button, item, slot);
+            var details = new VisualElement { pickingMode = PickingMode.Ignore };
+            details.AddToClassList("mount-copy");
+            var kind = new Label(title) { pickingMode = PickingMode.Ignore };
+            kind.AddToClassList("slot-kind");
+            details.Add(kind);
+            var name = new Label(MountName(item, slot)) { pickingMode = PickingMode.Ignore };
+            name.AddToClassList("mount-title");
+            details.Add(name);
+            if (item is WeaponDefinition gun && _catalog.Find<WeaponSkinDefinition>(_draft.SkinFor(gun.Id)) is { } skin && skin)
+            {
+                var finish = new Label(SkinTitle(skin)) { pickingMode = PickingMode.Ignore };
+                finish.AddToClassList("item-detail");
+                details.Add(finish);
+            }
+            button.Add(details);
+            rail.Add(button);
+            _drag.Slot(button, slot);
+        }
+
+        static string MountName(ContentDefinition item, int slot) =>
+            item ? item.DisplayName : slot == WearOffset ? "未佩戴" : slot < WearOffset ? "未选择" : "角色原装";
+
+        static void AddMountArt(VisualElement parent, ContentDefinition item, int slot)
+        {
+            var art = new Image { image = Art(item), scaleMode = ScaleMode.ScaleToFit, pickingMode = PickingMode.Ignore };
+            art.AddToClassList("mount-art");
+            parent.Add(art);
+            if (art.image || slot < WearOffset) return;
+            var icon = new VisualElement { pickingMode = PickingMode.Ignore };
+            icon.AddToClassList("wear-glyph");
+            icon.AddToClassList("wear-" + WearIcons[slot - WearOffset]);
+            art.Add(icon);
+        }
+
+        ContentDefinition Equipped(int slot) => slot < WearOffset
+            ? _catalog.Find<WeaponDefinition>(ActiveGear.Weapon(WeaponMounts[slot]))
+            : _catalog.Find<WearableDefinition>(ActiveGear.worn.Get((WearSlot)(slot - WearOffset)));
+
+        int ValidSlot(ContentDefinition item)
+        {
+            if (!Owned(item)) return -1;
+            if (item is WearableDefinition wear)
+                return wear.Fits(CurrentCharacter) ? WearOffset + (int)wear.Slot : -1;
+            var gun = item is WeaponSkinDefinition skin ? skin.Weapon : item as WeaponDefinition;
+            if (!Owned(gun) || !WardrobeSideGear.Available(gun, _equipmentSide)) return -1;
+            return System.Array.IndexOf(WeaponMounts, WardrobeSideGear.Category(gun.Class));
+        }
+
+        bool IsEquipped(ContentDefinition item, int slot)
+        {
+            if (item is WeaponSkinDefinition skin)
+                return Equipped(slot) == skin.Weapon && _draft.SkinFor(skin.Weapon.Id) == skin.Id;
+            if (item is WeaponDefinition gun && !string.IsNullOrEmpty(_draft.SkinFor(gun.Id))) return false;
+            return Equipped(slot) == item;
+        }
+
+        void MountItem(ContentDefinition item, int slot)
+        {
+            if (slot < 0 || slot != ValidSlot(item)) return;
+            _equipment = slot;
+            if (item is WearableDefinition wear) ActiveGear.worn.Set(wear.Slot, wear.Id);
             else
             {
-                var slot=(WearSlot)(_equipment-4);
-                Choice(bag,slot==WearSlot.Headwear?"取下头饰":"角色原装",string.IsNullOrEmpty(_draft.worn.Get(slot)),()=>{_draft.worn.Set(slot,null);Preview();});
-                foreach(var item in _catalog.Entries.OfType<WearableDefinition>().Where(w=>w.Slot==slot&&w.Fits(CurrentCharacter)&&Owned(w)))
-                    Tile(bag,item,_draft.worn.Get(slot)==item.Id,()=>{_draft.worn.Set(slot,item.Id);Preview();});
+                var skin = item as WeaponSkinDefinition;
+                var gun = skin ? skin.Weapon : (WeaponDefinition)item;
+                ActiveGear.SetWeapon(gun.Class, gun.Id);
+                _gun = gun.Id;
+                _draft.skins.RemoveAll(choice => choice.weaponId == gun.Id);
+                if (skin) _draft.skins.Add(new SkinChoice { weaponId = gun.Id, skinId = skin.Id });
             }
-        }
-
-        void AllEquipment()
-        {
-            var bag=Row();bag.name="backpack-items";
-            var character=CurrentCharacter;
-            foreach(var item in _catalog.Entries.Where(Owned).OrderBy(i=>InventoryOrder(i.Kind)))
-            {
-                if (item is WeaponDefinition weapon)
-                {
-                    int mount=weapon.Class==WeaponClass.Knife?3:weapon.Class==WeaponClass.Pistol?2:1;
-                    Tile(bag,weapon,WeaponSlot(mount)==weapon.Id,()=>{EquipWeapon(weapon,mount);Preview();});
-                }
-                else if (item is WeaponSkinDefinition skin && skin.Weapon)
-                {
-                    int mount=skin.Weapon.Class==WeaponClass.Knife?3:skin.Weapon.Class==WeaponClass.Pistol?2:1;
-                    Tile(bag,skin,_draft.SkinFor(skin.Weapon.Id)==skin.Id,()=>{EquipWeapon(skin.Weapon,mount);Skin(skin.Weapon,skin.Id);},Art(skin));
-                }
-                else if (item is WearableDefinition garment && garment.Fits(character))
-                    Tile(bag,garment,_draft.worn.Get(garment.Slot)==garment.Id,()=>{_draft.worn.Set(garment.Slot,garment.Id);Preview();},Art(garment));
-                else if (item is OutfitDefinition outfit && outfit.Character)
-                    Tile(bag,outfit,_draft.outfitId==outfit.Id,()=>{_draft.Select(outfit);Preview();},outfit.Character.Icon);
-            }
-        }
-
-        void EquipWeapon(WeaponDefinition weapon,int mount)
-        {
-            if (mount==1) _draft.primaryId=weapon.Id;
-            else if (mount==2) _draft.sidearmId=weapon.Id;
-            else _draft.knifeId=weapon.Id;
-            _gun=weapon.Id;
+            Preview();
         }
 
         bool Owned(ContentDefinition item) => item && !item.Archived && _profile.owned.Contains(item.Id);

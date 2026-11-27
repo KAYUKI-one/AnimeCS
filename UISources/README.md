@@ -14,3 +14,5 @@
 大厅的「配置」可切换展示角色和手持枪械。角色页可切换档案。库存可在固定顶栏下滚动。装备支持按阵营查看可用物品，并通过点击或拖拽放入对应槽位。
 
 头像、邀请好友、商店及其他待设计入口在这版作为静态元素呈现。图标使用 Lucide，许可见 [assets/icons/LICENSE.txt](assets/icons/LICENSE.txt)。
+
+任务手册、世界频道、好友弹窗和个人信息的独立参考样例见 [样例页](samples/community.html) 和 [预览图](samples/community.png)。
