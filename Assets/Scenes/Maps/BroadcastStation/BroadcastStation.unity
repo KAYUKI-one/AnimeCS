@@ -14,19 +14,19 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 0
-  m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_Fog: 1
+  m_FogColor: {r: 0.83, g: 0.87, b: 0.92, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.01
+  m_FogDensity: 0.0045
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.84, g: 0.87, b: 0.9, a: 1}
-  m_AmbientEquatorColor: {r: 0.69, g: 0.71, b: 0.73, a: 1}
-  m_AmbientGroundColor: {r: 0.44, g: 0.41, b: 0.37, a: 1}
+  m_AmbientSkyColor: {r: 0.72, g: 0.84, b: 1, a: 1}
+  m_AmbientEquatorColor: {r: 0.74, g: 0.77, b: 0.87, a: 1}
+  m_AmbientGroundColor: {r: 0.57, g: 0.5, b: 0.48, a: 1}
   m_AmbientIntensity: 1
   m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: ba56070f1c8d59a4084be9cbe7b333f1, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: ccaca1079f1680e479dbbb5a4b8ba448, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -1189,8 +1189,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 13
   m_Type: 1
-  m_Color: {r: 1, g: 0.964, b: 0.895, a: 1}
-  m_Intensity: 1.75
+  m_Color: {r: 1, g: 0.93, b: 0.83, a: 1}
+  m_Intensity: 1.48
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -1199,7 +1199,7 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 1
+    m_Strength: 0.76
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2

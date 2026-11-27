@@ -1,5 +1,5 @@
 {
   "name": "AnimeCS.Runtime",
   "rootNamespace": "AnimeCS",
-  "references": ["Unity.Entities", "Unity.Collections", "Unity.Burst", "Unity.InputSystem", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime"]
+  "references": ["SoftEnvironment", "Unity.Entities", "Unity.Collections", "Unity.Burst", "Unity.InputSystem", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime"]
 }

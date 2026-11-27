@@ -12,8 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d65fc406864287e4a925dbf8417fd5f7, type: 3}
   m_Name: PracticeHall
   m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.MapDefinition
-  _loadingArt: {fileID: 2800000, guid: c3d93700075941129cee37785f718f56, type: 3}
-  _loadingBrief: "在不同射距的靶位练习瞄准、移动和武器切换。"
   _id: map.practice
   _displayName: "\u7EC3\u67AA\u5730\u56FE"
   _thumbnail: {fileID: 0}
@@ -51,9 +49,12 @@ MonoBehaviour:
   _navigation: {fileID: 0}
   _geometrySourceGuid: 5893e680db881b7449d0abfeccda9f57
   _lightingSceneGuid: ea405f87dacbe67469539373975ba935
+  _loadingArt: {fileID: 2800000, guid: c3d93700075941129cee37785f718f56, type: 3}
+  _loadingBrief: "\u5728\u4E0D\u540C\u5C04\u8DDD\u7684\u9776\u4F4D\u7EC3\u4E60\u7784\u51C6\u3001\u79FB\u52A8\u548C\u6B66\u5668\u5207\u6362\u3002"
   _radarYaw: 0
   _lightingScenePath: Assets/Scenes/Maps/PracticeHall/PracticeHall.unity
   _combatGrade: {fileID: 0}
+  _daylight: {fileID: 11400000, guid: e5d06971e12db17469320187b918024a, type: 2}
   _buyRadius: 5
   _attackYaw: []
   _defendYaw: []

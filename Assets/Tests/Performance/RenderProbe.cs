@@ -136,6 +136,7 @@ namespace AnimeCS.Tests.Performance
             while (_game.InLobby || !_game.Ready) yield return null;
             _run.botLoadSeconds = Time.realtimeSinceStartupAsDouble - start;
             yield return WindowFrames("bot entry", 60);
+            yield return Capture("bot-map");
             start = Time.realtimeSinceStartupAsDouble;
             _game.Restart();
             while (!_game.Ready) yield return null;

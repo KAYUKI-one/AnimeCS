@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85920630218c2974bbcfa25f87eed541, type: 3}
+  m_Name: OpenDaylight
+  m_EditorClassIdentifier: SoftEnvironment::SoftEnvironment.DaylightPalette
+  _skybox: {fileID: 2100000, guid: ccaca1079f1680e479dbbb5a4b8ba448, type: 2}
+  _sunlight: {r: 1, g: 0.93, b: 0.83, a: 1}
+  _intensity: 1.48
+  _shadowStrength: 0.76
+  _skyLight: {r: 0.72, g: 0.84, b: 1, a: 1}
+  _horizonLight: {r: 0.74, g: 0.77, b: 0.87, a: 1}
+  _groundLight: {r: 0.57, g: 0.5, b: 0.48, a: 1}
+  _haze: {r: 0.83, g: 0.87, b: 0.92, a: 1}
+  _hazeDensity: 0.0045
+  _bakeSunEuler: {x: 48, y: 327, z: 0.0000012759447}
+  _bounceIntensity: 1

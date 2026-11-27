@@ -206,11 +206,24 @@ namespace AnimeCS.Play
         private UnityEngine.Rendering.Universal.UniversalAdditionalCameraData _baseData;
         private UnityEngine.Rendering.Volume _globalGrade;
         private Light _sceneSun, _mapSun;
+        private bool _mapOwnsLighting, _probesPending;
         private void ShowWarmup(int completed,int total) => _loading.ShaderProgress(completed,total);
         private void MapLight(bool inMatch)
         {
             if(_globalGrade) _globalGrade.sharedProfile=inMatch && SelectedMap && SelectedMap.CombatGrade?SelectedMap.CombatGrade:_presentation.daylightGrade;
             bool authored=inMatch && _mapSun;
+            if (_mapOwnsLighting && _loadedMap.IsValid() && _loadedMap.isLoaded)
+            {
+                // Unity takes the sky, ambient lighting and fog from the active additive scene.
+                var visibleScene = inMatch ? _loadedMap : gameObject.scene;
+                if (SceneManager.GetActiveScene() != visibleScene) SceneManager.SetActiveScene(visibleScene);
+                if (authored && SelectedMap.Daylight) SelectedMap.Daylight.ApplyToActiveScene(_mapSun);
+                if (inMatch && _probesPending)
+                {
+                    if (LightmapSettings.lightProbes) LightProbes.Tetrahedralize();
+                    _probesPending = false;
+                }
+            }
             if (_sceneSun) _sceneSun.enabled = !authored;
             if (_mapSun) _mapSun.enabled = authored;
             RenderSettings.sun = authored ? _mapSun : _sceneSun;
@@ -282,6 +295,8 @@ namespace AnimeCS.Play
             if (map.SpawnCount(Side.Attack) != LocalMatch.TeamSize || map.SpawnCount(Side.Defend) != LocalMatch.TeamSize)
                 throw new InvalidOperationException("地图需要攻守各五个出生位。");
             _mapSun=null;
+            _mapOwnsLighting=false;
+            _probesPending=false;
             var scenePath=map.PlayScenePath;
             if (!string.IsNullOrEmpty(scenePath))
             {
@@ -294,31 +309,52 @@ namespace AnimeCS.Play
                     yield return null;
                 }
                 _loadedMap = SceneManager.GetSceneByPath(scenePath);
-                bool baked=string.IsNullOrEmpty(map.ScenePath);
+                _mapOwnsLighting=string.IsNullOrEmpty(map.ScenePath) || map.Daylight;
                 foreach (var mapRoot in _loadedMap.GetRootGameObjects())
                 {
-                    if (baked && mapRoot.TryGetComponent<Light>(out var bakedSun) && bakedSun.type==LightType.Directional) { _mapSun=bakedSun;bakedSun.enabled=false; }
                     foreach (var camera in mapRoot.GetComponentsInChildren<Camera>(true)) camera.enabled = false;
                     foreach (var listener in mapRoot.GetComponentsInChildren<AudioListener>(true)) listener.enabled = false;
                     foreach (var geometry in mapRoot.GetComponentsInChildren<ImmutableMapMeshes>(true))
                         yield return geometry.ReleaseCpuCopies();
                 }
-                if(baked)
-                {
-                    SceneManager.SetActiveScene(_loadedMap);
-                    MapLight(false);
-                    LightProbes.Tetrahedralize();
-                }
             }
             else if (map.Geometry != null)
             {
                 var geometry = _mapRoot = Instantiate(map.Geometry, transform);
+                if (map.Daylight)
+                {
+                    _loadedMap = SceneManager.CreateScene(geometry.name);
+                    geometry.transform.SetParent(null, true);
+                    SceneManager.MoveGameObjectToScene(geometry, _loadedMap);
+                    _mapOwnsLighting = true;
+                }
                 // Raw FBX/OBJ geometry often has no physics; authored prefabs keep their colliders.
                 if (geometry.GetComponentInChildren<Collider>(true) == null)
                     foreach (var mesh in geometry.GetComponentsInChildren<MeshFilter>())
                         if (mesh.sharedMesh != null) mesh.gameObject.AddComponent<MeshCollider>().sharedMesh = mesh.sharedMesh;
             }
             else throw new InvalidOperationException("启动地图缺少场景或几何素材。");
+            if (_mapOwnsLighting)
+            {
+                SceneManager.SetActiveScene(_loadedMap);
+                _mapSun = RenderSettings.sun;
+                if (!_mapSun && map.Daylight)
+                {
+                    foreach (var root in _loadedMap.GetRootGameObjects())
+                    {
+                        _mapSun = System.Array.Find(root.GetComponentsInChildren<Light>(), l => l.type == LightType.Directional);
+                        if (_mapSun) break;
+                    }
+                    if (!_mapSun)
+                    {
+                        _mapSun = new GameObject("Environment daylight").AddComponent<Light>();
+                        _mapSun.type = LightType.Directional;
+                        map.Daylight.PrepareSunForBake(_mapSun);
+                    }
+                }
+                _probesPending = true;
+                MapLight(false);
+            }
             if(map.Navigation)_navigation=UnityEngine.AI.NavMesh.AddNavMeshData(map.Navigation);
         }
 

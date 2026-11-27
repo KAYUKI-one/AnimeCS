@@ -1,6 +1,6 @@
 {
   "name": "AnimeCS.Editor",
   "rootNamespace": "AnimeCS.Editor",
-  "references": ["AnimeCS.Runtime", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime"],
+  "references": ["AnimeCS.Runtime", "SoftEnvironment", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime"],
   "includePlatforms": ["Editor"]
 }

@@ -69,6 +69,8 @@ namespace AnimeCS.Content
         [SerializeField,HideInInspector] private string _lightingScenePath;
         [SerializeField,InspectorName("对局调色")] private UnityEngine.Rendering.VolumeProfile _combatGrade;
         public UnityEngine.Rendering.VolumeProfile CombatGrade=>_combatGrade;
+        [SerializeField, InspectorName("场景日照预设")] private SoftEnvironment.DaylightPalette _daylight;
+        public SoftEnvironment.DaylightPalette Daylight => _daylight;
         public string PlayScenePath => string.IsNullOrEmpty(_scenePath)?_lightingScenePath:_scenePath;
         public Vector3 SitePosition(Site site) => site == Site.B ? _siteB : _siteA;
         public float Radius => _siteRadius;

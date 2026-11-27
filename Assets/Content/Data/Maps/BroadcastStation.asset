@@ -12,8 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d65fc406864287e4a925dbf8417fd5f7, type: 3}
   m_Name: BroadcastStation
   m_EditorClassIdentifier: AnimeCS.Runtime::AnimeCS.Content.MapDefinition
-  _loadingBrief: "云端转播设施的连廊连接两个目标区域，高低差使中路视野格外重要。"
-  _loadingArt: {fileID: 2800000, guid: 8d6039c726534ae194c799c493ce684f, type: 3}
   _id: map.broadcast-station
   _displayName: "\u4E91\u4E0A\u8F6C\u64AD\u7AD9"
   _thumbnail: {fileID: 0}
@@ -65,9 +63,12 @@ MonoBehaviour:
   _navigation: {fileID: 0}
   _geometrySourceGuid: e69116ce92eab164bbb6fac8da21ca6f
   _lightingSceneGuid: b311e37029f33f646afef7ad6d8e7f05
+  _loadingArt: {fileID: 2800000, guid: 8d6039c726534ae194c799c493ce684f, type: 3}
+  _loadingBrief: "\u4E91\u7AEF\u8F6C\u64AD\u8BBE\u65BD\u7684\u8FDE\u5ECA\u8FDE\u63A5\u4E24\u4E2A\u76EE\u6807\u533A\u57DF\uFF0C\u9AD8\u4F4E\u5DEE\u4F7F\u4E2D\u8DEF\u89C6\u91CE\u683C\u5916\u91CD\u8981\u3002"
   _radarYaw: 0
   _lightingScenePath: Assets/Scenes/Maps/BroadcastStation/BroadcastStation.unity
   _combatGrade: {fileID: 0}
+  _daylight: {fileID: 11400000, guid: e5d06971e12db17469320187b918024a, type: 2}
   _buyRadius: 5
   _attackYaw: []
   _defendYaw: []

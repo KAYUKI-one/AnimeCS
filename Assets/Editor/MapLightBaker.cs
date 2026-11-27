@@ -64,24 +64,20 @@ namespace AnimeCS.Editor
                 sun.shadows=LightShadows.Soft;sun.shadowStrength=.78f;sun.shadowAngle=2f;RenderSettings.sun=sun;RenderSettings.skybox=style.daylightSky;
                 RenderSettings.ambientMode=AmbientMode.Trilight;RenderSettings.ambientSkyColor=style.skyLight;
                 RenderSettings.ambientEquatorColor=style.horizonLight;RenderSettings.ambientGroundColor=style.groundLight;
-                bool dust=map.Id=="map.dust2";
-                if(dust)
-                {
-                    sun.transform.rotation=Quaternion.Euler(50,-43,0);
-                    sun.color=new Color(1,.898f,.792f);sun.intensity=2.35f;sun.bounceIntensity=1.75f;
-                    RenderSettings.ambientSkyColor=new Color(.84f,.90f,.98f);
-                    RenderSettings.ambientEquatorColor=new Color(.78f,.79f,.80f);
-                    RenderSettings.ambientGroundColor=new Color(.56f,.51f,.44f);
-                    CreateDustGrade(map,style,sub);
-                }
+                if (map.Daylight) map.Daylight.PrepareSunForBake(sun);
                 var settingsPath=sub+"/Indirect.asset";
                 var settings=AssetDatabase.LoadAssetAtPath<LightingSettings>(settingsPath);
-                if(!settings){settings=new LightingSettings();AssetDatabase.CreateAsset(settings,settingsPath);}
-                settings.bakedGI=true;settings.realtimeGI=false;
-                settings.mixedBakeMode=map.Practice ? MixedLightingMode.Shadowmask : MixedLightingMode.IndirectOnly;
-                settings.lightmapper=LightingSettings.Lightmapper.ProgressiveGPU;
-                settings.lightmapResolution=6;settings.lightmapMaxSize=1024;settings.directSampleCount=16;
-                settings.indirectSampleCount=dust?128:64;settings.environmentSampleCount=dust?128:64;settings.maxBounces=dust?3:2;EditorUtility.SetDirty(settings);
+                if (!settings)
+                {
+                    settings = new LightingSettings {
+                        bakedGI = true, realtimeGI = false,
+                        mixedBakeMode = map.Practice ? MixedLightingMode.Shadowmask : MixedLightingMode.IndirectOnly,
+                        lightmapper = LightingSettings.Lightmapper.ProgressiveGPU,
+                        lightmapResolution = 6, lightmapMaxSize = 1024, directSampleCount = 16,
+                        indirectSampleCount = 64, environmentSampleCount = 64, maxBounces = 2
+                    };
+                    AssetDatabase.CreateAsset(settings, settingsPath);
+                }
                 Lightmapping.lightingSettings=settings;
                 var locations=new List<Vector3>();
                 foreach(Side side in new[]{Side.Attack,Side.Defend})
@@ -115,24 +111,6 @@ namespace AnimeCS.Editor
                 AssetDatabase.SaveAssets();
             }
             finally {SceneManager.SetActiveScene(previous);EditorSceneManager.CloseScene(scene,true);}
-        }
-
-        private static void CreateDustGrade(MapDefinition map,MatchPresentation style,string folder)
-        {
-            var path=folder+"/SunlitStreet.asset";
-            var profile=AssetDatabase.LoadAssetAtPath<VolumeProfile>(path);
-            if(!profile)
-            {
-                if(!AssetDatabase.CopyAsset(AssetDatabase.GetAssetPath(style.daylightGrade),path))throw new IOException(path);
-                profile=AssetDatabase.LoadAssetAtPath<VolumeProfile>(path);
-            }
-            if(profile.TryGet<ColorAdjustments>(out var adjustment))
-            {
-                adjustment.postExposure.Override(.30f);adjustment.contrast.Override(2);adjustment.saturation.Override(2);
-                EditorUtility.SetDirty(adjustment);
-            }
-            var so=new SerializedObject(map);
-            so.FindProperty("_combatGrade").objectReferenceValue=profile;so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         public static void Bake(MapDefinition map)

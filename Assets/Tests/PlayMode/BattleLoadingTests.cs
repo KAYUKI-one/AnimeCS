@@ -21,6 +21,10 @@ namespace AnimeCS.Tests
             var game=Object.FindAnyObjectByType<LocalGame>();
             var root=Object.FindAnyObjectByType<UIDocument>().rootVisualElement;
             yield return new WaitUntil(()=>game.InLobby);
+            var lobbyScene=SceneManager.GetActiveScene();
+            var lobbySky=RenderSettings.skybox;
+            var lobbySun=RenderSettings.sun;
+            bool lobbyFog=RenderSettings.fog;
             yield return services.Register(root);
             var map=Resources.FindObjectsOfTypeAll<MapDefinition>().First(m=>m.Id=="map.broadcast-station");
             game.SelectMap(map);
@@ -44,7 +48,14 @@ namespace AnimeCS.Tests
             }
             Assert.That(game.Ready,Is.True);
             Assert.That(screen.style.display.value,Is.EqualTo(DisplayStyle.None));
+            Assert.That(SceneManager.GetActiveScene().path,Is.EqualTo(map.PlayScenePath));
+            Assert.That(RenderSettings.sun.gameObject.scene.path,Is.EqualTo(map.PlayScenePath));
+            Assert.That(RenderSettings.skybox,Is.Not.EqualTo(lobbySky));
             game.ReturnToLobby();
+            Assert.That(SceneManager.GetActiveScene(),Is.EqualTo(lobbyScene));
+            Assert.That(RenderSettings.sun,Is.EqualTo(lobbySun));
+            Assert.That(RenderSettings.skybox,Is.EqualTo(lobbySky));
+            Assert.That(RenderSettings.fog,Is.EqualTo(lobbyFog));
         }
     }
 }

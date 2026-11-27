@@ -89,15 +89,21 @@ namespace AnimeCS.Tests
             Click("target-motion");Click("close-shop");
             game.ReturnToLobby();Click("mode");Click("mode-bots");
             yield return null; Assert.That(game.SelectedMap.Practice,Is.False);
-            for (int i = 0; i < 150 && SceneManager.GetActiveScene().path != bombScenePath; i++) yield return null;
-            Assert.That(SceneManager.GetActiveScene().path, Is.EqualTo(bombScenePath));
+            var loadDeadline = Time.realtimeSinceStartupAsDouble + 30;
+            while (!SceneManager.GetSceneByPath(bombScenePath).isLoaded && Time.realtimeSinceStartupAsDouble < loadDeadline)
+                yield return null;
+            Assert.That(SceneManager.GetSceneByPath(bombScenePath).isLoaded, Is.True);
+            Assert.That(SceneManager.GetActiveScene(), Is.EqualTo(game.gameObject.scene));
             Assert.That(SceneManager.GetSceneByPath(practiceScenePath).isLoaded, Is.False);
-            var bombProbes = LightmapSettings.lightProbes;
-            Assert.That(bombProbes, Is.Not.Null);
-            Assert.That(bombProbes.count, Is.GreaterThan(1));
             openingChoices = root.Q("sheet-content").Query<Button>().ToList().Select(button => button.text);
             Assert.That(openingChoices, Does.Contain(AttackOpening));
             Assert.That(openingChoices, Does.Contain(DefendOpening));
+            Click("close"); Click("start");
+            yield return new WaitUntil(()=>game.Ready);
+            Assert.That(SceneManager.GetActiveScene().path, Is.EqualTo(bombScenePath));
+            var bombProbes = LightmapSettings.lightProbes;
+            Assert.That(bombProbes, Is.Not.Null);
+            Assert.That(bombProbes.count, Is.GreaterThan(1));
             IEnumerator Ticks(int n){int end=match.Public.Tick+n;while(match.Public.Tick<end)yield return null;}
         }
 
