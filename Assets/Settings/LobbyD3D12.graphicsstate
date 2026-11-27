@@ -1,4 +1,14 @@
 {
+    "m_ObjectHideFlags": 0,
+    "m_CorrespondingSourceObject": {
+        "instanceID": 0
+    },
+    "m_PrefabInstance": {
+        "instanceID": 0
+    },
+    "m_PrefabAsset": {
+        "instanceID": 0
+    },
     "m_Name": "",
     "serializedVersion": "2",
     "m_Version": 0,
@@ -12,6 +22,11 @@
                 "Hash": "03d8b2f1f0688b352e1776e4b787ab11"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -47,6 +62,11 @@
                 "Hash": "09a6a805d765b53d22070734bf341c7b"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "0849e84e3d62649e8882e9d6f056a017",
+                    "type": 3
+                },
                 "shaderName": "Hidden/Universal Render Pipeline/ScreenSpaceAmbientOcclusion",
                 "shaderAssetGUID": "0849e84e3d62649e8882e9d6f056a017",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -79,9 +99,94 @@
         {
             "first": {
                 "serializedVersion": "2",
+                "Hash": "083247b8c79a2039c91b4d26bc3738c9"
+            },
+            "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "efa77a80ca0344749b4f19fdd5891cbe",
+                    "type": 3
+                },
+                "shaderName": "Hidden/lilToonOutline",
+                "shaderAssetGUID": "efa77a80ca0344749b4f19fdd5891cbe",
+                "shaderAssetLocalIdentifierInFile": 4800000,
+                "keywordNames": "_CLUSTER_LIGHT_LOOP _LIGHT_LAYERS _MAIN_LIGHT_SHADOWS_CASCADE _REFLECTION_PROBE_BLENDING _REFLECTION_PROBE_BOX_PROJECTION _SHADOWS_SOFT",
+                "subShaderIndex": 0,
+                "passIndex": 4,
+                "graphicsStateInfoSet": [
+                    {
+                        "vertexLayout": 7444424370868687011,
+                        "renderPass": 6411816435972218655,
+                        "renderState": 10013744087531817133,
+                        "subPassIndex": 1,
+                        "topology": 0,
+                        "forceCullMode": -1,
+                        "shadingRateCombinerPrimitive": 0,
+                        "shadingRateCombinerFragment": 0,
+                        "baseShadingRate": 0,
+                        "depthBias": 0.0,
+                        "slopeDepthBias": 0.0,
+                        "userBackface": false,
+                        "appBackface": false,
+                        "wireframe": false,
+                        "invertProjectionMatrix": true,
+                        "unfilterableTextureBindings": 0,
+                        "nonfilteringSamplerBindings": 0
+                    }
+                ]
+            }
+        },
+        {
+            "first": {
+                "serializedVersion": "2",
+                "Hash": "06304637a68c824fc22f31dad51c3ade"
+            },
+            "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "efa77a80ca0344749b4f19fdd5891cbe",
+                    "type": 3
+                },
+                "shaderName": "Hidden/lilToonOutline",
+                "shaderAssetGUID": "efa77a80ca0344749b4f19fdd5891cbe",
+                "shaderAssetLocalIdentifierInFile": 4800000,
+                "keywordNames": "_CLUSTER_LIGHT_LOOP _LIGHT_LAYERS _REFLECTION_PROBE_BLENDING _REFLECTION_PROBE_BOX_PROJECTION",
+                "subShaderIndex": 0,
+                "passIndex": 2,
+                "graphicsStateInfoSet": [
+                    {
+                        "vertexLayout": 7444424370868687011,
+                        "renderPass": 11294987102597378144,
+                        "renderState": 5139698867707353204,
+                        "subPassIndex": 0,
+                        "topology": 0,
+                        "forceCullMode": -1,
+                        "shadingRateCombinerPrimitive": 0,
+                        "shadingRateCombinerFragment": 0,
+                        "baseShadingRate": 0,
+                        "depthBias": 1.0,
+                        "slopeDepthBias": 2.5,
+                        "userBackface": false,
+                        "appBackface": false,
+                        "wireframe": false,
+                        "invertProjectionMatrix": true,
+                        "unfilterableTextureBindings": 0,
+                        "nonfilteringSamplerBindings": 0
+                    }
+                ]
+            }
+        },
+        {
+            "first": {
+                "serializedVersion": "2",
                 "Hash": "2d4662d16043aa39d107a9fdf534897c"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -114,9 +219,54 @@
         {
             "first": {
                 "serializedVersion": "2",
+                "Hash": "32947867c4196949130a650c07de2489"
+            },
+            "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "df12117ecd77c31469c224178886498e",
+                    "type": 3
+                },
+                "shaderName": "lilToon",
+                "shaderAssetGUID": "df12117ecd77c31469c224178886498e",
+                "shaderAssetLocalIdentifierInFile": 4800000,
+                "keywordNames": "_CLUSTER_LIGHT_LOOP _LIGHT_LAYERS _MAIN_LIGHT_SHADOWS_CASCADE _REFLECTION_PROBE_BLENDING _REFLECTION_PROBE_BOX_PROJECTION _SHADOWS_SOFT",
+                "subShaderIndex": 0,
+                "passIndex": 3,
+                "graphicsStateInfoSet": []
+            }
+        },
+        {
+            "first": {
+                "serializedVersion": "2",
+                "Hash": "33ec66711e4bf208c16a4edc05f19c43"
+            },
+            "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "df12117ecd77c31469c224178886498e",
+                    "type": 3
+                },
+                "shaderName": "lilToon",
+                "shaderAssetGUID": "df12117ecd77c31469c224178886498e",
+                "shaderAssetLocalIdentifierInFile": 4800000,
+                "keywordNames": "_CLUSTER_LIGHT_LOOP _LIGHT_LAYERS _MAIN_LIGHT_SHADOWS_CASCADE _REFLECTION_PROBE_BLENDING _REFLECTION_PROBE_BOX_PROJECTION _SCREEN_SPACE_OCCLUSION _SHADOWS_SOFT",
+                "subShaderIndex": 0,
+                "passIndex": 0,
+                "graphicsStateInfoSet": []
+            }
+        },
+        {
+            "first": {
+                "serializedVersion": "2",
                 "Hash": "43ca2cdddc7a36e4b3b06e9c63937ae6"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "5f1864addb451f54bae8c86d230f736e",
+                    "type": 3
+                },
                 "shaderName": "Hidden/Universal Render Pipeline/Bloom",
                 "shaderAssetGUID": "5f1864addb451f54bae8c86d230f736e",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -152,6 +302,11 @@
                 "Hash": "57a8385a1b0500a5167c49d1683d855e"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "ec26c78555cf25d4cbd7a8e89683e2bf",
+                    "type": 3
+                },
                 "shaderName": "AnimeCS/Character Surface",
                 "shaderAssetGUID": "ec26c78555cf25d4cbd7a8e89683e2bf",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -187,6 +342,11 @@
                 "Hash": "5d4cc7b9a137b57b9e99b2e1ecbc7007"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -222,6 +382,11 @@
                 "Hash": "6256f40ce9b9cc24323c0b6c4091782c"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -257,6 +422,11 @@
                 "Hash": "53f698cf81a080e933776c4eaa45e44a"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -292,6 +462,11 @@
                 "Hash": "7720de7bef1a2f7379b712a2825d6a06"
             },
             "second": {
+                "shader": {
+                    "fileID": 9002,
+                    "guid": "0000000000000000f000000000000000",
+                    "type": 0
+                },
                 "shaderName": "Hidden/Internal-GUITexture",
                 "shaderAssetGUID": "0860a397848c35f488bf42d3c36a3330",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -327,6 +502,11 @@
                 "Hash": "631adde4630ddbcd4b6fe389e5cd83f8"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "5f1864addb451f54bae8c86d230f736e",
+                    "type": 3
+                },
                 "shaderName": "Hidden/Universal Render Pipeline/Bloom",
                 "shaderAssetGUID": "5f1864addb451f54bae8c86d230f736e",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -362,6 +542,11 @@
                 "Hash": "81667abf59e16a9abd349b1ad5e8762a"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "ec26c78555cf25d4cbd7a8e89683e2bf",
+                    "type": 3
+                },
                 "shaderName": "AnimeCS/Character Surface",
                 "shaderAssetGUID": "ec26c78555cf25d4cbd7a8e89683e2bf",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -397,6 +582,11 @@
                 "Hash": "925a35532273f9cc2344e24791b4e279"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "0849e84e3d62649e8882e9d6f056a017",
+                    "type": 3
+                },
                 "shaderName": "Hidden/Universal Render Pipeline/ScreenSpaceAmbientOcclusion",
                 "shaderAssetGUID": "0849e84e3d62649e8882e9d6f056a017",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -432,6 +622,11 @@
                 "Hash": "99f801c9ca02e3c3b13d89e439ea3a3e"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "5f1864addb451f54bae8c86d230f736e",
+                    "type": 3
+                },
                 "shaderName": "Hidden/Universal Render Pipeline/Bloom",
                 "shaderAssetGUID": "5f1864addb451f54bae8c86d230f736e",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -467,6 +662,11 @@
                 "Hash": "a11cad5082d178c146851b11fe8c6856"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "e7857e9d0c934dc4f83f270f8447b006",
+                    "type": 3
+                },
                 "shaderName": "Hidden/Universal Render Pipeline/UberPost",
                 "shaderAssetGUID": "e7857e9d0c934dc4f83f270f8447b006",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -502,6 +702,11 @@
                 "Hash": "ab80687ec22c2fdda5bb3b628d2e723c"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "5f1864addb451f54bae8c86d230f736e",
+                    "type": 3
+                },
                 "shaderName": "Hidden/Universal Render Pipeline/Bloom",
                 "shaderAssetGUID": "5f1864addb451f54bae8c86d230f736e",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -537,6 +742,11 @@
                 "Hash": "b192697c8eaed41f949b3b91129c1462"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -572,6 +782,11 @@
                 "Hash": "b0fc2c6d460d60cdcf7165c6ca52a0ad"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -607,6 +822,11 @@
                 "Hash": "55becdc293d48e38558daaa200d1c7f1"
             },
             "second": {
+                "shader": {
+                    "fileID": 9100,
+                    "guid": "0000000000000000f000000000000000",
+                    "type": 0
+                },
                 "shaderName": "Hidden/Internal-UIRDefault",
                 "shaderAssetGUID": "1e5f18a346ed454418f93aa7eaf55791",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -642,6 +862,11 @@
                 "Hash": "d3f2a73b85e2fa70400d69439620ced3"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -677,6 +902,11 @@
                 "Hash": "db7ecd0406d12d69dacd1898253efaf4"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -712,6 +942,11 @@
                 "Hash": "efb2bb206a9e2dc9f825757470ba7d44"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "0849e84e3d62649e8882e9d6f056a017",
+                    "type": 3
+                },
                 "shaderName": "Hidden/Universal Render Pipeline/ScreenSpaceAmbientOcclusion",
                 "shaderAssetGUID": "0849e84e3d62649e8882e9d6f056a017",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -747,6 +982,11 @@
                 "Hash": "f1d4ad93e2a625cda780dba28bbfbaf1"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "65df88701913c224d95fc554db28381a",
+                    "type": 3
+                },
                 "shaderName": "Hidden/Universal Render Pipeline/LutBuilderLdr",
                 "shaderAssetGUID": "65df88701913c224d95fc554db28381a",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -782,6 +1022,11 @@
                 "Hash": "1323edb0d0cdd796e0e24c083a4d6584"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "ec26c78555cf25d4cbd7a8e89683e2bf",
+                    "type": 3
+                },
                 "shaderName": "AnimeCS/Character Surface",
                 "shaderAssetGUID": "ec26c78555cf25d4cbd7a8e89683e2bf",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -817,6 +1062,11 @@
                 "Hash": "10d545442e9c3b8455ffb864f6b5a6f2"
             },
             "second": {
+                "shader": {
+                    "fileID": 68,
+                    "guid": "0000000000000000e000000000000000",
+                    "type": 0
+                },
                 "shaderName": "Hidden/InternalClear",
                 "shaderAssetGUID": "3fc50aeabf787ea4e9b1d09bfbd2bff5",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -852,6 +1102,11 @@
                 "Hash": "2e8140a2fffdfcc3d9344f285aab6ea6"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "ec26c78555cf25d4cbd7a8e89683e2bf",
+                    "type": 3
+                },
                 "shaderName": "AnimeCS/Character Surface",
                 "shaderAssetGUID": "ec26c78555cf25d4cbd7a8e89683e2bf",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -867,6 +1122,11 @@
                 "Hash": "357bfbf25bc9c5f412f1206a601c001a"
             },
             "second": {
+                "shader": {
+                    "fileID": 103,
+                    "guid": "0000000000000000f000000000000000",
+                    "type": 0
+                },
                 "shaderName": "Skybox/Cubemap",
                 "shaderAssetGUID": "3ed86df59d11a651a000969b27cf9b59",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -902,6 +1162,11 @@
                 "Hash": "76372680c15f1725a80f24afb3d90d51"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -934,9 +1199,54 @@
         {
             "first": {
                 "serializedVersion": "2",
+                "Hash": "79f9fbf10d27dd640015d67c6666d3e4"
+            },
+            "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "efa77a80ca0344749b4f19fdd5891cbe",
+                    "type": 3
+                },
+                "shaderName": "Hidden/lilToonOutline",
+                "shaderAssetGUID": "efa77a80ca0344749b4f19fdd5891cbe",
+                "shaderAssetLocalIdentifierInFile": 4800000,
+                "keywordNames": "_CLUSTER_LIGHT_LOOP _LIGHT_LAYERS _MAIN_LIGHT_SHADOWS_CASCADE _REFLECTION_PROBE_BLENDING _REFLECTION_PROBE_BOX_PROJECTION _SCREEN_SPACE_OCCLUSION _SHADOWS_SOFT",
+                "subShaderIndex": 0,
+                "passIndex": 0,
+                "graphicsStateInfoSet": [
+                    {
+                        "vertexLayout": 7444424370868687011,
+                        "renderPass": 8422648699406483309,
+                        "renderState": 10964803032788712255,
+                        "subPassIndex": 0,
+                        "topology": 0,
+                        "forceCullMode": -1,
+                        "shadingRateCombinerPrimitive": 0,
+                        "shadingRateCombinerFragment": 0,
+                        "baseShadingRate": 0,
+                        "depthBias": 0.0,
+                        "slopeDepthBias": 0.0,
+                        "userBackface": false,
+                        "appBackface": false,
+                        "wireframe": false,
+                        "invertProjectionMatrix": true,
+                        "unfilterableTextureBindings": 0,
+                        "nonfilteringSamplerBindings": 0
+                    }
+                ]
+            }
+        },
+        {
+            "first": {
+                "serializedVersion": "2",
                 "Hash": "85d3952b7285037eaa6aa5bbf7c488c5"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -969,9 +1279,54 @@
         {
             "first": {
                 "serializedVersion": "2",
+                "Hash": "9f97859065a0274d8cdf708c44a249f0"
+            },
+            "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "efa77a80ca0344749b4f19fdd5891cbe",
+                    "type": 3
+                },
+                "shaderName": "Hidden/lilToonOutline",
+                "shaderAssetGUID": "efa77a80ca0344749b4f19fdd5891cbe",
+                "shaderAssetLocalIdentifierInFile": 4800000,
+                "keywordNames": "_CLUSTER_LIGHT_LOOP _LIGHT_LAYERS _MAIN_LIGHT_SHADOWS_CASCADE _REFLECTION_PROBE_BLENDING _REFLECTION_PROBE_BOX_PROJECTION _SCREEN_SPACE_OCCLUSION _SHADOWS_SOFT",
+                "subShaderIndex": 0,
+                "passIndex": 1,
+                "graphicsStateInfoSet": [
+                    {
+                        "vertexLayout": 16496790821534512709,
+                        "renderPass": 8422648699406483309,
+                        "renderState": 3666920913762101981,
+                        "subPassIndex": -1,
+                        "topology": 0,
+                        "forceCullMode": -1,
+                        "shadingRateCombinerPrimitive": 0,
+                        "shadingRateCombinerFragment": 0,
+                        "baseShadingRate": 0,
+                        "depthBias": 0.0,
+                        "slopeDepthBias": 0.0,
+                        "userBackface": false,
+                        "appBackface": false,
+                        "wireframe": false,
+                        "invertProjectionMatrix": true,
+                        "unfilterableTextureBindings": 0,
+                        "nonfilteringSamplerBindings": 0
+                    }
+                ]
+            }
+        },
+        {
+            "first": {
+                "serializedVersion": "2",
                 "Hash": "a827fd6e5651ae5cd8ba2290fd32499f"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "0849e84e3d62649e8882e9d6f056a017",
+                    "type": 3
+                },
                 "shaderName": "Hidden/Universal Render Pipeline/ScreenSpaceAmbientOcclusion",
                 "shaderAssetGUID": "0849e84e3d62649e8882e9d6f056a017",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -1007,6 +1362,11 @@
                 "Hash": "b8e103d918078774a0f2d1c6c4e09a3f"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "ec26c78555cf25d4cbd7a8e89683e2bf",
+                    "type": 3
+                },
                 "shaderName": "AnimeCS/Character Surface",
                 "shaderAssetGUID": "ec26c78555cf25d4cbd7a8e89683e2bf",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -1042,6 +1402,11 @@
                 "Hash": "eafdbe5024225d72ec25a25a9a67b911"
             },
             "second": {
+                "shader": {
+                    "fileID": 4800000,
+                    "guid": "933532a4fcc9baf4fa0491de14d08ed7",
+                    "type": 3
+                },
                 "shaderName": "Universal Render Pipeline/Lit",
                 "shaderAssetGUID": "933532a4fcc9baf4fa0491de14d08ed7",
                 "shaderAssetLocalIdentifierInFile": 4800000,
@@ -1584,6 +1949,108 @@
             }
         },
         {
+            "first": 16496790821534512709,
+            "second": {
+                "vertexChannelsInfo": [
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 3
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 12,
+                        "format": 0,
+                        "dimension": 3
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 24,
+                        "format": 0,
+                        "dimension": 4
+                    },
+                    {
+                        "stream": 3,
+                        "offset": 0,
+                        "format": 2,
+                        "dimension": 4
+                    },
+                    {
+                        "stream": 1,
+                        "offset": 0,
+                        "format": 1,
+                        "dimension": 2
+                    },
+                    {
+                        "stream": 1,
+                        "offset": 4,
+                        "format": 0,
+                        "dimension": 2
+                    },
+                    {
+                        "stream": 1,
+                        "offset": 12,
+                        "format": 1,
+                        "dimension": 2
+                    },
+                    {
+                        "stream": 1,
+                        "offset": 16,
+                        "format": 1,
+                        "dimension": 2
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    }
+                ],
+                "vertexStrides": [
+                    40,
+                    20,
+                    0,
+                    4,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "vertexStreamCount": 3
+            }
+        },
+        {
             "first": 12695440296898572277,
             "second": {
                 "vertexChannelsInfo": [
@@ -1887,6 +2354,108 @@
                     0
                 ],
                 "vertexStreamCount": 0
+            }
+        },
+        {
+            "first": 7444424370868687011,
+            "second": {
+                "vertexChannelsInfo": [
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 3
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 12,
+                        "format": 0,
+                        "dimension": 3
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 24,
+                        "format": 0,
+                        "dimension": 4
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    },
+                    {
+                        "stream": 1,
+                        "offset": 0,
+                        "format": 1,
+                        "dimension": 2
+                    },
+                    {
+                        "stream": 1,
+                        "offset": 4,
+                        "format": 0,
+                        "dimension": 2
+                    },
+                    {
+                        "stream": 1,
+                        "offset": 12,
+                        "format": 1,
+                        "dimension": 2
+                    },
+                    {
+                        "stream": 1,
+                        "offset": 16,
+                        "format": 1,
+                        "dimension": 2
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    },
+                    {
+                        "stream": 0,
+                        "offset": 0,
+                        "format": 0,
+                        "dimension": 0
+                    }
+                ],
+                "vertexStrides": [
+                    40,
+                    20,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "vertexStreamCount": 2
             }
         }
     ],
@@ -4617,6 +5186,551 @@
             }
         },
         {
+            "first": 8422648699406483309,
+            "second": {
+                "attachments": [
+                    {
+                        "format": 94,
+                        "needsResolve": false,
+                        "canMultiview": false,
+                        "loadAction": 1,
+                        "storeAction": 3,
+                        "sampleCount": 1
+                    },
+                    {
+                        "format": 4,
+                        "needsResolve": false,
+                        "canMultiview": false,
+                        "loadAction": 1,
+                        "storeAction": 0,
+                        "sampleCount": 1
+                    },
+                    {
+                        "format": 0,
+                        "needsResolve": false,
+                        "canMultiview": false,
+                        "loadAction": 0,
+                        "storeAction": 0,
+                        "sampleCount": 0
+                    },
+                    {
+                        "format": 0,
+                        "needsResolve": false,
+                        "canMultiview": false,
+                        "loadAction": 0,
+                        "storeAction": 0,
+                        "sampleCount": 0
+                    },
+                    {
+                        "format": 0,
+                        "needsResolve": false,
+                        "canMultiview": false,
+                        "loadAction": 0,
+                        "storeAction": 0,
+                        "sampleCount": 0
+                    },
+                    {
+                        "format": 0,
+                        "needsResolve": false,
+                        "canMultiview": false,
+                        "loadAction": 0,
+                        "storeAction": 0,
+                        "sampleCount": 0
+                    },
+                    {
+                        "format": 0,
+                        "needsResolve": false,
+                        "canMultiview": false,
+                        "loadAction": 0,
+                        "storeAction": 0,
+                        "sampleCount": 0
+                    },
+                    {
+                        "format": 0,
+                        "needsResolve": false,
+                        "canMultiview": false,
+                        "loadAction": 0,
+                        "storeAction": 0,
+                        "sampleCount": 0
+                    }
+                ],
+                "attachmentCount": 2,
+                "subPasses": [
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                1,
+                                -1,
+                                -1,
+                                -1,
+                                -1,
+                                -1,
+                                -1,
+                                -1
+                            ],
+                            "activeAttachments": 1
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    },
+                    {
+                        "inputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "colorOutputs": {
+                            "attachments": [
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0,
+                                0
+                            ],
+                            "activeAttachments": 0
+                        },
+                        "flags": 0
+                    }
+                ],
+                "subPassCount": 1,
+                "depthAttachmentIndex": 0,
+                "shadingRateIndex": -1,
+                "foveationImageIndex": -1,
+                "multiviewCount": 0,
+                "sampleCount": 1,
+                "hasEyeTexture": false
+            }
+        },
+        {
             "first": 3469922188915394730,
             "second": {
                 "attachments": [
@@ -6254,6 +7368,118 @@
     ],
     "m_RenderStateMap": [
         {
+            "first": 3666920913762101981,
+            "second": {
+                "renderState": {
+                    "blendState": {
+                        "rt": [
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 10,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            }
+                        ],
+                        "separateMRTBlend": 0,
+                        "alphaToMask": 0
+                    },
+                    "rasterState": {
+                        "cullMode": 1,
+                        "depthBias": 0,
+                        "slopeScaledDepthBias": 0.0,
+                        "depthClip": 1,
+                        "conservative": 0
+                    },
+                    "depthState": {
+                        "depthWrite": 1,
+                        "depthFunc": 2
+                    },
+                    "stencilState": {
+                        "stencilEnable": 1,
+                        "readMask": 255,
+                        "writeMask": 255,
+                        "padding": 0,
+                        "stencilFuncFront": 8,
+                        "stencilPassOpFront": 0,
+                        "stencilFailOpFront": 0,
+                        "stencilZFailOpFront": 0,
+                        "stencilFuncBack": 8,
+                        "stencilPassOpBack": 0,
+                        "stencilFailOpBack": 0,
+                        "stencilZFailOpBack": 0
+                    },
+                    "stencilRef": 0,
+                    "mask": 15
+                }
+            }
+        },
+        {
             "first": 4985964129555546333,
             "second": {
                 "renderState": {
@@ -6478,6 +7704,118 @@
             }
         },
         {
+            "first": 10964803032788712255,
+            "second": {
+                "renderState": {
+                    "blendState": {
+                        "rt": [
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 10,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            }
+                        ],
+                        "separateMRTBlend": 0,
+                        "alphaToMask": 0
+                    },
+                    "rasterState": {
+                        "cullMode": 0,
+                        "depthBias": 0,
+                        "slopeScaledDepthBias": 0.0,
+                        "depthClip": 1,
+                        "conservative": 0
+                    },
+                    "depthState": {
+                        "depthWrite": 1,
+                        "depthFunc": 4
+                    },
+                    "stencilState": {
+                        "stencilEnable": 1,
+                        "readMask": 255,
+                        "writeMask": 255,
+                        "padding": 0,
+                        "stencilFuncFront": 8,
+                        "stencilPassOpFront": 0,
+                        "stencilFailOpFront": 0,
+                        "stencilZFailOpFront": 0,
+                        "stencilFuncBack": 8,
+                        "stencilPassOpBack": 0,
+                        "stencilFailOpBack": 0,
+                        "stencilZFailOpBack": 0
+                    },
+                    "stencilRef": 0,
+                    "mask": 15
+                }
+            }
+        },
+        {
             "first": 16425680416059072479,
             "second": {
                 "renderState": {
@@ -6583,6 +7921,118 @@
                         "stencilPassOpBack": 0,
                         "stencilFailOpBack": 0,
                         "stencilZFailOpBack": 4
+                    },
+                    "stencilRef": 0,
+                    "mask": 15
+                }
+            }
+        },
+        {
+            "first": 10013744087531817133,
+            "second": {
+                "renderState": {
+                    "blendState": {
+                        "rt": [
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            },
+                            {
+                                "writeMask": 15,
+                                "srcBlend": 1,
+                                "dstBlend": 0,
+                                "srcBlendAlpha": 1,
+                                "dstBlendAlpha": 0,
+                                "blendOp": 0,
+                                "blendOpAlpha": 0
+                            }
+                        ],
+                        "separateMRTBlend": 0,
+                        "alphaToMask": 0
+                    },
+                    "rasterState": {
+                        "cullMode": 0,
+                        "depthBias": 0,
+                        "slopeScaledDepthBias": 0.0,
+                        "depthClip": 1,
+                        "conservative": 0
+                    },
+                    "depthState": {
+                        "depthWrite": 1,
+                        "depthFunc": 4
+                    },
+                    "stencilState": {
+                        "stencilEnable": 1,
+                        "readMask": 255,
+                        "writeMask": 255,
+                        "padding": 0,
+                        "stencilFuncFront": 8,
+                        "stencilPassOpFront": 0,
+                        "stencilFailOpFront": 0,
+                        "stencilZFailOpFront": 0,
+                        "stencilFuncBack": 8,
+                        "stencilPassOpBack": 0,
+                        "stencilFailOpBack": 0,
+                        "stencilZFailOpBack": 0
                     },
                     "stencilRef": 0,
                     "mask": 15

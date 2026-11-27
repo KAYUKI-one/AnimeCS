@@ -245,15 +245,6 @@ namespace AnimeCS.Editor
                         if (texture) m.SetTexture("_EmissionMap", texture);
                         m.SetColor("_EmissionColor", tint * .13f);
                     }
-                    if (original.name == "Cantarella_T06" || original.name == "Lily_T07")
-                    {
-                        m.SetFloat("_Surface", 1);
-                        m.SetFloat("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                        m.SetFloat("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                        m.SetFloat("_ZWrite", 0);
-                        m.SetOverrideTag("RenderType","Transparent");
-                        m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); m.renderQueue = 3000;
-                    }
                     AssetDatabase.CreateAsset(m, matPath);
                 }
                 if (character && folder.Contains("/Characters/")) CharacterShading.Apply(original.name,m);
@@ -264,7 +255,7 @@ namespace AnimeCS.Editor
                     var deLit=AssetDatabase.LoadAssetAtPath<Texture2D>(folder+"/Ember47Albedo.png");
                     if(deLit)diffuse=deLit;
                 }
-                if (diffuse && m.GetTexture("_BaseMap") != diffuse) { m.SetTexture("_BaseMap", diffuse); EditorUtility.SetDirty(m); }
+                if (diffuse && m.mainTexture != diffuse) { m.mainTexture = diffuse; EditorUtility.SetDirty(m); }
                 if (!character && original.name.EndsWith("_T00", StringComparison.Ordinal))
                 {
                     string normalPath = folder + "/" + original.name.Replace("_T00","_N") + ".png";
@@ -276,8 +267,8 @@ namespace AnimeCS.Editor
                         EditorUtility.SetDirty(m);
                     }
                 }
-                if(character && m.HasProperty("_EmissionColor"))
-                { m.SetColor("_EmissionColor",m.GetColor("_BaseColor")*.035f);EditorUtility.SetDirty(m); }
+                if(character && !StylizedCharacters.Editor.CharacterToonMaterial.IsPrepared(m) && m.HasProperty("_EmissionColor"))
+                { m.SetColor("_EmissionColor",m.color*.035f);EditorUtility.SetDirty(m); }
                 if (!character && (original.name.EndsWith("_Ruby") || original.name.EndsWith("_T00")))
                 {
                     string metalPath=folder+"/"+original.name.Replace("_T00","_Metal")+".png";
@@ -312,10 +303,13 @@ namespace AnimeCS.Editor
                 importer.SaveAndReimport();
             }
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-            if (material.GetTexture("_BumpMap") == texture && material.IsKeywordEnabled("_NORMALMAP")) return;
+            bool toon = StylizedCharacters.Editor.CharacterToonMaterial.IsPrepared(material);
+            if (material.GetTexture("_BumpMap") == texture &&
+                (toon ? material.GetFloat("_UseBumpMap")>.5f : material.IsKeywordEnabled("_NORMALMAP"))) return;
             material.SetTexture("_BumpMap",texture);
-            material.SetFloat("_BumpScale",.65f);
-            material.EnableKeyword("_NORMALMAP");
+            material.SetFloat("_BumpScale",toon ? .35f : .65f);
+            if(toon) material.SetFloat("_UseBumpMap",1);
+            else material.EnableKeyword("_NORMALMAP");
             EditorUtility.SetDirty(material);
         }
 
@@ -370,7 +364,7 @@ namespace AnimeCS.Editor
                     material.doubleSidedGI = true;
                     AssetDatabase.CreateAsset(material, materialPath);
                 }
-                material.SetTexture("_BaseMap", Load<Texture2D>(folder + side + "Weave.png"));
+                material.mainTexture=Load<Texture2D>(folder + side + "Weave.png");
                 EditorUtility.SetDirty(material);
                 var root = new GameObject(name + " " + side + " insignia");
                 try

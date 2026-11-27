@@ -33,14 +33,6 @@ namespace AnimeCS.Tests
             public bool TryGetElimination(int sequence,out Elimination item) { item=Latest; return sequence==1; }
         }
 
-        private sealed class HudSeat : ISeatPort
-        {
-            public SeatView State;
-            public SeatView Read()=>State;
-            public SeatView WatchTeam(int direction=0)=>State;
-            public bool Submit(int tick,SeatIntent intent)=>false;
-        }
-
         [UnityTest] public IEnumerator OnlineHudUsesTheAuthorizedFeedAndSeparatesRoomActionsFromLeaving()
         {
             yield return SceneManager.LoadSceneAsync(Scene);
@@ -51,18 +43,18 @@ namespace AnimeCS.Tests
             var catalog=(ContentCatalog)typeof(LocalGame).GetField("_catalog",flags).GetValue(game);
             var root=Object.FindAnyObjectByType<UIDocument>().rootVisualElement.Q("hud");
             var clock=new PublicMatchView { Round=1,Tick=200,Phase=RoundPhase.Contest,Score0=3,Score1=8 };
-            var ports=new ISeatPort[LocalMatch.Seats];
-            for(int i=0;i<ports.Length;i++) ports[i]=new HudSeat { State=new SeatView { Seat=i,Health=100,Match=clock } };
-            var me=ports[6].Read();
+            var ports=new SeatView[LocalMatch.Seats];
+            for(int i=0;i<ports.Length;i++) ports[i]=new SeatView { Seat=i,Health=100,Match=clock };
+            var me=ports[6];
             var feed=new RemoteFeed { Latest=new Elimination(199,1,6,1,"队长","对手",catalog.StartingPistol(Side.Attack),HitZone.Head,false) };
-            hud.StartMatch(null,null,feed,true);
+            hud.StartMatch(feed,null,false,true,true);
             hud.Present(me,me,ports);
             Assert.That(root.Q<Label>("our-score").text,Is.EqualTo("8"));
             Assert.That(root.Q("kill-feed").Children().First().Q<Label>(className:"kill-player").text,Is.EqualTo("队长"));
             Assert.That(root.Q("kill-feed").Children().First().ClassListContains("own-kill"),Is.True);
             for(int local=0;local<=LocalMatch.Seats-1;local++)
             {
-                var order=Enumerable.Range(0,LocalMatch.Seats).Select(i=>MatchHud.RosterSeat(i,local)).ToArray();
+                var order=Enumerable.Range(0,LocalMatch.Seats).Select(i=>MatchHud.RosterSeat(i,local,LocalMatch.TeamSize)).ToArray();
                 Assert.That(order.Distinct().Count(),Is.EqualTo(LocalMatch.Seats));
                 Assert.That(order[0],Is.EqualTo(local));
                 Assert.That(order.Take(LocalMatch.TeamSize).All(i=>i/LocalMatch.TeamSize==local/LocalMatch.TeamSize),Is.True);
@@ -76,7 +68,7 @@ namespace AnimeCS.Tests
             hud.Present(me,me,ports);
             Assert.That(root.Q("restart").style.display.value,Is.EqualTo(DisplayStyle.Flex));
             Assert.That(root.Q<Label>("pause-title").text,Is.EqualTo("我方获胜"));
-            hud.StartMatch(null,null,feed,false);
+            hud.StartMatch(feed,null,false,false,false);
             hud.Present(me,me,ports);
             Assert.That(root.Q("restart").style.display.value,Is.EqualTo(DisplayStyle.None));
             Assert.That(root.Q("end-room").style.display.value,Is.EqualTo(DisplayStyle.None));

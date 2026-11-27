@@ -1,5 +1,5 @@
 {
   "name": "AnimeCS.PlayTests",
-  "references": ["AnimeCS.Runtime", "Unity.InputSystem", "Unity.RenderPipelines.Universal.Runtime"],
+  "references": ["AnimeCS.Runtime", "Unity.InputSystem", "Unity.RenderPipelines.Universal.Runtime", "StylizedCharacters.Runtime", "com.unity.animations.springbone"],
   "optionalUnityReferences": ["TestAssemblies"]
 }

@@ -29,6 +29,7 @@ namespace AnimeCS.Play
         private readonly ArenaPawn[] _actors = new ArenaPawn[LocalMatch.Seats];
         private readonly AppearancePresenter[] _avatars = new AppearancePresenter[LocalMatch.Seats];
         private readonly ISeatPort[] _ports = new ISeatPort[LocalMatch.Seats];
+        private readonly SeatView[] _hudSeats = new SeatView[LocalMatch.Seats];
         private readonly ISeatDriver[] _drivers = new ISeatDriver[LocalMatch.Seats];
         private readonly Dictionary<GroundPickup, GameObject> _drops = new();
         private readonly HashSet<GroundPickup> _presentDrops = new();
@@ -37,6 +38,7 @@ namespace AnimeCS.Play
         private KeyboardSeat _keyboard;
         private MatchHud _hud;
         private TeamNameplates _teamIds;
+        private readonly TeamNameplates.Entry[] _teamTags=new TeamNameplates.Entry[LocalMatch.TeamSize];
         private LocalMatch _match;
         private int _cameraMask, _handsMask;
         private float _matchFov;
@@ -389,12 +391,26 @@ namespace AnimeCS.Play
             _lobbyHost=new VisualElement(); _hudHost=new VisualElement();
             _lobbyHost.style.flexGrow=1; _hudHost.style.flexGrow=1;
             root.Add(_lobbyHost); root.Add(_hudHost);
-            _loading = new BattleLoadingScreen(_catalog, _presentation.battleLoadingStyle);
+            _loading = new BattleLoadingScreen(MatchFormat.TeamSize, _presentation.battleLoadingStyle);
             root.Add(_loading);
-            _hud = new MatchHud(_hudHost,_presentation,_catalog,_rules,_keyboard.Order,TogglePause,Restart,ReturnToLobby,EndOnlineRoom);
-            _teamIds = new TeamNameplates(_hudHost.Q("hud"));
+            _hud = new MatchHud(_hudHost,_presentation,_catalog,_rules,LocalMatch.TeamSize);
+            _hud.OrderRequested += _keyboard.Order;
+            _hud.ResumeRequested += TogglePause;
+            _hud.RestartRequested += Restart;
+            _hud.LobbyRequested += ReturnToLobby;
+            _hud.EndRoomRequested += EndOnlineRoom;
+            _hud.TargetMotionRequested += ToggleTargetMotion;
+            _teamIds = new TeamNameplates(_hudHost.Q("hud"),_teamTags.Length);
             Account = new AnimeCS.Accounts.AccountClient();
-            _lobby = new LobbyScreen(_lobbyHost,_presentation,_catalog,this);
+            _lobby = new LobbyScreen(_lobbyHost,_presentation.lobby,_presentation.lobbyTheme,_catalog,this);
+            _lobby.LocalMatchRequested += Restart;
+            _lobby.PartyMatchRequested += StartAccountBattle;
+            _lobby.MapRequested += SelectMap;
+            _lobby.OpeningSideRequested += SetOpeningSide;
+            _lobby.AspectRequested += SetLobbyAspect;
+            _lobby.FriendlyCuesRequested += SetLobbyFriendlyCues;
+            _lobby.SensitivityRequested += SetLobbySensitivity;
+            _lobby.VolumeRequested += SetLobbyVolume;
             _preview = new LobbyPreview(transform,_camera,_presentation,_catalog);
             ReturnToLobby();
         }
@@ -421,8 +437,16 @@ namespace AnimeCS.Play
         private int _entrySeed;
         private void ShowLineup()
         {
-            _loading.Begin(SelectedMap,_onlineRequested,Account?.State?.members);
-            if (_onlineRequested) return;
+            var map = SelectedMap;
+            _loading.Begin(map.DisplayName, map.LoadingBrief, map.LoadingArt, map.Radar, map.Practice, _onlineRequested);
+            if (_onlineRequested)
+            {
+                var party = Account?.State?.members;
+                if (party != null)
+                    for (int i = 0; i < Mathf.Min(party.Length, MatchFormat.TeamSize); i++)
+                        ShowLoadingCard(Side.Defend, i, _catalog.Find<CharacterDefinition>(party[i].showCharacterId), party[i].id);
+                return;
+            }
             var opening=LocalMatch.OpeningFor(Mode,_firstSide);
             _entrySeed=opening==FirstSide.Random ? UnityEngine.Random.Range(1,int.MaxValue) : _seed;
             int attackers=LocalMatch.PreviewAttackTeam(opening,_entrySeed);
@@ -433,9 +457,18 @@ namespace AnimeCS.Play
                 int slot=i%LocalMatch.TeamSize;
                 var outfit=_catalog.OutfitForSide(side,i==0?wardrobe.OutfitFor(side):null,slot);
                 bool empty=Mode==MatchMode.AimPractice && i>0 && i<LocalMatch.TeamSize;
-                _loading.SetCard(side,slot,empty ? null : outfit?.Id,empty ? "空席" : i==0 ? Account?.State?.id ?? "自己" : "BOT "+(i+1).ToString("00"));
+                ShowLoadingCard(side,slot,!empty && outfit ? outfit.Character : null,empty ? "空席" : i==0 ? Account?.State?.id ?? "自己" : "BOT "+(i+1).ToString("00"));
             }
         }
+
+        private void ShowLoadingOutfit(Side side, int slot, string outfitId, string label)
+        {
+            var outfit = _catalog.Find<OutfitDefinition>(outfitId);
+            ShowLoadingCard(side, slot, outfit ? outfit.Character : null, label);
+        }
+
+        private void ShowLoadingCard(Side side, int slot, CharacterDefinition character, string label) =>
+            _loading.SetCard(side, slot, character ? character.DisplayName : null, character ? character.BattlePortrait : null, label);
 
         public void Restart()
         {
@@ -469,7 +502,7 @@ namespace AnimeCS.Play
                 _ports[i] = _match.BindSeat(i);
                 _drivers[i] = i == 0 ? _keyboard : mode==MatchMode.AimPractice ? new PracticeTarget(_match,_catalog.Map,i) : new ObjectiveBot(_catalog, seed ^ (i * 7919),_rules.bot);
                 var view = _ports[i].Read();
-                _loading.SetCard(view.Side,i % LocalMatch.TeamSize,view.Health>0 ? view.OutfitId : null,view.Health<=0 ? "空席" : i==0 ? Account?.State?.id ?? "自己" : "BOT "+(i+1).ToString("00"));
+                ShowLoadingOutfit(view.Side,i % LocalMatch.TeamSize,view.Health>0 ? view.OutfitId : null,view.Health<=0 ? "空席" : i==0 ? Account?.State?.id ?? "自己" : "BOT "+(i+1).ToString("00"));
                 _loading.Progress(.63f + .23f*(i+1)/_ports.Length, "正在准备角色");
                 if (view.Health<=0 || !_avatars[i].NeedsBody(view)) continue;
                 _avatars[i].Present(view,i==0);
@@ -479,7 +512,7 @@ namespace AnimeCS.Play
             _preview.Hide(); InLobby=false;
             _lobbyHost.style.display=DisplayStyle.None; _hudHost.style.display=DisplayStyle.Flex;
             _keyboard.SyncRound(_ports[0].Read(),true); _keyboard.ResetPointer();
-            _hud.StartMatch(_match,profile.current);
+            _hud.StartMatch(_match,profile.current,mode==MatchMode.AimPractice,canRestart:true);
             ApplyAspect();MapLight(true);
             _time=0;
             _loading.Progress(.93f,"正在绘制场景");
@@ -532,8 +565,31 @@ namespace AnimeCS.Play
             }
             var self=Player.Read();
             var watched=self.Health>0 ? self : Player.WatchTeam();
-            _teamIds.Present(self,watched,_camera,_ports,_actors,_avatars,_world,FriendlyCues,alpha,
-                _online==null ? null : _onlineAllyTags,MenuOpen);
+            PresentTeamTags(self,watched,alpha);
+        }
+
+        private void PresentTeamTags(in SeatView self,in SeatView watched,float alpha)
+        {
+            bool active=watched.Seat>=0 && !watched.Blinded && !watched.InsideSmoke && !MenuOpen &&
+                !self.Match.Paused && self.Match.Phase!=RoundPhase.Finished && _teamIds.HasLayout;
+            bool assist=FriendlyCues;
+            bool InFrame(Vector3 p) => p.z>=_camera.nearClipPlane && p.x>=0 && p.x<=1 && p.y>=0 && p.y<=1;
+            int first=self.Seat/_teamTags.Length*_teamTags.Length;
+            for(int slot=0;slot<_teamTags.Length;slot++)
+            {
+                int seat=first+slot;
+                _teamTags[slot]=default;
+                if(active && seat!=watched.Seat && (_online==null ? _actors[seat].Alive : _onlineAllyTags[seat]))
+                {
+                    var head=_avatars[seat].LabelAnchor(alpha);
+                    var point=_camera.WorldToViewportPoint(head);
+                    var chest=_camera.WorldToViewportPoint(_actors[seat].transform.position+Vector3.up*_actors[seat].Height*.57f);
+                    if((InFrame(point)||InFrame(chest)) && _world.VisibleAlly(_camera.transform.position,seat,head-Vector3.up*.21f))
+                        _teamTags[slot]=new TeamNameplates.Entry(_hudSeats[seat].DisplayId,point.z<_camera.nearClipPlane ? chest : point);
+                }
+                _avatars[seat].SetFriendlyCue(assist && _teamTags[slot].Visible);
+            }
+            _teamIds.Present(_teamTags,assist);
         }
 
         public void TogglePause()
@@ -587,6 +643,13 @@ namespace AnimeCS.Play
 
         private bool MenuOpen => _online!=null ? _onlineMenu : _match!=null && _match.IsPaused;
 
+        private void SetOpeningSide(FirstSide side) => OpeningSide = side;
+
+        private void ToggleTargetMotion()
+        {
+            if (Ready && _match?.Mode == MatchMode.AimPractice) _match.MovingTargets = !_match.MovingTargets;
+        }
+
         private void ReadPlayerInput(in SeatView self,bool pause,bool shop)
         {
             if (pause && _hud.ShopOpen && !MenuOpen) _hud.ToggleShop();
@@ -619,11 +682,12 @@ namespace AnimeCS.Play
             for (int i=0;i<_avatars.Length;i++)
             {
                 _actors[i].InterpolateVisuals(alpha);
-                _avatars[i].Present(_ports[i].Read(),watched.Seat==i,alpha);
+                _hudSeats[i]=_ports[i].Read();
+                _avatars[i].Present(_hudSeats[i],watched.Seat==i,alpha);
             }
             _world.SetLocalView(!publicOnly && watched.Seat==0 && _drivers[0]==_keyboard ? _camera.transform.position : (Vector3?)null);
             DrawWorld(_match,publicOnly,_match.Public.Tick+alpha);
-            _hud.Present(self,watched,_ports);
+            _hud.Present(self,watched,_hudSeats,movingTargets:_match.MovingTargets);
             UpdatePointer();
             _audio.Present(watched,_world);
         }
@@ -677,6 +741,7 @@ namespace AnimeCS.Play
         private void OnApplicationFocus(bool focused)
         {
             _focused = focused; _discardFrameTime=true;
+            if (!focused) _lobby?.CancelPointerInteraction();
             _keyboard?.ResetPointer();
             UpdatePointer();
         }
@@ -720,6 +785,27 @@ namespace AnimeCS.Play
 
         private void OnDestroy()
         {
+            if (_lobby != null)
+            {
+                _lobby.CancelPointerInteraction();
+                _lobby.LocalMatchRequested -= Restart;
+                _lobby.PartyMatchRequested -= StartAccountBattle;
+                _lobby.MapRequested -= SelectMap;
+                _lobby.OpeningSideRequested -= SetOpeningSide;
+                _lobby.AspectRequested -= SetLobbyAspect;
+                _lobby.FriendlyCuesRequested -= SetLobbyFriendlyCues;
+                _lobby.SensitivityRequested -= SetLobbySensitivity;
+                _lobby.VolumeRequested -= SetLobbyVolume;
+            }
+            if (_hud != null)
+            {
+                _hud.OrderRequested -= _keyboard.Order;
+                _hud.ResumeRequested -= TogglePause;
+                _hud.RestartRequested -= Restart;
+                _hud.LobbyRequested -= ReturnToLobby;
+                _hud.EndRoomRequested -= EndOnlineRoom;
+                _hud.TargetMotionRequested -= ToggleTargetMotion;
+            }
             Account?.Dispose();
             if(_navigation.valid)_navigation.Remove();
             if (_runtimeCatalog) Destroy(_runtimeCatalog);

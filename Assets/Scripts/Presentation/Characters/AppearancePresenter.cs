@@ -1,5 +1,6 @@
 using AnimeCS.Content;
 using AnimeCS.Match;
+using StylizedCharacters;
 using UnityEngine;
 
 namespace AnimeCS.Play
@@ -64,7 +65,8 @@ namespace AnimeCS.Play
         internal void PredictTrigger(int round,int tick){_predictedRound=round;_predictedTick=tick;}
         private Quaternion _aim;
         private Transform _mark, _stature;
-        private float _stanceEyes, _feetWeight;
+        private float _stanceEyes, _feetWeight, _footFloorHeight;
+        private bool _grounded;
         private int _viewTick = -1;
         private float _stride, _bodyYaw, _lookYaw, _lookPitch, _swing;
         private int _bodyRound=-1;
@@ -76,7 +78,7 @@ namespace AnimeCS.Play
 
         private SkinnedMeshRenderer[] _cueRenderers=System.Array.Empty<SkinnedMeshRenderer>();
         private readonly MaterialPropertyBlock _cueBlock=new();
-        private static readonly int FriendlyRim=Shader.PropertyToID("_FriendlyRim");
+        private static readonly int FriendlyRim=Shader.PropertyToID("_RimColor");
         private bool _cueActive;
         internal void SetFriendlyCue(bool visible)
         {
@@ -84,9 +86,9 @@ namespace AnimeCS.Play
             _cueActive=visible;
             foreach(var renderer in _cueRenderers)
             {
-                renderer.GetPropertyBlock(_cueBlock);
-                _cueBlock.SetFloat(FriendlyRim,visible?1f:0f);
-                renderer.SetPropertyBlock(_cueBlock);
+                // This presenter owns the renderer-wide block on the character. Equipment skins use per-slot blocks.
+                if(visible) _cueBlock.SetColor(FriendlyRim,new Color(.36f,.9f,1f,.75f));
+                renderer.SetPropertyBlock(visible ? _cueBlock : null);
             }
         }
 
@@ -206,7 +208,10 @@ namespace AnimeCS.Play
 
         private void UpdateMotion(in SeatView view, float alpha)
         {
-            _stanceEyes=_actor.RenderEye(alpha).y-_actor.RenderFeet(alpha).y;
+            float feetHeight = _actor.RenderFeet(alpha).y;
+            _stanceEyes=_actor.RenderEye(alpha).y-feetHeight;
+            _footFloorHeight = feetHeight - _actor.GroundSkin;
+            _grounded = view.Motion.Grounded;
             _feetWeight=view.Motion.Grounded ? 1f-Mathf.InverseLerp(.12f,1.5f,view.Motion.Velocity.magnitude) : 0f;
             float scale = _style ? _style.handlingMotion : 1f;
             if (_showView) _viewAction = WeaponActionPose.Sample(view, _equipped, alpha, true, scale, _actions);
@@ -290,6 +295,7 @@ namespace AnimeCS.Play
                         _stature.localPosition=Vector3.up*(floor-sole*scale.y);
                     }
                 }
+                _rig.FitGround(PhysicsFootSurface.Shared, _footFloorHeight, _grounded);
                 _rig.Flinch(_flinch,_hitZone);
                 if (_worldGun)
                 {
@@ -338,7 +344,11 @@ namespace AnimeCS.Play
             return _equipped && _equipped.Class!=WeaponClass.Knife && mount && mount.activeInHierarchy
                 ? mount.transform.TransformPoint(Tip(_watch)) : (Vector3?)null;
         }
-        public void BeforeAnimation() => _rig?.RestoreHitPose();
+        public void BeforeAnimation()
+        {
+            _rig?.RestoreHitPose();
+            _rig?.RestoreFootPose();
+        }
         public void Hide()
         {
             SetFriendlyCue(false);
@@ -379,7 +389,7 @@ namespace AnimeCS.Play
             foreach (var rigidbody in copy.GetComponentsInChildren<Rigidbody>(true))
             { rigidbody.isKinematic = true; rigidbody.detectCollisions = false; }
             foreach (var script in copy.GetComponentsInChildren<MonoBehaviour>(true))
-                if (script != null) script.enabled = false;
+                if (script != null && !StylizedCharacters.HumanoidSecondaryMotion.IsVisualBehaviour(script)) script.enabled = false;
             foreach (var camera in copy.GetComponentsInChildren<Camera>(true)) camera.enabled = false;
             foreach (var sourceAudio in copy.GetComponentsInChildren<AudioSource>(true)) sourceAudio.enabled = false;
             foreach (var listener in copy.GetComponentsInChildren<AudioListener>(true)) listener.enabled = false;

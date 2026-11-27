@@ -13,7 +13,8 @@ from mathutils import Matrix, Quaternion, Vector
 sys.path.insert(0, str(Path(__file__).parent))
 from motion import author_actions, pose, garment_stances
 from drape import mark_surfaces, bake_clearance
-from cast_roster import folders as cast_folders, playable
+from secondary_skin import add_secondary
+from cast_roster import fit_garment_point, folders as cast_folders, garment_tailoring, playable, smooth
 
 names = {"Rover": "男漂泊", "Cantarella": "坎特", "Lily": "护士服", "Flor": "修模绑骨后）_by_鸣潮_4ce938", "BlackMiku":"黑色礼服miku", "Laevatain":"莱万汀", "Mornye":"莫宁", "Michele":"米雪儿", "Nora":"诺诺"}
 source, destination, *selected = sys.argv[sys.argv.index("--") + 1:]
@@ -112,10 +113,6 @@ def materials(label, body, folder):
 def panel_bone(name):
     return re.search(r"スカート|skirt|裙|^dress|^belt_[a-e]_|^piaodai",name,re.IGNORECASE) is not None
 
-def smooth(low, high, n):
-    t=max(0., min(1., (n-low)/(high-low)))
-    return t*t*(3.-2.*t)
-
 def drape_weights(pos, points, weight, result, leg_influence):
     # Keep the waistband on its source joint; distribute loose panels over both legs across the centre seam.
     left, right = (points[s+"UpperLeg"][1] for s in ("Left","Right"))
@@ -199,30 +196,25 @@ def convert(label, file):
     body.matrix_world = Matrix.Identity(4)
     body.data.transform(xform @ mesh.matrix_world)
     body.name = label + "Body"
-    if label == "BlackMiku":
-        # Tailor the original dress over its fitted bodice. Keep both lining and opaque skirt faces.
-        skirt = {v for p in body.data.polygons if body.data.materials[p.material_index].name in {"裙G","裙3","裙2","裙1","裙+","裙++"} for v in p.vertices}
-        for index in skirt:
-            p = body.data.vertices[index].co
-            hem = smooth(.015, .58, 1.05-p.z)
-            p.x *= 1-.32*hem
-            p.y *= 1-.43*hem
-            p.z += .52*max(0,1.02-p.z)
-        # The hat and blindfold retain the character silhouette. Remove the separate trailing veil.
-        trim(body,lambda f: body.data.materials[f.material_index].name=="头纱")
-    if label == "Flor":
-        # Keep the own bodice and lining joined; trim the paired outer/inner tails to the same hem.
-        dress_materials={"Up_Dress","Up_Dressin","Down_Dressin","Up_Belt","Down_Belt","Down_Sliver","Down_Bag"}
-        panels={v for p in body.data.polygons if body.data.materials[p.material_index].name in dress_materials for v in p.vertices}
+    tailoring = garment_tailoring.get(label)
+    fit = tailoring["fit"] if tailoring else None
+    removed_materials = tailoring.get("remove", ()) if tailoring else ()
+    if tailoring:
+        garment_materials = tailoring["materials"]
+        # Fit outer panels and their lining together.
+        panels = {v for p in body.data.polygons
+                  if body.data.materials[p.material_index].name in garment_materials for v in p.vertices}
         for index in panels:
-            p=body.data.vertices[index].co
-            hem=smooth(.01,.53,.98-p.z)
-            p.x*=1-.20*hem
-            p.y*=1-.33*hem
-            p.z+=.48*max(0,.98-p.z)
+            fit_garment_point(body.data.vertices[index].co, fit)
+        if removed_materials:
+            trim(body, lambda f: body.data.materials[f.material_index].name in removed_materials)
     groups = [target(g.name) if g.name in old.data.bones else None for g in body.vertex_groups]
+    def tailor_panel(point):
+        return fit_garment_point(point.copy(), fit)
+    secondary=add_secondary(body,old,points,bone_xform,target,tailor_panel)
+    spring_groups=[secondary.get(g.name) for g in body.vertex_groups]
     fabric = [label in garment_stances and g.name in old.data.bones and panel_bone(g.name) for g in body.vertex_groups]
-    veil = {v for p in body.data.polygons if label=="BlackMiku" and body.data.materials[p.material_index].name=="头纱" for v in p.vertices}
+    veil = {v for p in body.data.polygons if body.data.materials[p.material_index].name in removed_materials for v in p.vertices}
     if label in garment_stances:
         mark_surfaces(body, points, groups, fabric, veil)
     weights = []
@@ -231,7 +223,15 @@ def convert(label, file):
         for g in v.groups:
             key = groups[g.group]
             if key is None or g.weight <= 0: continue
-            amount=drape_weights(v.co,points,g.weight,w,.15 if label=='Cantarella' else 1.) if fabric[g.group] and v.index not in veil else g.weight
+            amount=g.weight
+            spring=spring_groups[g.group]
+            if spring:
+                # Fitted fabric follows the authored leg motion; loose strands retain more inertia.
+                transfer=amount*(.82 if spring.startswith("SpringHair") else .36)
+                w[spring]=w.get(spring,0.)+transfer
+                amount-=transfer
+            if fabric[g.group] and v.index not in veil:
+                amount=drape_weights(v.co,points,amount,w,.15 if label=='Cantarella' else 1.)
             w[key] = w.get(key,0.) + amount
         weights.append(sorted(w.items(), key=lambda t:-t[1])[:4] or [("Hips",1.)])
     body.vertex_groups.clear()
@@ -265,9 +265,12 @@ def convert(label, file):
         rig.animation_data_clear()
         for b in rig.pose.bones: b.matrix_basis=Matrix.Identity(4)
         bpy.context.view_layer.update()
-    if body_only and label in garment_stances:
-        bake_clearance(label, body, rig)
-        export(folder/(label+".fbx"),[rig,body])
+    if body_only:
+        if label in garment_stances: bake_clearance(label, body, rig)
+        if label=="Rover":
+            for a in list(bpy.data.actions): bpy.data.actions.remove(a)
+            author_actions(rig)
+        export(folder/(label+".fbx"),[rig,body],label=="Rover")
         print("DRAPED",label,len(body.data.vertices),flush=True)
         return
     # Only artwork and the normalized deform rig are exported. Bake the sleeve view from these same weights.

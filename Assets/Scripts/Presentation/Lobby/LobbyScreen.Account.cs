@@ -21,7 +21,7 @@ namespace AnimeCS.Play
         string _dialogKey, _partySignature, _socialSignature, _joinedBattle, _headerRoom, _chatDraft = "", _friendDraft = "";
         bool _busy, _signedIn, _polling;
         IVisualElementScheduledItem _noticeTimer;
-        AccountState State => _game.Account.State;
+        AccountState State => _host.Account.State;
 
         static void SetVisible(VisualElement element, bool visible) =>
             element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
@@ -78,7 +78,7 @@ namespace AnimeCS.Play
             {
                 if(e.keyCode==KeyCode.Return || e.keyCode==KeyCode.KeypadEnter) Authenticate(false);
             });
-            _screen.Q<TextField>("auth-id").value=PlayerPrefs.GetString("AnimeCS.LastPlayerId","");
+            _screen.Q<TextField>("auth-id").value=_host.Account.LastPlayerId;
             _screen.schedule.Execute(Poll).Every(PollSeconds*1000);
         }
 
@@ -99,59 +99,60 @@ namespace AnimeCS.Play
                 if (State==null)
                 {
                     status.text=register?"正在注册唯一 ID…":"正在登录…";
-                    if (register) await _game.Account.RegisterAsync(id.value.Trim(),password.value);
-                    else await _game.Account.LoginAsync(id.value.Trim(),password.value);
-                    if (!_game) return;
-                    PlayerPrefs.SetString("AnimeCS.LastPlayerId",State.id);
+                    await _host.Account.AuthenticateAsync(register,id.value.Trim(),password.value);
+                    if (!_host.IsActive) return;
                     password.value="";
                 }
                 SetVisible(login,false); SetVisible(signup,false); SetVisible(id,false); SetVisible(password,false);
                 auth.Q<Label>("auth-heading").text="检查资源更新";
                 status.text="正在核对资源清单…";
-                string result=await _game.Account.CheckUpdateAsync();
-                if (!_game) return;
+                string result=await _host.Account.CheckUpdateAsync();
+                if (!_host.IsActive) return;
                 _signedIn=true;
                 Show();
                 Notice(result);
             }
             catch (Exception error)
             {
-                if (_game) {status.text=error.Message; SetVisible(retry,State!=null);}
+                if (_host.IsActive) {status.text=error.Message; SetVisible(retry,State!=null);}
             }
             finally
             {
                 _busy=false;
-                if (_game) {login.SetEnabled(true); signup.SetEnabled(true); retry.SetEnabled(true);}
+                if (_host.IsActive) {login.SetEnabled(true); signup.SetEnabled(true); retry.SetEnabled(true);}
             }
         }
 
-        async void RunAction(Func<Task> request,Action after=null)
+        void RunAction(LobbyAccountAction action, string argument = null, Action after = null) =>
+            RunAction(() => _host.Account.RequestAsync(new LobbyAccountIntent(action, argument)), after);
+
+        async void RunAction(Func<Task> request, Action after = null, bool requireSignIn = true)
         {
-            if (_busy || !_signedIn) return;
+            if (_busy || requireSignIn && !_signedIn) return;
             _busy=true;
             try
             {
                 await request();
-                if (!_game) return;
+                if (!_host.IsActive) return;
                 RefreshHeader();
                 after?.Invoke();
             }
-            catch(Exception error) { if(_game) Notice(error.Message); }
+            catch(Exception error) { if(_host.IsActive) Notice(error.Message); }
             finally { _busy=false; }
         }
 
         async void Poll()
         {
-            if (!_signedIn || !_game || !_game.InLobby || _polling || _busy) return;
+            if (!_signedIn || !_host.IsActive || !_host.InLobby || _polling || _busy) return;
             _polling=true;
             try
             {
-                await _game.Account.RefreshAsync();
-                if (!_game || !_game.InLobby || _busy) return;
+                await _host.Account.RequestAsync(new LobbyAccountIntent(LobbyAccountAction.Refresh));
+                if (!_host.IsActive || !_host.InLobby || _busy) return;
                 RefreshHeader();
                 EnterPartyBattle();
             }
-            catch(Exception error) { if(_game) _screen.Q<Button>("chat-preview").text="连接状态    "+error.Message; }
+            catch(Exception error) { if(_host.IsActive) _screen.Q<Button>("chat-preview").text="连接状态    "+error.Message; }
             finally { _polling=false; }
         }
 
@@ -164,7 +165,7 @@ namespace AnimeCS.Play
                 {
                     if (State.party[0]!=State.id) { Notice("上一场比赛已结束，等待队长重新开赛"); return; }
                     string finishedRoom=State.battleId;
-                    RunAction(()=>_game.Account.RestartBattleAsync(finishedRoom),EnterPartyBattle);
+                    RunAction(LobbyAccountAction.RestartBattle,finishedRoom,EnterPartyBattle);
                     return;
                 }
                 if (!string.IsNullOrEmpty(State.battleId))
@@ -175,17 +176,17 @@ namespace AnimeCS.Play
                     return;
                 }
                 if (State.party[0]!=State.id) { Notice("等待队长开始对局"); return; }
-                RunAction(_game.Account.StartPartyAsync,EnterPartyBattle);
+                RunAction(LobbyAccountAction.StartParty,after:EnterPartyBattle);
             }
-            else { Close(); _game.Restart(); }
+            else { Close(); LocalMatchRequested?.Invoke(); }
         }
 
         internal void EnterPartyBattle()
         {
-            if (!_game.InLobby || State.battleFinished || string.IsNullOrEmpty(State.battleId) || State.battleId==_joinedBattle) return;
+            if (!_host.InLobby || State.battleFinished || string.IsNullOrEmpty(State.battleId) || State.battleId==_joinedBattle) return;
             _joinedBattle=State.battleId;
             Close();
-            _game.StartAccountBattle();
+            PartyMatchRequested?.Invoke();
         }
 
         void RefreshHeader(bool force=false)
@@ -212,7 +213,7 @@ namespace AnimeCS.Play
             if ((force || partyKey!=_partySignature) && _section==null && _dialogKey!="config")
             {
                 _partySignature=partyKey;
-                _game.SetLobbyTeammates(members.Where(m=>m.id!=State.id).Select(m=>_game.DisplayMember(m.id,m.showCharacterId,m.showSkinId)).ToArray());
+                _host.Preview.ShowTeammates(members.Where(member => member.id != State.id).ToArray());
                 var tags=_screen.Q("nameplates");
                 tags.Clear();
                 var names=new[]{State.id}.Concat(members.Where(m=>m.id!=State.id).Select(m=>m.id));
@@ -231,11 +232,11 @@ namespace AnimeCS.Play
 
         void PositionNames()
         {
-            if (!_signedIn || _section!=null || !_game.InLobby) return;
+            if (!_signedIn || _section!=null || !_host.InLobby) return;
             var names=_screen.Q("nameplates");
             for(int i=0;i<names.childCount;i++)
             {
-                if (!_game.LobbyNamePosition(i,out var p)) continue;
+                if (!_host.Preview.TryNamePosition(i,out var p)) continue;
                 names[i].style.left=Length.Percent(p.x*100f);
                 names[i].style.top=Length.Percent(Mathf.Clamp(1-p.y,.10f,.93f)*100f);
             }

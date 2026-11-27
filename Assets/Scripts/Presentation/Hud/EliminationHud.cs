@@ -12,11 +12,12 @@ namespace AnimeCS.Play
         private readonly VisualElement _feed,_medalHost;
         private readonly KillEmblem _emblem;
         private readonly FeedRow[] _rows=new FeedRow[5];
-        private readonly int[] _counts=new int[LocalMatch.Seats],_last=new int[LocalMatch.Seats];
+        private readonly int[] _counts,_last;
         private int _seen,_round;
 
-        internal EliminationHud(VisualElement root,ContentCatalog catalog)
+        internal EliminationHud(VisualElement root,ContentCatalog catalog,int teamSize)
         {
+            _counts=new int[teamSize*2];_last=new int[teamSize*2];
             _catalog=catalog; _feed=root.Q("kill-feed"); _medalHost=root.Q("kill-medal");
             _emblem=new KillEmblem(); _medalHost.Add(_emblem);
             for(int i=0;i<_rows.Length;i++) { _rows[i]=new FeedRow();_feed.Add(_rows[i].Root); }
@@ -45,7 +46,7 @@ namespace AnimeCS.Play
             {
                 int seq=_seen-i;
                 if (session.TryGetElimination(seq,out var e) && e.Round==_round && clock.Tick-e.Tick<FeedTicks)
-                    _rows[i].Show(seq,e,local,_catalog);
+                    _rows[i].Show(seq,e,local,_counts.Length/2,_catalog);
                 else _rows[i].Hide();
             }
             _feed.style.display=visible?DisplayStyle.Flex:DisplayStyle.None;
@@ -67,7 +68,7 @@ namespace AnimeCS.Play
                 Root.Add(_from);Root.Add(_glyph);Root.Add(_weapon);Root.Add(_badges);Root.Add(_victim);Hide();
             }
             internal void Hide() { if(_sequence==-1)return;_sequence=-1;Root.style.display=DisplayStyle.None; }
-            internal void Show(int seq,in Elimination kill,int local,ContentCatalog catalog)
+            internal void Show(int seq,in Elimination kill,int local,int teamSize,ContentCatalog catalog)
             {
                 if(_sequence==seq)return;_sequence=seq;Root.style.display=DisplayStyle.Flex;
                 _from.text=kill.Attacker<0?"装置":kill.From; _victim.text=kill.To;
@@ -76,8 +77,8 @@ namespace AnimeCS.Play
                 _weapon.text=gun?gun.DisplayName:"爆炸";
                 _badges.text=(kill.Airborne?"空中 ":"")+(kill.Headshot?"爆头":kill.Knife?"刀杀":"");
                 _badges.style.display=kill.Airborne||kill.Headshot||kill.Knife?DisplayStyle.Flex:DisplayStyle.None;
-                _from.EnableInClassList("kill-ally",kill.Attacker>=0 && kill.Attacker/LocalMatch.TeamSize==local/LocalMatch.TeamSize);
-                _victim.EnableInClassList("kill-ally",kill.Victim/LocalMatch.TeamSize==local/LocalMatch.TeamSize);
+                _from.EnableInClassList("kill-ally",kill.Attacker>=0 && kill.Attacker/teamSize==local/teamSize);
+                _victim.EnableInClassList("kill-ally",kill.Victim/teamSize==local/teamSize);
                 Root.EnableInClassList("own-kill",kill.Attacker==local);Root.EnableInClassList("own-death",kill.Victim==local);
             }
         }

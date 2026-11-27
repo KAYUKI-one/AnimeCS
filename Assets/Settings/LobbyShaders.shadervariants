@@ -99,3 +99,21 @@ ShaderVariantCollection:
         passType: 13
       - keywords: _CLUSTER_LIGHT_LOOP _NORMALMAP
         passType: 13
+  - first: {fileID: 4800000, guid: efa77a80ca0344749b4f19fdd5891cbe, type: 3}
+    second:
+      variants:
+      - keywords:
+        passType: 13
+      - keywords: _CLUSTER_LIGHT_LOOP _LIGHT_LAYERS _MAIN_LIGHT_SHADOWS_CASCADE _REFLECTION_PROBE_BLENDING
+          _REFLECTION_PROBE_BOX_PROJECTION _SHADOWS_SOFT
+        passType: 13
+      - keywords: _CLUSTER_LIGHT_LOOP _LIGHT_LAYERS _REFLECTION_PROBE_BLENDING _REFLECTION_PROBE_BOX_PROJECTION
+        passType: 13
+  - first: {fileID: 4800000, guid: df12117ecd77c31469c224178886498e, type: 3}
+    second:
+      variants:
+      - keywords:
+        passType: 13
+      - keywords: _CLUSTER_LIGHT_LOOP _LIGHT_LAYERS _MAIN_LIGHT_SHADOWS_CASCADE _REFLECTION_PROBE_BLENDING
+          _REFLECTION_PROBE_BOX_PROJECTION _SHADOWS_SOFT
+        passType: 14

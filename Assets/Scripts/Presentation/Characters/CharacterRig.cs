@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using AnimeCS.Content;
 using AnimeCS.Match;
+using StylizedCharacters;
 using UnityEngine;
 
 namespace AnimeCS.Play
@@ -16,6 +17,7 @@ namespace AnimeCS.Play
         private readonly List<(SkinnedMeshRenderer renderer, Mesh mesh, int stand, int crouch)> _drapes = new();
         private readonly Transform[] _feet = new Transform[4];
         private readonly Vector3[] _soleLocal = new Vector3[4];
+        private readonly GroundedFeet _groundedFeet;
         private readonly Vector3 _faceLocal;
         internal Vector3 FaceCenter => Head.TransformPoint(_faceLocal);
         private readonly Transform[] _lookBones=new Transform[4];
@@ -36,6 +38,7 @@ namespace AnimeCS.Play
         public CharacterRig(GameObject body, CharacterDefinition definition, RuntimeAnimatorController stanceController=null, bool alwaysAnimate=false)
         {
             if (body == null) return;
+            StylizedCharacters.HumanoidSecondaryMotion.Attach(body);
             foreach (var bone in body.GetComponentsInChildren<Transform>(true))
             {
                 // Ambiguous names cannot be safely retargeted.
@@ -66,7 +69,7 @@ namespace AnimeCS.Play
             }
             _bones.TryGetValue("Head",out var head); Head = head;
             _bones.TryGetValue("UpperChest",out var chest); Chest = chest;
-            if(animator && animator.avatar && animator.isHuman)
+            if(animator && animator.avatar && animator.avatar.isValid && animator.isHuman)
             {
                 Head=animator.GetBoneTransform(HumanBodyBones.Head);
                 _feet[0]=animator.GetBoneTransform(HumanBodyBones.LeftFoot);
@@ -76,6 +79,7 @@ namespace AnimeCS.Play
                 var sourceSkin = body.GetComponentInChildren<SkinnedMeshRenderer>(true);
                 var skinBones = sourceSkin ? sourceSkin.bones : System.Array.Empty<Transform>();
                 var bindPoses = sourceSkin && sourceSkin.sharedMesh ? sourceSkin.sharedMesh.bindposes : System.Array.Empty<Matrix4x4>();
+                GroundedFeet.Foot leftFoot = null, rightFoot = null;
                 for (int i=0;i<_feet.Length;i++)
                     if (_feet[i])
                     {
@@ -86,8 +90,19 @@ namespace AnimeCS.Play
                             : body.transform.worldToLocalMatrix * _feet[i].localToWorldMatrix;
                         var floorPoint = boneToBody.MultiplyPoint3x4(Vector3.zero);
                         floorPoint.y = 0;
-                        _soleLocal[i] = boneToBody.inverse.MultiplyPoint3x4(floorPoint);
+                        var bodyToBone = boneToBody.inverse;
+                        _soleLocal[i] = bodyToBone.MultiplyPoint3x4(floorPoint);
+                        if (i < 2)
+                        {
+                            var thigh = animator.GetBoneTransform(i == 0 ? HumanBodyBones.LeftUpperLeg : HumanBodyBones.RightUpperLeg);
+                            var knee = animator.GetBoneTransform(i == 0 ? HumanBodyBones.LeftLowerLeg : HumanBodyBones.RightLowerLeg);
+                            var foot = new GroundedFeet.Foot(animator.transform, thigh, knee, _feet[i], _soleLocal[i],
+                                bodyToBone.MultiplyVector(Vector3.up));
+                            if (i == 0) leftFoot = foot;
+                            else rightFoot = foot;
+                        }
                     }
+                _groundedFeet = new GroundedFeet(leftFoot, rightFoot);
                 Chest=animator.GetBoneTransform(HumanBodyBones.UpperChest) ?? animator.GetBoneTransform(HumanBodyBones.Chest);
                 _lookBones[0]=animator.GetBoneTransform(HumanBodyBones.Spine);_lookBones[1]=Chest;
                 _lookBones[2]=animator.GetBoneTransform(HumanBodyBones.Neck);_lookBones[3]=Head;
@@ -114,6 +129,11 @@ namespace AnimeCS.Play
                 AimFromHand = WeaponSocket != null;
             }
         }
+
+        internal void FitGround(IFootSurface surface, float floorHeight, bool grounded) =>
+            _groundedFeet?.Apply(surface, floorHeight, grounded);
+
+        internal void RestoreFootPose() => _groundedFeet?.Restore();
 
         internal float LowestSole(float fallback)
         {

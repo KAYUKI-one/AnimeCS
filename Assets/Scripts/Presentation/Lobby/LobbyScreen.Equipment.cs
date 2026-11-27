@@ -17,7 +17,7 @@ namespace AnimeCS.Play
         const int RifleMount = 3;
         const int WearOffset = 5;
 
-        EquipmentDrag _drag;
+        readonly EquipmentDrag<ContentDefinition> _drag;
         Side _equipmentSide;
         bool _allEquipment, _showPresets;
         WardrobeSideGear ActiveGear => _draft.GearFor(_equipmentSide);
@@ -25,7 +25,7 @@ namespace AnimeCS.Play
         void FrameEquipment()
         {
             if ((_section == "equipment" || _section == "character") && _screen.worldBound.width > 1 && _stage.worldBound.width > 1)
-                _game.CenterPreview((_stage.worldBound.center.x - _screen.worldBound.xMin) / _screen.worldBound.width,
+                _host.Preview.Center((_stage.worldBound.center.x - _screen.worldBound.xMin) / _screen.worldBound.width,
                     showcase: true, equipment: _section == "equipment");
         }
 
@@ -36,7 +36,7 @@ namespace AnimeCS.Play
             _showPresets = false;
             _equipment = RifleMount;
             _gun = ActiveGear.Weapon(WeaponClass.Rifle);
-            _game.PreviewWardrobe(_draft, _gun, false, previewWorn: ActiveGear.worn);
+            _host.Preview.ShowWardrobe(_draft, _gun, false, previewWorn: ActiveGear.worn);
         }
 
         void SelectEquipmentSide(Side side)
@@ -91,8 +91,8 @@ namespace AnimeCS.Play
 
             var toolbar = _sheet.Q("equipment-toolbar");
             toolbar.Clear();
-            var allowed = _catalog.Entries.Where(Owned).Where(item => ValidSlot(item) >= 0).ToArray();
-            var choices = _allEquipment ? allowed : allowed.Where(item => ValidSlot(item) == _equipment).ToArray();
+            var allowed = _catalog.Entries.Select(item => (item, slot: ValidSlot(item))).Where(choice => choice.slot >= 0);
+            var choices = (_allEquipment ? allowed : allowed.Where(choice => choice.slot == _equipment)).ToArray();
             var heading = new VisualElement();
             heading.AddToClassList("equipment-heading");
             SectionLabel(heading, _showPresets ? "装备预设" : "可装配库存");
@@ -111,7 +111,7 @@ namespace AnimeCS.Play
             }, "equip-presets");
             if (!_showPresets)
             {
-                var hint = new Label("拖到左侧，或点击装备") { name = "equipment-hint" };
+                var hint = new Label("长按拖到左侧，或点击装备") { name = "equipment-hint" };
                 filters.Add(hint);
             }
 
@@ -155,13 +155,12 @@ namespace AnimeCS.Play
             bag.AddToClassList("equipment-grid");
             if (choices.Length == 0)
                 bag.Add(new Label("此槽位暂无可用物品") { name = "equipment-empty" });
-            foreach (var item in choices)
+            foreach (var (item, slot) in choices)
             {
-                int slot = ValidSlot(item);
                 bool equipped = IsEquipped(item, slot);
-                var button = Tile(bag, item, slot == _equipment && equipped, () => MountItem(item, slot), Art(item));
+                var button = Tile(bag, item, slot == _equipment && equipped, null, Art(item));
                 button.tooltip = item.DisplayName + (equipped ? "（已装备）" : "");
-                _drag.Source(button, item);
+                _drag.Source(button, item, slot);
             }
         }
 
@@ -251,11 +250,9 @@ namespace AnimeCS.Play
 
         int ValidSlot(ContentDefinition item)
         {
-            if (!Owned(item)) return -1;
-            if (item is WearableDefinition wear)
-                return wear.Fits(CurrentCharacter) ? WearOffset + (int)wear.Slot : -1;
+            if (!_profile.CanEquip(item, _equipmentSide, CurrentCharacter)) return -1;
+            if (item is WearableDefinition wear) return WearOffset + (int)wear.Slot;
             var gun = item is WeaponSkinDefinition skin ? skin.Weapon : item as WeaponDefinition;
-            if (!Owned(gun) || !WardrobeSideGear.Available(gun, _equipmentSide)) return -1;
             return System.Array.IndexOf(WeaponMounts, WardrobeSideGear.Category(gun.Class));
         }
 
@@ -269,21 +266,13 @@ namespace AnimeCS.Play
 
         void MountItem(ContentDefinition item, int slot)
         {
-            if (slot < 0 || slot != ValidSlot(item)) return;
+            if (_section != "equipment" || slot < 0 || slot != ValidSlot(item) ||
+                !_profile.TryEquip(_draft, item, _equipmentSide, CurrentCharacter, out var weapon)) return;
             _equipment = slot;
-            if (item is WearableDefinition wear) ActiveGear.worn.Set(wear.Slot, wear.Id);
-            else
-            {
-                var skin = item as WeaponSkinDefinition;
-                var gun = skin ? skin.Weapon : (WeaponDefinition)item;
-                ActiveGear.SetWeapon(gun.Class, gun.Id);
-                _gun = gun.Id;
-                _draft.skins.RemoveAll(choice => choice.weaponId == gun.Id);
-                if (skin) _draft.skins.Add(new SkinChoice { weaponId = gun.Id, skinId = skin.Id });
-            }
+            if (weapon) _gun = weapon.Id;
             Preview();
         }
 
-        bool Owned(ContentDefinition item) => item && !item.Archived && _profile.owned.Contains(item.Id);
+        bool Owned(ContentDefinition item) => _profile.Owns(item);
     }
 }

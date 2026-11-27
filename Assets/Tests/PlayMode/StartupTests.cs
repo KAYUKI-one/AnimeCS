@@ -5,9 +5,12 @@ using AnimeCS.Match;
 using AnimeCS.Play;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UIElements;
+using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
 
 namespace AnimeCS.Tests
 {
@@ -110,41 +113,52 @@ namespace AnimeCS.Tests
             Assert.That(bag.Q<Button>("weapon.fold44"), Is.Not.Null);
             Assert.That(bag.Q<Button>("weapon.ember47"), Is.Null);
             Press("faction-attack"); yield return null;
-            var pistol = bag.Q<Button>("weapon.street20");
-            Assert.That(pistol, Is.Not.Null);
-            var pistolMount = page.Q<Button>("equip-slot-1");
-            var wrongMount = page.Q<Button>("equip-slot-2");
-            Assert.That(pistol.Q<Image>().layout.height, Is.GreaterThan(pistol.layout.height * .6f));
-            Assert.That(page.Q("wear-rail").Q(className:"wear-glyph").resolvedStyle.backgroundImage.vectorImage, Is.Not.Null);
-            Assert.That(page.Q("apply-loadout").worldBound.yMin, Is.GreaterThanOrEqualTo(bag.worldBound.yMax - 1f));
-            string initialFinish = page.Q<Label>("equipment-preview-caption").text;
             var lobby = root.Q("lobby");
 
             void StartDrag(Button source)
             {
                 using var down = PointerDownEvent.GetPooled(new Event
                     { type = EventType.MouseDown, button = 0, mousePosition = source.worldBound.center });
-                down.target = source;
-                source.SendEvent(down);
+                root.SendEvent(down);
+                Assert.That(lobby.HasPointerCapture(PointerId.mousePointerId), Is.True);
             }
             void MoveDrag(Vector2 position)
             {
                 using var move = PointerMoveEvent.GetPooled(new Event
                     { type = EventType.MouseDrag, button = 0, mousePosition = position });
-                move.target = lobby;
-                lobby.SendEvent(move);
+                root.SendEvent(move);
             }
             void ReleaseDrag(Vector2 position)
             {
                 using var up = PointerUpEvent.GetPooled(new Event
                     { type = EventType.MouseUp, button = 0, mousePosition = position });
-                up.target = lobby;
-                lobby.SendEvent(up);
+                root.SendEvent(up);
+                Assert.That(lobby.HasPointerCapture(PointerId.mousePointerId), Is.False);
             }
+            string PistolName() => page.Q<Button>("equip-slot-1").Q<Label>(className:"mount-title").text;
 
+            Press("weapon.street20"); yield return null;
+            var quick = bag.Q<Button>("weapon.heavy50");
+            Assert.That(quick, Is.Not.Null);
+            string quickName = quick.Q<Label>().text;
+            StartDrag(quick);
+            ReleaseDrag(quick.worldBound.center);
+            Assert.That(PistolName(), Is.EqualTo(quickName));
+            Assert.That(lobby.Q(className:"equipment-drag-ghost"), Is.Null);
+            Press("weapon.street20"); yield return null;
+            string initialPistol = PistolName();
+
+            var pistol = bag.Q<Button>("weapon.heavy50");
+            var pistolMount = page.Q<Button>("equip-slot-1");
+            var wrongMount = page.Q<Button>("equip-slot-2");
+            Assert.That(initialPistol, Is.Not.EqualTo(quickName));
+            Assert.That(pistol.Q<Image>().layout.height, Is.GreaterThan(pistol.layout.height * .6f));
+            Assert.That(page.Q("wear-rail").Q(className:"wear-glyph").resolvedStyle.backgroundImage.vectorImage, Is.Not.Null);
+            Assert.That(page.Q("apply-loadout").worldBound.yMin, Is.GreaterThanOrEqualTo(bag.worldBound.yMax - 1f));
+            string initialFinish = page.Q<Label>("equipment-preview-caption").text;
             StartDrag(pistol);
-            MoveDrag(stage.worldBound.center);
-            yield return null;
+            Assert.That(lobby.Q(className:"equipment-drag-ghost"), Is.Null);
+            yield return new WaitForSecondsRealtime(.25f);
             var ghost = lobby.Q(className:"equipment-drag-ghost");
             Assert.That(ghost, Is.Not.Null);
             Assert.That(ghost.resolvedStyle.opacity, Is.InRange(.84f, .91f));
@@ -154,6 +168,13 @@ namespace AnimeCS.Tests
             Assert.That(pistolMount.ClassListContains("drop-ready"), Is.True);
             Assert.That(wrongMount.ClassListContains("drop-ready"), Is.False);
             Assert.That(page.Q<Label>("equipment-preview-caption").text, Is.EqualTo(initialFinish));
+            var firstPoint = stage.worldBound.center;
+            var secondPoint = firstPoint + new Vector2(25, 18);
+            MoveDrag(firstPoint); yield return null;
+            var firstGhost = ghost.worldBound.position;
+            MoveDrag(secondPoint); yield return null;
+            Assert.That(ghost.worldBound.xMin - firstGhost.x, Is.EqualTo(25).Within(.5f));
+            Assert.That(ghost.worldBound.yMin - firstGhost.y, Is.EqualTo(18).Within(.5f));
             yield return LobbyTestServices.Capture("EquipmentDrag");
 
             MoveDrag(wrongMount.worldBound.center);
@@ -161,6 +182,72 @@ namespace AnimeCS.Tests
             ReleaseDrag(wrongMount.worldBound.center);
             Assert.That(lobby.Q(className:"equipment-drag-ghost"), Is.Null);
             Assert.That(page.Q<Label>("equipment-preview-caption").text, Is.EqualTo(initialFinish));
+            Assert.That(PistolName(), Is.EqualTo(initialPistol));
+
+            StartDrag(pistol);
+            Press("close");
+            ReleaseDrag(pistolMount.worldBound.center);
+            yield return new WaitForSecondsRealtime(.25f);
+            Assert.That(lobby.Q(className:"equipment-drag-ghost"), Is.Null);
+            Assert.That(page.resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
+            Assert.That(PistolName(), Is.EqualTo(initialPistol));
+
+            StartDrag(pistol);
+            MoveDrag(pistolMount.worldBound.center);
+            Assert.That(lobby.Q(className:"equipment-drag-ghost"), Is.Null);
+            yield return new WaitForSecondsRealtime(.25f);
+            Assert.That(pistolMount.ClassListContains("drop-snapped"), Is.True);
+            ReleaseDrag(pistolMount.worldBound.center);
+            Assert.That(PistolName(), Is.EqualTo(quickName));
+            yield return null;
+
+            Press("weapon.street20"); yield return null;
+            Assert.That(PistolName(), Is.EqualTo(initialPistol));
+            var mouse = InputSystem.AddDevice<Mouse>();
+            try
+            {
+                using var uiInput = new UiReplayInput(mouse);
+                // Send full device states through the input backend so it must pick and dispatch to the panel.
+                void QueueMouse(Vector2 panelPosition, bool held)
+                {
+                    var state = new MouseState { position = UiReplayInput.ScreenPoint(root.panel, panelPosition) };
+                    InputSystem.QueueStateEvent(mouse, state.WithButton(MouseButton.Left, held));
+                }
+
+                IEnumerator WaitForUi(System.Func<bool> arrived, string message)
+                {
+                    double deadline = Time.realtimeSinceStartupAsDouble + 2;
+                    while (!arrived() && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
+                    Assert.That(arrived(), Is.True, message);
+                }
+
+                var sourcePoint = bag.Q<Button>("weapon.heavy50").worldBound.center;
+                QueueMouse(sourcePoint, false); yield return null;
+                QueueMouse(sourcePoint, true);
+                yield return WaitForUi(() => lobby.Q(className:"equipment-drag-ghost") != null,
+                    "A stationary virtual mouse press must display the drag card.");
+                Assert.That(lobby.HasPointerCapture(PointerId.mousePointerId), Is.True);
+                var deviceGhost = lobby.Q(className:"equipment-drag-ghost");
+                bool GhostAt(Vector2 pointer) => Mathf.Abs(deviceGhost.worldBound.xMin - (pointer.x + 14)) < 2f;
+                QueueMouse(firstPoint, true);
+                yield return WaitForUi(() => GhostAt(firstPoint), "The drag card must follow the first virtual mouse move.");
+                QueueMouse(secondPoint, true);
+                yield return WaitForUi(() => GhostAt(secondPoint), "The drag card must follow the second virtual mouse move.");
+
+                var target = page.Q<Button>("equip-slot-1");
+                var targetPoint = target.worldBound.center;
+                QueueMouse(targetPoint, true);
+                yield return WaitForUi(() => target.ClassListContains("drop-snapped"),
+                    "The occupied target must accept the held virtual mouse drag.");
+                QueueMouse(targetPoint, false);
+                yield return WaitForUi(() => PistolName() == quickName, "The drop must equip the dragged pistol.");
+                Assert.That(lobby.HasPointerCapture(PointerId.mousePointerId), Is.False);
+                Assert.That(lobby.Q(className:"equipment-drag-ghost"), Is.Null);
+            }
+            finally
+            {
+                InputSystem.RemoveDevice(mouse);
+            }
 
             Press("equip-slot-3"); yield return null;
             Assert.That(page.Q("backpack-items").Q<Button>("weapon.ember47"), Is.Not.Null);
@@ -168,8 +255,12 @@ namespace AnimeCS.Tests
             Assert.That(rifle, Is.Not.Null);
             var mount = page.Q<Button>("equip-slot-3");
             var nearMount = new Vector2(mount.worldBound.xMax + 4f, mount.worldBound.center.y);
+            var farMount = nearMount + Vector2.right * 8f;
             Assert.That(mount.worldBound.Contains(nearMount), Is.False);
             StartDrag(rifle);
+            yield return new WaitForSecondsRealtime(.25f);
+            MoveDrag(farMount);
+            Assert.That(mount.ClassListContains("drop-snapped"), Is.False);
             MoveDrag(nearMount);
             Assert.That(mount.ClassListContains("drop-snapped"), Is.True);
             ReleaseDrag(nearMount);
@@ -181,7 +272,7 @@ namespace AnimeCS.Tests
             double saveDeadline = Time.realtimeSinceStartupAsDouble + 8;
             while (!(game.Account.State.loadoutJson?.Contains("skin.ember47.case") ?? false) &&
                    Time.realtimeSinceStartupAsDouble < saveDeadline) yield return null;
-            Assert.That(game.Account.State.loadoutJson, Does.Contain("attackGear").And.Contain("skin.ember47.case"));
+            Assert.That(game.Account.State.loadoutJson, Does.Contain("attackGear").And.Contain("skin.ember47.case").And.Contain("weapon.heavy50"));
             Press("home");Press("settings");
             yield return null;
             Assert.That(root.Q("sheet-content").Query<Slider>(className:"setting-field").ToList().Count,Is.EqualTo(2));

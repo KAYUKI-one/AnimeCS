@@ -115,6 +115,32 @@ namespace AnimeCS.Tests
             Assert.That(loaded.defendGear.rifleId, Is.EqualTo("weapon.fold44"));
         }
 
+        [Test] public void EquipReplacesOccupiedSlotAndChecksFactionAndOwnership()
+        {
+            var catalog = ContentLibrary.Catalog;
+            var profile = WardrobeProfile.Create(catalog);
+            var draft = profile.Resolve(profile.current, catalog);
+            var character = catalog.Find<OutfitDefinition>(draft.OutfitFor(Side.Attack)).Character;
+            var pistol = catalog.Find<WeaponDefinition>("weapon.heavy50");
+            var defenderOnly = catalog.Find<WeaponDefinition>("weapon.verdict57");
+            string oldPistol = draft.attackGear.pistolId, defenderPistol = draft.defendGear.pistolId;
+            Assert.That(oldPistol, Is.Not.Null.And.Not.EqualTo(pistol.Id));
+            Assert.That(profile.TryEquip(draft, defenderOnly, Side.Attack, character, out _), Is.False);
+            Assert.That(draft.attackGear.pistolId, Is.EqualTo(oldPistol));
+            Assert.That(profile.TryEquip(draft, pistol, Side.Attack, character, out var selected), Is.True);
+            Assert.That(selected, Is.SameAs(pistol));
+            Assert.That(draft.attackGear.pistolId, Is.EqualTo(pistol.Id));
+            Assert.That(draft.defendGear.pistolId, Is.EqualTo(defenderPistol));
+
+            var skin = catalog.Find<WeaponSkinDefinition>("skin.ember47.case");
+            Assert.That(profile.TryEquip(draft, skin, Side.Attack, character, out selected), Is.True);
+            Assert.That(draft.SkinFor(selected.Id), Is.EqualTo(skin.Id));
+            profile.owned.Remove(skin.Id);
+            Assert.That(profile.TryEquip(draft, skin, Side.Attack, character, out _), Is.False);
+            Assert.That(profile.TryEquip(draft, skin.Weapon, Side.Attack, character, out selected), Is.True);
+            Assert.That(draft.SkinFor(selected.Id), Is.Null);
+        }
+
         [Test] public void LegacyProfileReplacesRetiredOutfitsAndPreservesWeaponsAndSkins()
         {
             var catalog = ContentLibrary.Catalog;

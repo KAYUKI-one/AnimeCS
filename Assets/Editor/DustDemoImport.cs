@@ -39,6 +39,12 @@ namespace AnimeCS.Editor
             {
                 var world=(GameObject)PrefabUtility.InstantiatePrefab(visual,scene);world.transform.SetParent(root.transform,false);
                 world.AddComponent<AnimeCS.Play.ImmutableMapMeshes>();
+                // Adjacent wall triangles can land in tile renderers with different probe samples.
+                foreach (var renderer in world.GetComponentsInChildren<MeshRenderer>(true))
+                {
+                    renderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+                    PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
+                }
                 var horizon=AssetDatabase.LoadAssetAtPath<GameObject>(Source+"Horizon/Horizon.gltf");
                 if(horizon)
                 {

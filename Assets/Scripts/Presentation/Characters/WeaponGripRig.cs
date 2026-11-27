@@ -1,4 +1,5 @@
 using AnimeCS.Content;
+using StylizedCharacters;
 using UnityEngine;
 
 namespace AnimeCS.Play
@@ -26,7 +27,7 @@ namespace AnimeCS.Play
                 var outward=body.right*side;
                 var down=(-body.up+outward*.18f+body.forward*.045f).normalized;
                 var palm=Quaternion.LookRotation(down,body.forward);
-                arm.Solve(arm.Shoulder.position+down*(arm.Reach*.965f),outward-body.forward*.6f,palm);
+                arm.Solve(arm.Shoulder.position+arm.ReachOffset(down*.965f),outward-body.forward*.6f,palm);
             }
         }
 
@@ -70,8 +71,8 @@ namespace AnimeCS.Play
             if (view)
             {
                 // View sleeves use their own shoulder origins below the camera, preserving original bone lengths.
-                _right.Shoulder.position = rightTarget + body.TransformDirection(new Vector3(.30f,-.43f,-.71f)) * _right.Reach;
-                _left.Shoulder.position = leftTarget + body.TransformDirection(new Vector3(-.47f,-.40f,-.63f)) * _left.Reach;
+                _right.Shoulder.position = rightTarget + _right.ReachOffset(body.TransformDirection(new Vector3(.30f,-.43f,-.71f)));
+                _left.Shoulder.position = leftTarget + _left.ReachOffset(body.TransformDirection(new Vector3(-.47f,-.40f,-.63f)));
             }
             else
             {
@@ -109,8 +110,8 @@ namespace AnimeCS.Play
             var right=_right.WristTarget(mount.TransformPoint(new Vector3(.207f,.045f,-.024f)),rightPalm);
             if(view)
             {
-                _left.Shoulder.position=left+body.TransformDirection(new Vector3(-.36f,-.39f,-.69f))*_left.Reach;
-                _right.Shoulder.position=right+body.TransformDirection(new Vector3(.38f,-.40f,-.68f))*_right.Reach;
+                _left.Shoulder.position=left+_left.ReachOffset(body.TransformDirection(new Vector3(-.36f,-.39f,-.69f)));
+                _right.Shoulder.position=right+_right.ReachOffset(body.TransformDirection(new Vector3(.38f,-.40f,-.68f)));
             }
             _left.Solve(left,body.TransformDirection(new Vector3(-.7f,-1,-.25f)),leftPalm);
             _right.Solve(right,body.TransformDirection(new Vector3(.7f,-1,-.25f)),rightPalm);
@@ -135,8 +136,8 @@ namespace AnimeCS.Play
             var rw=_right.WristTarget(right,rightPalm);var lw=_left.WristTarget(left,leftPalm);
             if(view)
             {
-                _right.Shoulder.position=rw+body.TransformDirection(new Vector3(.39f,-.41f,-.61f))*_right.Reach;
-                _left.Shoulder.position=lw+body.TransformDirection(new Vector3(-.65f,-.36f,-.60f))*_left.Reach;
+                _right.Shoulder.position=rw+_right.ReachOffset(body.TransformDirection(new Vector3(.39f,-.41f,-.61f)));
+                _left.Shoulder.position=lw+_left.ReachOffset(body.TransformDirection(new Vector3(-.65f,-.36f,-.60f)));
             }
             else
             {
@@ -154,17 +155,18 @@ namespace AnimeCS.Play
         private sealed class Arm
         {
             public readonly Transform Shoulder;
+            private readonly Transform _space;
             private readonly Transform _elbow, _hand;
             private readonly Transform[] _fingers = new Transform[15];
             private readonly Vector3[] _localRay = new Vector3[15];
-            private readonly float _upperLength, _lowerLength, _palmLength;
+            private readonly float _reach, _palmLength;
             private readonly Quaternion _palmBasis;
-            public float Reach => _upperLength + _lowerLength;
             public bool Ready { get; }
 
             public Arm(Animator animator, bool left)
             {
                 if (!animator || !animator.avatar || !animator.avatar.isValid || !animator.isHuman) return;
+                _space = animator.transform;
                 Shoulder = animator.GetBoneTransform(left ? HumanBodyBones.LeftUpperArm : HumanBodyBones.RightUpperArm);
                 _elbow = animator.GetBoneTransform(left ? HumanBodyBones.LeftLowerArm : HumanBodyBones.RightLowerArm);
                 _hand = animator.GetBoneTransform(left ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand);
@@ -174,28 +176,37 @@ namespace AnimeCS.Play
                     _fingers[i] = animator.GetBoneTransform((HumanBodyBones)((int)first+i));
                 var index = _fingers[3]; var middle = _fingers[6]; var little = _fingers[12];
                 if (!index || !middle || !little) return;
-                var along = middle.position - _hand.position;
-                var across = index.position - little.position;
+                var along = _space.InverseTransformVector(middle.position - _hand.position);
+                var across = _space.InverseTransformVector(index.position - little.position);
                 _palmLength = along.magnitude;
-                _palmBasis = Quaternion.Inverse(_hand.rotation) * Quaternion.LookRotation(along,across);
-                _upperLength = Vector3.Distance(Shoulder.position,_elbow.position);
-                _lowerLength = Vector3.Distance(_elbow.position,_hand.position);
+                _palmBasis = Quaternion.Inverse(TwoBonePose.Rotation(_space, _hand)) * Quaternion.LookRotation(along,across);
+                _reach = _space.InverseTransformVector(_elbow.position - Shoulder.position).magnitude +
+                    _space.InverseTransformVector(_hand.position - _elbow.position).magnitude;
                 for (int i = 0; i < _fingers.Length; i++)
                 {
                     var joint = _fingers[i];
                     if (!joint) continue;
                     Transform next = i%3<2 ? _fingers[i+1] : null;
                     var ray = next ? next.position-joint.position : joint.position-joint.parent.position;
-                    _localRay[i] = Quaternion.Inverse(joint.rotation) * ray.normalized;
+                    _localRay[i] = Quaternion.Inverse(TwoBonePose.Rotation(_space, joint)) * _space.InverseTransformVector(ray).normalized;
                 }
-                Ready = Reach > .1f && _palmLength > .015f;
+                float visibleReach = Vector3.Distance(Shoulder.position, _elbow.position) + Vector3.Distance(_elbow.position, _hand.position);
+                Ready = visibleReach > .1f && Vector3.Distance(middle.position, _hand.position) > .015f;
             }
 
-            public Vector3 WristTarget(Vector3 knuckle, Quaternion palm) => knuckle - palm*Vector3.forward*_palmLength;
+            private Quaternion PalmInRig(Quaternion palm) => Quaternion.LookRotation(
+                _space.InverseTransformVector(palm * Vector3.forward), _space.InverseTransformVector(palm * Vector3.up));
+
+            public Vector3 ReachOffset(Vector3 direction) => _space.TransformVector(
+                _space.InverseTransformVector(direction).normalized * _reach * direction.magnitude);
+
+            public Vector3 WristTarget(Vector3 knuckle, Quaternion palm) => knuckle - _space.TransformVector(
+                _space.InverseTransformVector(palm * Vector3.forward).normalized * _palmLength);
+
             public Vector3 ReachCorrection(Vector3 target)
             {
-                var ray = target-Shoulder.position;
-                return Vector3.ClampMagnitude(ray,Reach-.006f)-ray;
+                var ray = _space.InverseTransformVector(target - Shoulder.position);
+                return _space.TransformVector(Vector3.ClampMagnitude(ray, _reach * .99f) - ray);
             }
 
             public void ReachFromClavicle(Vector3 target)
@@ -203,22 +214,24 @@ namespace AnimeCS.Play
                 var needed = -ReachCorrection(target);
                 var joint = Shoulder.parent;
                 if (!joint || needed.sqrMagnitude < .000004f) return;
-                var arm = Shoulder.position-joint.position;
-                var turn = Quaternion.FromToRotation(arm,arm+needed);
-                joint.rotation = Quaternion.RotateTowards(Quaternion.identity,turn,30) * joint.rotation;
+                var arm = _space.InverseTransformVector(Shoulder.position - joint.position);
+                var turn = Quaternion.FromToRotation(arm, arm + _space.InverseTransformVector(needed));
+                TwoBonePose.Rotate(_space, joint, Quaternion.RotateTowards(Quaternion.identity, turn, 30));
             }
 
             public void Solve(Vector3 target, Vector3 pole, Quaternion palm)
             {
-                var ray = target - Shoulder.position;
-                var axis = ray.normalized;
-                var d = Mathf.Clamp(ray.magnitude, Mathf.Abs(_upperLength-_lowerLength)+.0001f,Reach-.0001f);
-                float along = (_upperLength*_upperLength-_lowerLength*_lowerLength+d*d)/(2*d);
-                var elbow = Shoulder.position + axis*along + Vector3.ProjectOnPlane(pole,axis).normalized *
-                    Mathf.Sqrt(Mathf.Max(0,_upperLength*_upperLength-along*along));
-                Shoulder.rotation = Quaternion.FromToRotation(_elbow.position-Shoulder.position,elbow-Shoulder.position) * Shoulder.rotation;
-                _elbow.rotation = Quaternion.FromToRotation(_hand.position-_elbow.position,target-_elbow.position) * _elbow.rotation;
-                _hand.rotation = palm * Quaternion.Inverse(_palmBasis);
+                TwoBonePose.Solve(_space, Shoulder, _elbow, _hand,
+                    _space.InverseTransformPoint(target), _space.InverseTransformVector(pole));
+                TwoBonePose.SetRotation(_space, _hand, PalmInRig(palm) * Quaternion.Inverse(_palmBasis));
+            }
+
+            private void TurnFinger(int index, Vector3 direction, float weight = 1f)
+            {
+                var joint = _fingers[index];
+                var rotation = TwoBonePose.Rotation(_space, joint);
+                var delta = Quaternion.FromToRotation(rotation * _localRay[index], _space.InverseTransformVector(direction));
+                TwoBonePose.SetRotation(_space, joint, Quaternion.Slerp(Quaternion.identity, delta, weight) * rotation);
             }
 
             public void CurlAroundInsert(Transform mount, Bounds bounds, float weight)
@@ -247,8 +260,7 @@ namespace AnimeCS.Play
                         };
                         Vector3 ray=mount.TransformPoint(local)-joint.position;
                         if(ray.sqrMagnitude<.000001f)continue;
-                        var turn=Quaternion.FromToRotation(joint.rotation*_localRay[i],ray);
-                        joint.rotation=Quaternion.Slerp(Quaternion.identity,turn,weight)*joint.rotation;
+                        TurnFinger(i, ray, weight);
                     }
                 }
             }
@@ -268,7 +280,7 @@ namespace AnimeCS.Play
                             : link switch { 0=>new Vector3(.009f,.017f,z),1=>new Vector3(.018f,-.008f,z),_=>new Vector3(-.003f,-.017f,z) };
                         var direction=mount.TransformPoint(onGrip)-joint.position;
                         if(direction.sqrMagnitude>.0000001f)
-                            joint.rotation=Quaternion.FromToRotation(joint.rotation*_localRay[i],direction)*joint.rotation;
+                            TurnFinger(i, direction);
                     }
                 }
             }
@@ -280,7 +292,7 @@ namespace AnimeCS.Play
                     int finger=i/3,link=i%3;
                     var ray=finger==0 ? new Vector3(.76f,-.12f-link*.08f,.55f) :
                         new Vector3(.18f+(2-finger)*.096f,.32f-link*.33f,.96f);
-                    joint.rotation=Quaternion.FromToRotation(joint.rotation*_localRay[i],aim*ray)*joint.rotation;
+                    TurnFinger(i, aim * ray);
                 }
             }
             public void PoseFingers(Quaternion aim, bool left, bool wrap)
@@ -305,7 +317,7 @@ namespace AnimeCS.Play
                         dir = link==0 ? new Vector3(.76f*side,-.16f,.62f) :
                               link==1 ? new Vector3(.95f*side,-.08f,-.32f) : new Vector3(.10f*side,.04f,-1);
                     }
-                    joint.rotation = Quaternion.FromToRotation(joint.rotation*_localRay[i], aim*dir) * joint.rotation;
+                    TurnFinger(i, aim * dir);
                 }
             }
         }

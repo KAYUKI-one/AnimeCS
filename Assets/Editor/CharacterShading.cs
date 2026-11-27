@@ -1,5 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
+using AnimeCS.Content;
+using StylizedCharacters.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -8,54 +11,67 @@ namespace AnimeCS.Editor
 {
     internal static class CharacterShading
     {
-        // Atlas channels are authored differently per source. In particular several opaque colour maps use alpha for packing.
+        [Serializable]
+        sealed class AtlasRoles
+        {
+            public string[] face, hair, metal, satin, transparent, cutoutPrefixes, singleSidedShell;
+            public CharacterSurfaceRole Role(string name) =>
+                face.Contains(name) ? CharacterSurfaceRole.Face : hair.Contains(name) ? CharacterSurfaceRole.Hair :
+                metal.Contains(name) ? CharacterSurfaceRole.Metal : satin.Contains(name) ? CharacterSurfaceRole.Satin :
+                CharacterToonMaterial.InferRole(name);
+        }
+
+        static AtlasRoles LoadRoles() => JsonUtility.FromJson<AtlasRoles>(
+            AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/Editor/CastSurfaceAssignments.json").text);
+
         internal static void Apply(string name, Material material)
         {
-            if (!name.Contains("_")) return;
-            string[] parts=name.Split('_'); string cast=parts[0], atlas=parts[1];
-            bool face=cast switch {
-                "Rover"=>atlas=="T02","Lily" or "Nora"=>atlas=="T01","Michele"=>atlas=="T02",_=>atlas=="T00" };
-            bool hair=cast switch {
-                "Rover"=>atlas=="T04", "Lily" or "Flor"=>atlas=="T05"||atlas=="T06",
-                "Laevatain"=>atlas=="T05","Mornye"=>atlas=="T02"||atlas=="T03",
-                "BlackMiku"=>atlas=="T02"||atlas=="T23","Michele"=>atlas=="T01","Nora"=>atlas=="T00",_=>false };
-            bool metal=cast=="BlackMiku" && (atlas=="T11"||atlas=="BABABA"||atlas=="T26");
-            bool satin=cast=="BlackMiku" && (atlas=="T04"||atlas=="T05"||atlas=="T16"||atlas=="T17");
-            bool translucent=(cast=="Lily"&&atlas=="T07") || (cast=="BlackMiku"&&atlas=="T28") || (cast=="Mornye"&&atlas=="T08");
-            bool clip=cast=="BlackMiku" && !translucent && atlas.StartsWith("T",StringComparison.Ordinal);
-            var shader=Shader.Find("AnimeCS/Character Surface");
-            if (!shader) throw new InvalidDataException("角色表面着色器未导入。");
-            material.shader=shader;
-            bool legShell=cast=="Mornye" && atlas=="T08";
-            material.SetFloat("_Cull",legShell?(float)CullMode.Back:0);
-            material.SetFloat("_AlphaToMask",clip?1:0);
-            material.SetFloat("_ClearCoatMask",hair?.86f:0);
-            material.SetFloat("_ClearCoatSmoothness",face?.87f:.12f);
-            material.SetFloat("_Smoothness",metal?.77f:hair?.61f:satin?.53f:face?.38f:.26f);
-            material.SetFloat("_Metallic",metal?.65f:0);
-            material.SetColor("_SpecColor",Color.white*(metal?.45f:hair?.22f:satin?.18f:face?.071f:.1f));
-            material.SetFloat("_Cutoff",clip?.24f:.5f);
-            if (clip && material.GetTexture("_BaseMap") is Texture2D texture &&
-                AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) is TextureImporter albedo &&
-                (!albedo.mipMapsPreserveCoverage || !Mathf.Approximately(albedo.alphaTestReferenceValue,.24f)))
+            if (CharacterToonMaterial.IsPrepared(material)) return;
+            ApplyAssignedPreset(name,material);
+        }
+
+        internal static void ApplyAssignedPreset(string name, Material material)
+        {
+            var roles = LoadRoles();
+            var mode = roles.transparent.Contains(name) ? CharacterAlphaMode.Transparent :
+                roles.cutoutPrefixes.Any(prefix => name.StartsWith(prefix,StringComparison.Ordinal)) ?
+                CharacterAlphaMode.Cutout : CharacterAlphaMode.Opaque;
+            CharacterToonMaterial.ApplyPreset(material,roles.Role(name),mode);
+            bool shell = roles.singleSidedShell.Contains(name);
+            material.SetFloat("_Cull",(int)(shell ? CullMode.Back : CullMode.Off));
+            if (shell)
             {
-                albedo.mipMapsPreserveCoverage=true;albedo.alphaTestReferenceValue=.24f;
-                albedo.SaveAndReimport();
+                var tint = material.color;
+                tint.a = .70f;
+                material.color=tint;
             }
-            material.SetFloat("_Surface",translucent?1:0);
-            material.SetFloat("_ZWrite",translucent?0:1);
-            material.SetFloat("_SrcBlend",(float)(translucent?BlendMode.SrcAlpha:BlendMode.One));
-            material.SetFloat("_DstBlend",(float)(translucent?BlendMode.OneMinusSrcAlpha:BlendMode.Zero));
-            CoreUtils.SetKeyword(material,"_SURFACE_TYPE_TRANSPARENT",translucent);
-            CoreUtils.SetKeyword(material,"_ALPHATEST_ON",clip);
-            material.DisableKeyword("_EMISSION");
-            var tint=material.GetColor("_BaseColor");
-            tint.a=legShell?.70f:1;
-            material.SetColor("_BaseColor",tint);
-            material.SetOverrideTag("RenderType",translucent?"Transparent":clip?"TransparentCutout":"Opaque");
-            material.renderQueue=(int)(translucent?RenderQueue.Transparent:clip?RenderQueue.AlphaTest:RenderQueue.Geometry);
-            material.SetShaderPassEnabled("ShadowCaster",!translucent);
+            if (mode == CharacterAlphaMode.Cutout) material.SetFloat("_Cutoff",.24f);
             EditorUtility.SetDirty(material);
+        }
+
+        [MenuItem("AnimeCS/美术/应用角色卡通材质")]
+        public static void ApplyToCast()
+        {
+            // Body and first-person exports share these atlases. Some auxiliary slots exist in only one export.
+            var folders = ContentLibrary.Catalog.Entries.OfType<CharacterDefinition>().Where(c => !c.Archived && c.Model)
+                .Select(c => Path.GetDirectoryName(AssetDatabase.GetAssetPath(c.Model)).Replace('\\','/')).Distinct().ToArray();
+            foreach (var material in AssetDatabase.FindAssets("t:Material",folders).Select(AssetDatabase.GUIDToAssetPath)
+                         .Where(path => path.EndsWith(".mat",StringComparison.OrdinalIgnoreCase)).Select(AssetDatabase.LoadAssetAtPath<Material>))
+                Apply(material.name,material);
+            ApplyToWearables();
+            AssetDatabase.SaveAssets();
+        }
+
+        internal static void ApplyToWearables()
+        {
+            foreach (string guid in AssetDatabase.FindAssets("t:Material",new[] {"Assets/Content/Art/Wearables"}))
+            {
+                string path=AssetDatabase.GUIDToAssetPath(guid);
+                if (!path.EndsWith(".mat",StringComparison.OrdinalIgnoreCase)) continue;
+                var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (mat && mat.shader.name != "AnimeCS/Hidden garment region" && !CharacterToonMaterial.IsPrepared(mat))
+                    CharacterToonMaterial.Convert(mat,CharacterSurfaceRole.Fabric);
+            }
         }
     }
 }

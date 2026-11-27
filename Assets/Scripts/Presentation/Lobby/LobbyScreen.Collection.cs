@@ -54,7 +54,7 @@ namespace AnimeCS.Play
             if (!character) return;
             var outfit=_catalog.Entries.OfType<OutfitDefinition>().FirstOrDefault(o=>Owned(o) && o.Character==character);
             if (outfit) _draft.Select(outfit);
-            _game.PreviewWardrobe(_draft,_gun,false,unarmed:true,previewWorn:_draft.WornFor(character.Faction));
+            _host.Preview.ShowWardrobe(_draft,_gun,false,unarmed:true,previewWorn:_draft.WornFor(character.Faction));
         }
 
         void Characters()
@@ -127,9 +127,9 @@ namespace AnimeCS.Play
             var tag=new Label("RECRUITMENT  /  角色招募");tag.AddToClassList("eyebrow");info.Add(tag);
             SectionLabel(info,featured?featured.DisplayName:"角色招募");
             if (!string.IsNullOrEmpty(State.lastDrawId)) info.Add(new Label("上次招募   "+DisplayName(State.lastDrawId)));
-            var draw=ActionButton(info,$"招募一次    {State.drawCost} 代币","draw-character",()=>RunAction(_game.Account.DrawAsync,()=>
+            var draw=ActionButton(info,$"招募一次    {State.drawCost} 代币","draw-character",()=>RunAction(LobbyAccountAction.Draw,after:()=>
             {
-                _profile=_game.ReadWardrobe();
+                _profile=_host.ReadWardrobe();
                 if (_section=="shop") Render();
                 Notice("招募获得    "+DisplayName(State.lastDrawId));
             }),true);
@@ -161,8 +161,8 @@ namespace AnimeCS.Play
                     card.Add(new Image{image=Art(item),scaleMode=ScaleMode.ScaleToFit});card.Add(new Label(item.DisplayName));
                     bool owned=Owned(item);
                     var buy=ActionButton(card,owned?"已拥有":listing.offer.price+" 代币  ·  购买","buy-"+listing.offer.id,()=>
-                        RunAction(()=>_game.Account.BuyAsync(listing.offer.id),()=>{
-                            _profile=_game.ReadWardrobe();if (_section=="shop") Render();Notice(item.DisplayName+" 已加入库存");}));
+                        RunAction(LobbyAccountAction.Buy,listing.offer.id,()=>{
+                            _profile=_host.ReadWardrobe();if (_section=="shop") Render();Notice(item.DisplayName+" 已加入库存");}));
                     buy.SetEnabled(!owned && State.credits>=listing.offer.price);
                 }
             }

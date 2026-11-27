@@ -34,6 +34,7 @@ namespace AnimeCS.Tests.Performance
 
         private static string _directory;
         private GraphicsStateCollection _trace;
+        private bool _offscreen;
         private readonly Run _run = new();
         private readonly FrameTiming[] _timing = new FrameTiming[1];
         private LocalGame _game;
@@ -53,6 +54,7 @@ namespace AnimeCS.Tests.Performance
             var host = new GameObject("Standalone render probe");
             DontDestroyOnLoad(host);
             var probe = host.AddComponent<RenderProbe>();
+            probe._offscreen = Array.IndexOf(args, "-offscreen-probe") >= 0;
             if (Array.IndexOf(args, "-trace-states") >= 0 && SystemInfo.supportsParallelPSOCreation)
             {
                 if (!Debug.isDebugBuild)
@@ -192,12 +194,42 @@ namespace AnimeCS.Tests.Performance
         private IEnumerator Capture(string file)
         {
             yield return new WaitForEndOfFrame();
-            ScreenCapture.CaptureScreenshot(Path.Combine(_directory, file + ".png"));
+            if (_offscreen) RenderCamera(file);
+            else ScreenCapture.CaptureScreenshot(Path.Combine(_directory, file + ".png"));
             for (int i = 0; i < 5; i++) yield return null;
+        }
+
+        // A hidden Windows swap chain can skip presenting every frame. Render the actual scene camera explicitly.
+        private void RenderCamera(string file)
+        {
+            var camera = Camera.main;
+            if (!camera) return;
+            var target = RenderTexture.GetTemporary(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32);
+            var previous = RenderTexture.active;
+            var original = camera.targetTexture;
+            Texture2D pixels = null;
+            try
+            {
+                camera.targetTexture = target;
+                camera.Render();
+                if (file == null) return;
+                RenderTexture.active = target;
+                pixels = new Texture2D(target.width, target.height, TextureFormat.RGB24, false);
+                pixels.ReadPixels(new Rect(0, 0, target.width, target.height), 0, 0);
+                File.WriteAllBytes(Path.Combine(_directory, file + ".png"), pixels.EncodeToPNG());
+            }
+            finally
+            {
+                camera.targetTexture = original;
+                RenderTexture.active = previous;
+                RenderTexture.ReleaseTemporary(target);
+                if (pixels) Destroy(pixels);
+            }
         }
 
         private IEnumerator WindowFrames(string name, int count)
         {
+            if (_offscreen) RenderCamera(name == "lobby" ? "lobby-camera" : null);
             var times = new double[count];
             var main = new List<double>(count);
             var gpu = new List<double>(count);

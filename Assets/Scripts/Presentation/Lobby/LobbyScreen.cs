@@ -12,7 +12,7 @@ namespace AnimeCS.Play
     internal sealed partial class LobbyScreen
     {
         readonly VisualElement _screen,_sheet,_content;
-        readonly LocalGame _game;
+        readonly ILobbyHost _host;
         readonly ContentCatalog _catalog;
         WardrobeProfile _profile;
         WardrobeLoadout _draft;
@@ -24,19 +24,27 @@ namespace AnimeCS.Play
         ContentDefinition _item;
         Vector2 _inventoryScroll;
         static readonly string[] SlotNames={"头饰","上衣","手套","下衣","鞋子"};
-        public LobbyScreen(VisualElement host,MatchPresentation style,ContentCatalog catalog,LocalGame game)
+        internal event Action LocalMatchRequested, PartyMatchRequested;
+        internal event Action<MapDefinition> MapRequested;
+        internal event Action<FirstSide> OpeningSideRequested;
+        internal event Action<PlayAspect> AspectRequested;
+        internal event Action<bool> FriendlyCuesRequested;
+        internal event Action<float> SensitivityRequested, VolumeRequested;
+
+        internal LobbyScreen(VisualElement host, VisualTreeAsset layout, StyleSheet theme, ContentCatalog catalog, ILobbyHost lobbyHost)
         {
-            _game=game;_catalog=catalog;style.lobby.CloneTree(host);
+            _host=lobbyHost;_catalog=catalog;layout.CloneTree(host);
             _screen=host.Q("lobby");
-            if (style.lobbyTheme) _screen.styleSheets.Add(style.lobbyTheme);
+            if (theme) _screen.styleSheets.Add(theme);
             _sheet=_screen.Q("sheet");_content=_screen.Q("sheet-content");
             _slots=_sheet.Q("loadout-slots"); _stage=_sheet.Q("inspection-stage");
-            _drag = new EquipmentDrag(_screen, ValidSlot, MountItem, (card, item) => ItemCardContent(card, item, Art(item)));
+            _drag = new EquipmentDrag<ContentDefinition>(_screen, (card, item) => ItemCardContent(card, item, Art(item)));
+            _drag.ItemRequested += MountItem;
             _stage.RegisterCallback<GeometryChangedEvent>(_=>FrameEquipment());
             void AttachTurntable(VisualElement stage)
             {
                 stage.RegisterCallback<PointerDownEvent>(e=>{if(e.button==0 && e.target==stage)stage.CapturePointer(e.pointerId);});
-                stage.RegisterCallback<PointerMoveEvent>(e=>{if(stage.HasPointerCapture(e.pointerId))game.RotateLobby(-e.deltaPosition.x*.38f);});
+                stage.RegisterCallback<PointerMoveEvent>(e=>{if(stage.HasPointerCapture(e.pointerId))_host.Preview.Rotate(-e.deltaPosition.x*.38f);});
                 stage.RegisterCallback<PointerUpEvent>(e=>stage.ReleasePointer(e.pointerId));
             }
             AttachTurntable(_screen.Q("stage-view")); AttachTurntable(_screen.Q("inspection-stage"));
@@ -61,18 +69,18 @@ namespace AnimeCS.Play
 
         public void RefreshMap()
         {
-            var map = _game.SelectedMap;
+            var map = _host.SelectedMap;
             bool party=State?.party is {Length:>1};
             if(party) map=_catalog.Find<MapDefinition>(State.mapId);
             _screen.Q<Label>("map-title").text = party
                 ? (map ? map.DisplayName : "服务器选图")+"\n小队爆破"
-                : map.DisplayName+"\n"+(_game.Mode==MatchMode.AimPractice ? "自由训练" : $"{LocalMatch.TeamSize}v{LocalMatch.TeamSize} 攻守拆弹");
+                : map.DisplayName+"\n"+(_host.Mode==MatchMode.AimPractice ? "自由训练" : $"{MatchFormat.TeamSize}v{MatchFormat.TeamSize} 攻守拆弹");
             _screen.Q<Image>("map-thumb").image = map ? (map.LoadingArt ? map.LoadingArt : map.Radar) : null;
         }
 
         public void Show()
         {
-            _profile = _game.ReadWardrobe();
+            _profile = _host.ReadWardrobe();
             Close();
             SetVisible(_screen.Q("auth"), !_signedIn);
             if (_signedIn) RefreshHeader(true);
@@ -83,14 +91,16 @@ namespace AnimeCS.Play
             if (!_signedIn) return;
             if (_drag.CancelDrag()) return;
             if (_dialogKey != null) { HideDialog(); return; }
-            if (_section == "inventory" && _item) { _item = null; _game.EndInspection(); Render(); }
+            if (_section == "inventory" && _item) { _item = null; _host.Preview.EndInspection(); Render(); }
             else Close();
         }
+
+        internal void CancelPointerInteraction() => _drag.CancelDrag();
 
         public void Close()
         {
             _drag.Clear();
-            if (_section == "equipment" || _section == "inventory" || _section == "character") _game.EndInspection();
+            if (_section == "equipment" || _section == "inventory" || _section == "character") _host.Preview.EndInspection();
             _section = null; _draft = null; _item = null; _first = false;
             SetVisible(_sheet, false);
             SetVisible(_screen.Q("home-heading"), true);
@@ -103,14 +113,14 @@ namespace AnimeCS.Play
         {
             Close();
             _section = key;
-            _profile = _game.ReadWardrobe();
+            _profile = _host.ReadWardrobe();
             _draft = _profile.Resolve(_profile.current, _catalog);
-            _gun = _game.LobbyWeaponId;
+            _gun = _host.LobbyWeaponId;
             SetVisible(_sheet,true);
             SetVisible(_screen.Q("home-heading"),false);
             SetVisible(_screen.Q("topbar"),key != "settings" && key != "tasks");
             if (key == "equipment") BeginEquipment();
-            if (key == "character") SelectCharacter(_catalog.Find<CharacterDefinition>(_game.Account.State?.showCharacterId) ?? CurrentCharacter);
+            if (key == "character") SelectCharacter(_catalog.Find<CharacterDefinition>(State?.showCharacterId) ?? CurrentCharacter);
             SelectTab(key);
             Render();
         }
@@ -118,7 +128,7 @@ namespace AnimeCS.Play
         void Preview()
         {
             _draft=_profile.Resolve(_draft,_catalog);
-            _game.PreviewWardrobe(_draft,_gun,_first,previewWorn:_draft.WornFor(_equipmentSide));
+            _host.Preview.ShowWardrobe(_draft,_gun,_first,previewWorn:_draft.WornFor(_equipmentSide));
             Render();
             FrameEquipment();
         }
@@ -130,18 +140,12 @@ namespace AnimeCS.Play
 
         void PersistWardrobe()
         {
-            if (_game.Account.State == null)
+            bool online = State != null;
+            RunAction(() => _host.Account.SaveWardrobeAsync(_profile, _gun), () =>
             {
-                _game.SetLobbyWeapon(_gun);
-                _game.SaveWardrobe(_profile);
-                Preview();
-                return;
-            }
-            RunAction(() => _game.Account.SaveLoadoutAsync(_game.SerializeGear(_profile)), () =>
-            {
-                Notice("装备配置已保存");
+                if (online) Notice("装备配置已保存");
                 if (_section == "equipment") Preview();
-            });
+            }, requireSignIn: online);
         }
 
         void Render()
@@ -175,12 +179,13 @@ namespace AnimeCS.Play
 
         void Settings()
         {
-            GraphicsOptions(); Header("对局辅助");
-            var friendly=new Toggle("队友三角与轮廓"){name="friendly-cues",value=_game.FriendlyCues};
-            friendly.AddToClassList("setting-field");friendly.RegisterValueChangedCallback(e=>_game.FriendlyCues=e.newValue);_content.Add(friendly);
+            var settings = _host.Settings;
+            GraphicsOptions(settings); Header("对局辅助");
+            var friendly=new Toggle("队友三角与轮廓"){name="friendly-cues",value=settings.FriendlyCues};
+            friendly.AddToClassList("setting-field");friendly.RegisterValueChangedCallback(e=>FriendlyCuesRequested?.Invoke(e.newValue));_content.Add(friendly);
             Header("操控与声音");
-            Slider("鼠标灵敏度",.025f,.30f,_game.Sensitivity,v=>_game.Sensitivity=v);
-            Slider("音量",0,1,_game.Volume,v=>_game.Volume=v);Header("键鼠");
+            Slider("鼠标灵敏度",.025f,.30f,settings.Sensitivity,v=>SensitivityRequested?.Invoke(v));
+            Slider("音量",0,1,settings.Volume,v=>VolumeRequested?.Invoke(v));Header("键鼠");
             _content.Add(new Label("WASD 移动    Shift 静步    空格跳跃    Ctrl / C 下蹲"));
             _content.Add(new Label("1 主武器    2 副武器    3 刀    5 目标包    滚轮切换    Q 上一件"));
             _content.Add(new Label("左键使用    右键开镜    R 换弹    F 检视    E 交互    X 投道具    G 丢弃手持物"));
@@ -196,18 +201,19 @@ namespace AnimeCS.Play
                 _content.Add(new Label(assigned ? "房间地图  "+assigned.DisplayName : "队长开赛时，战斗服务器将分配地图。"));
                 return;
             }
-            var modes=Row(); bool practice=_game.Mode==MatchMode.AimPractice;
+            var modes=Row(); bool practice=_host.Mode==MatchMode.AimPractice;
             var range=_catalog.Entries.OfType<MapDefinition>().FirstOrDefault(m=>m.Practice && !m.Archived);
-            var last=_game.LastBombMap ? _game.LastBombMap : _catalog.Entries.OfType<MapDefinition>().FirstOrDefault(m=>!m.Practice && !m.Archived);
-            Choice(modes,"Bot 爆破",!practice,()=>{_game.SelectMap(last);Render();},"mode-bots");
-            if(range) Choice(modes,"练枪地图",practice,()=>{_game.SelectMap(range);Render();},"mode-practice");
+            var last=_host.LastBombMap ? _host.LastBombMap : _catalog.Entries.OfType<MapDefinition>().FirstOrDefault(m=>!m.Practice && !m.Archived);
+            void RequestMap(MapDefinition map) { MapRequested?.Invoke(map); Render(); }
+            Choice(modes,"Bot 爆破",!practice,()=>RequestMap(last),"mode-bots");
+            if(range) Choice(modes,"练枪地图",practice,()=>RequestMap(range),"mode-practice");
             if(practice){_content.Add(new Label("靶位自动复位。按 B 可随时领取两方装备或切换移动靶。"));return;}
             Header("地图");var maps=Row();
             foreach(var map in _catalog.Entries.OfType<MapDefinition>().Where(m=>!m.Practice && !m.Archived))
-                Choice(maps,map.DisplayName,map==_game.SelectedMap,()=>{_game.SelectMap(map);Render();});
-            if(_game.Mode==MatchMode.Online){_content.Add(new Label("联机试玩 · 随机阵营"));return;}
+                Choice(maps,map.DisplayName,map==_host.SelectedMap,()=>RequestMap(map));
+            if(_host.Mode==MatchMode.Online){_content.Add(new Label("联机试玩 · 随机阵营"));return;}
             Header("开局阵营");var sides=Row();
-            foreach(FirstSide side in Enum.GetValues(typeof(FirstSide)))Choice(sides,side==FirstSide.Attack?"余烬 · 先攻":side==FirstSide.Defend?"苍盾 · 先守":"随机",_game.OpeningSide==side,()=>{_game.OpeningSide=side;Render();});
+            foreach(FirstSide side in Enum.GetValues(typeof(FirstSide)))Choice(sides,side==FirstSide.Attack?"余烬 · 先攻":side==FirstSide.Defend?"苍盾 · 先守":"随机",_host.OpeningSide==side,()=>{OpeningSideRequested?.Invoke(side);Render();});
 
         }
 
@@ -236,7 +242,7 @@ namespace AnimeCS.Play
             _inventoryScroll=((ScrollView)_content).scrollOffset;
             _item=item;
             if (item is WeaponDefinition || item is WeaponSkinDefinition || item is UtilityDefinition)
-                _game.InspectItem(item);
+                _host.Preview.ShowItem(item);
             else
             {
                 var wear=_profile.Resolve(_profile.current,_catalog);
@@ -254,7 +260,7 @@ namespace AnimeCS.Play
                     if (fit) wear.outfitId=fit.Id;
                     wear.worn.Set(garment.Slot,garment.Id);
                 }
-                _game.PreviewWardrobe(wear,_gun,false,true);
+                _host.Preview.ShowWardrobe(wear,_gun,false,true);
             }
             Render();
         }

@@ -86,7 +86,10 @@ namespace AnimeCS.Tests
                 excursion = Mathf.Max(excursion, Mathf.Abs(actors[5].transform.position.x - startX));
             }
             Assert.That(excursion, Is.GreaterThan(.18f));
-            Click("target-motion");Click("close-shop");
+            Assert.That(shop.Q<Button>("target-motion").text, Is.EqualTo("靶位移动　开"));
+            Click("target-motion"); yield return null;
+            Assert.That(shop.Q<Button>("target-motion").text, Is.EqualTo("靶位移动　关"));
+            Click("close-shop");
             game.ReturnToLobby();Click("mode");Click("mode-bots");
             yield return null; Assert.That(game.SelectedMap.Practice,Is.False);
             var loadDeadline = Time.realtimeSinceStartupAsDouble + 30;
@@ -152,13 +155,23 @@ namespace AnimeCS.Tests
                         renderer.BakeMesh(baked);
                         var vertices=baked.vertices;var weights=renderer.sharedMesh.boneWeights;
                         var feet=renderer.bones.Select(b=>b.name.EndsWith("Foot") || b.name.EndsWith("Toes")).ToArray();
-                        var toWorld=renderer.transform.localToWorldMatrix;float sole=float.PositiveInfinity;
+                        var toWorld = renderer.transform.localToWorldMatrix;
+                        var sole = new Vector3(0, float.PositiveInfinity, 0);
                         for(int v=0;v<vertices.Length;v++)
                         {
-                            if(feet[weights[v].boneIndex0]) sole=Mathf.Min(sole,toWorld.MultiplyPoint3x4(vertices[v]).y);
+                            if (!feet[weights[v].boneIndex0]) continue;
+                            var vertex = toWorld.MultiplyPoint3x4(vertices[v]);
+                            if (vertex.y < sole.y) sole = vertex;
                         }
-                        if(view.Motion.Grounded)
-                            Assert.That(sole,Is.EqualTo(actors[i].Visuals.position.y-actors[i].GroundSkin).Within(.045f),character.Id+" sole / crouch="+crouch);
+                        if (view.Motion.Grounded)
+                        {
+                            Assert.That(float.IsPositiveInfinity(sole.y), Is.False, character.Id + " has a weighted sole");
+                            float floor = actors[i].Visuals.position.y - actors[i].GroundSkin;
+                            if (Physics.Raycast(sole + Vector3.up * .28f, Vector3.down, out var contact, .56f,
+                                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore) && contact.normal.y < .9999f)
+                                floor = contact.point.y;
+                            Assert.That(sole.y, Is.EqualTo(floor).Within(.045f), character.Id + " sole / crouch=" + crouch);
+                        }
                     }
                     finally {Object.Destroy(baked);}
                     var hit=actors[i].HeadHitbox;

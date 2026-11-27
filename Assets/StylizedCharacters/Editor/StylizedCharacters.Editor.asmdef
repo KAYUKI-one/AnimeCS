@@ -1,0 +1,6 @@
+{
+    "name": "StylizedCharacters.Editor",
+    "rootNamespace": "StylizedCharacters.Editor",
+    "includePlatforms": ["Editor"],
+    "references": ["lilToon.Editor"]
+}

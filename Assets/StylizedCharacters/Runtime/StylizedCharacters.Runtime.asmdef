@@ -1,0 +1,5 @@
+{
+    "name": "StylizedCharacters.Runtime",
+    "rootNamespace": "StylizedCharacters",
+    "references": ["com.unity.animations.springbone"]
+}

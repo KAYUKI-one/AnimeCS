@@ -123,6 +123,8 @@ namespace AnimeCS.Editor
         public static void Bind(ContentDefinition entry, Object source)
         {
             string field = SourceField(entry.Kind, source);
+            if (entry is CharacterDefinition && source is GameObject model)
+                source=StylizedCharacters.Editor.CharacterModelMaterials.Prepare(model);
             var data = new SerializedObject(entry);
             var reference = data.FindProperty(field);
             if (entry is WeaponDefinition && field=="_worldModel" && reference.objectReferenceValue!=source)
@@ -175,6 +177,8 @@ namespace AnimeCS.Editor
                 return definition;
             }
             string field = SourceField(kind, source);
+            if (kind == ContentKind.Character && source is GameObject model)
+                source=StylizedCharacters.Editor.CharacterModelMaterials.Prepare(model);
             foreach (var entry in catalog.Entries)
                 if (entry != null && entry.Kind == kind && (entry is MapDefinition map && field == "_geometry" ? map.Geometry == source : new SerializedObject(entry).FindProperty(field).objectReferenceValue == source))
                     return entry;

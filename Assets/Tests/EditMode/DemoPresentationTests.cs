@@ -136,7 +136,7 @@ namespace AnimeCS.Tests
                         Assert.That(mesh, Is.Not.Null, outfit.name);
                         Assert.That(rig.BindClothing(patch), Is.True, outfit.name);
                         Assert.That(mesh.bones.All(bone => bone && bone.IsChildOf(body.transform) && !bone.IsChildOf(patch.transform)), Is.True, outfit.name);
-                        Assert.That(mesh.sharedMaterial.GetTexture("_BaseMap"), Is.Not.Null);
+                        Assert.That(mesh.sharedMaterial.mainTexture, Is.Not.Null, outfit.name);
                     }
                 }
                 finally { Object.DestroyImmediate(body); }

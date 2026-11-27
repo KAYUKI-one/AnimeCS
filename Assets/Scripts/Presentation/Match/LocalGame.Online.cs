@@ -29,7 +29,6 @@ namespace AnimeCS.Play
         private bool _onlineRequested;
         private SeatDatagramClient _online;
         private readonly ReplicaPort[] _replicas = new ReplicaPort[LocalMatch.Seats];
-        private readonly string[] _hudOutfits = new string[LocalMatch.Seats];
         private readonly string[] _onlineNames = new string[LocalMatch.Seats];
         private readonly bool[] _shown = new bool[LocalMatch.Seats];
         private readonly bool[] _onlineAllyTags = new bool[LocalMatch.Seats];
@@ -91,7 +90,7 @@ namespace AnimeCS.Play
                 _ports[i]=_replicas[i];
                 var member=_online.Member(i,out bool visible);
                 _onlineNames[i]=join.party!=null && i<join.party.Length ? join.party[i] : $"BOT {i+1:00}";
-                _loading.SetCard(member.Side,i%LocalMatch.TeamSize,member.OutfitId,_onlineNames[i]);
+                ShowLoadingOutfit(member.Side,i%LocalMatch.TeamSize,member.OutfitId,_onlineNames[i]);
                 _loading.Progress(.86f+.10f*(i+1)/_replicas.Length,"正在绘制角色");
                 if (visible && member.Health>0)
                 {
@@ -104,8 +103,7 @@ namespace AnimeCS.Play
             }
             _world.WarmFeedback(); _preview.Hide();
             InLobby=false; _lobbyHost.style.display=DisplayStyle.None; _hudHost.style.display=DisplayStyle.Flex;
-            _hud.StartMatch(null,ReadWardrobe().current,_online.WorldView,IsPartyLeader);
-            Array.Clear(_hudOutfits,0,_hudOutfits.Length);
+            _hud.StartMatch(_online.WorldView,ReadWardrobe().current,false,IsPartyLeader,IsPartyLeader);
             _keyboard.SyncRound(self,true); _keyboard.ResetPointer(); MapLight(true); ApplyAspect(); _time=0;
             RenderOnline();
             yield return null;
@@ -178,6 +176,7 @@ namespace AnimeCS.Play
                 member.Match=self.Match;member.DisplayId=_onlineNames[i];
                 _onlineAllyTags[i]=_online.CanIdentifyAlly(i);
                 _replicas[i].State=member;
+                _hudSeats[i]=member;
                 if (visible && member.Health>0 && member.OutfitId!=null)
                 {
                     _avatars[i].BeforeAnimation();
@@ -187,17 +186,10 @@ namespace AnimeCS.Play
                 }
                 else if (_shown[i]) { _avatars[i].Hide(); _shown[i]=false; }
             }
-            for (int i=0;i<_ports.Length;i++)
-            {
-                var outfit=_ports[MatchHud.RosterSeat(i,self.Seat)].Read().OutfitId;
-                if (outfit==_hudOutfits[i]) continue;
-                _hudOutfits[i]=outfit;
-                _hud.SetRosterPortrait(i,_catalog.Find<OutfitDefinition>(outfit)?.Character?.Icon);
-            }
             self=_replicas[self.Seat].State;
             if(watched.Seat>=0) watched=_replicas[watched.Seat].State;
             DrawWorld(_online.WorldView,watched.Seat<0,self.Match.Tick);
-            _hud.Present(self,watched,_ports,_onlineMenu);
+            _hud.Present(self,watched,_hudSeats,_onlineMenu);
             _audio.Present(watched);
         }
 

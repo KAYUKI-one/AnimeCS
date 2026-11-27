@@ -199,14 +199,42 @@ namespace AnimeCS.Tests
                 InputSystem.QueueDeltaStateEvent(mouse.delta,new Vector2(210,70));
                 yield return null;yield return null;
                 Assert.That(Mathf.DeltaAngle(before.Yaw,game.Player.Read().Yaw),Is.EqualTo(0).Within(.01));
-                var offer=shop.Q<Button>("weapon.heavy50");Assert.That(offer.enabledSelf,Is.True);
-                var panel=shop.panel.visualTree.worldBound;var point=offer.worldBound.center;
-                var screenPoint=new Vector2(point.x*Screen.width/panel.width,Screen.height-point.y*Screen.height/panel.height);
-                InputSystem.QueueStateEvent(mouse,new MouseState{position=screenPoint});yield return null;
-                InputSystem.QueueStateEvent(mouse,new MouseState{position=screenPoint}.WithButton(MouseButton.Left));yield return null;
-                InputSystem.QueueStateEvent(mouse,new MouseState{position=screenPoint});yield return null;
-                for(int i=0;i<20 && game.Player.Read().SidearmId!="weapon.heavy50";i++)yield return null;
-                Assert.That(game.Player.Read().SidearmId,Is.EqualTo("weapon.heavy50"),"A real pointer click issues the order.");
+                using (new UiReplayInput(mouse))
+                {
+                    var offer = shop.Q<Button>("weapon.heavy50");
+                    Assert.That(offer.enabledInHierarchy, Is.True);
+                    var point = offer.worldBound.center;
+                    var hit = shop.panel.Pick(point);
+                    Assert.That(hit == offer || offer.Contains(hit), Is.True, "The purchase card must be visible and pickable.");
+                    var screenPoint = UiReplayInput.ScreenPoint(shop.panel, point);
+                    var released = new MouseState { position = screenPoint };
+                    InputSystem.QueueStateEvent(mouse, released);
+                    yield return new WaitForEndOfFrame();
+                    var pressed = new MouseState { position = screenPoint }.WithButton(MouseButton.Left);
+                    InputSystem.QueueStateEvent(mouse, pressed);
+                    double pointerDeadline = Time.realtimeSinceStartupAsDouble + 2;
+                    while (!offer.HasPointerCapture(PointerId.mousePointerId) && Time.realtimeSinceStartupAsDouble < pointerDeadline)
+                        yield return null;
+                    Assert.That(offer.HasPointerCapture(PointerId.mousePointerId), Is.True, "The panel must receive the virtual mouse press.");
+                    bool clicked = false;
+                    void ConfirmClick() => clicked = true;
+                    offer.clicked += ConfirmClick;
+                    try
+                    {
+                        InputSystem.QueueStateEvent(mouse, released);
+                        double releaseDeadline = Time.realtimeSinceStartupAsDouble + 2;
+                        while (!clicked && Time.realtimeSinceStartupAsDouble < releaseDeadline) yield return null;
+                        Assert.That(clicked, Is.True, "The released mouse must activate the captured purchase card.");
+                    }
+                    finally { offer.clicked -= ConfirmClick; }
+
+                    double purchaseDeadline = Time.realtimeSinceStartupAsDouble + 2;
+                    while (game.Player.Read().SidearmId != "weapon.heavy50" && Time.realtimeSinceStartupAsDouble < purchaseDeadline)
+                        yield return null;
+                    var purchased = game.Player.Read();
+                    Assert.That(purchased.SidearmId, Is.EqualTo("weapon.heavy50"),
+                        $"The click must reach the purchase rules. Phase {purchased.Match.Phase}, credits {purchased.Credits}, can buy {purchased.CanBuy}.");
+                }
                 Assert.That(game.Player.Read().Credits,Is.EqualTo(200));
                 InputSystem.QueueStateEvent(mouse,new MouseState().WithButton(MouseButton.Right));yield return null;yield return null;
                 InputSystem.QueueDeltaStateEvent(mouse.delta,new Vector2(210,70));

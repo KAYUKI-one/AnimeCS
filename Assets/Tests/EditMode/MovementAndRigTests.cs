@@ -4,6 +4,7 @@ using AnimeCS.Editor;
 using AnimeCS.Match;
 using AnimeCS.Play;
 using NUnit.Framework;
+using StylizedCharacters;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -385,6 +386,122 @@ namespace AnimeCS.Tests
                     Assert.That(moved,Is.GreaterThan(duck.Length/32),outfit.DisplayName);
                 }
                 finally { graph.Destroy(); Object.DestroyImmediate(baked); Object.DestroyImmediate(body); }
+            }
+        }
+
+        [Test] public void WeaponContactsSurviveStatureChangesAfterBinding()
+        {
+            var catalog = ContentLibrary.Catalog;
+            var weapons = new[]
+            {
+                catalog.StartingPistol(Side.Attack),
+                catalog.Entries.OfType<WeaponDefinition>().First(weapon => weapon.Class == WeaponClass.HeavySniper)
+            };
+            foreach (var outfit in catalog.SeatOutfits)
+            {
+                var root = new GameObject("Scaled IK test");
+                var graph = PlayableGraph.Create();
+                try
+                {
+                    root.transform.rotation = Quaternion.Euler(0, -21, 0);
+                    var stature = Bone(root.transform, "Stature", Vector3.zero);
+                    stature.localScale = new Vector3(1.04f, 1.08f, 1.04f);
+                    var body = Object.Instantiate(outfit.Character.Model, stature, false);
+                    var animator = body.GetComponentInChildren<Animator>();
+                    var rig = new WeaponGripRig(animator);
+                    Assert.That(rig.Valid, Is.True, outfit.Id);
+                    var output = AnimationPlayableOutput.Create(graph, "Pose", animator);
+                    var controller = outfit.Character.Controller;
+                    var mount = Bone(root.transform, "Weapon", Vector3.zero);
+                    foreach (float height in new[] { .76f, 1.18f })
+                    {
+                        stature.localScale = new Vector3(1.04f, height, 1.04f);
+                        var clip = controller.animationClips.First(value => value.name == (height < 1 ? "DuckIdle" : "Idle"));
+                        output.SetSourcePlayable(AnimationClipPlayable.Create(graph, clip));
+                        graph.Play();
+                        foreach (var weapon in weapons)
+                        foreach (float pitch in new[] { -32f, 0f, 44f })
+                        {
+                            graph.Evaluate(.017f);
+                            rig.Pose(root.transform, mount, weapon, Quaternion.Euler(pitch, -8, 0), false);
+                            var right = animator.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
+                            var left = animator.GetBoneTransform(HumanBodyBones.LeftMiddleProximal);
+                            float error = Mathf.Max(Vector3.Distance(right.position, mount.TransformPoint(weapon.Grip)),
+                                Vector3.Distance(left.position, mount.TransformPoint(weapon.Support)));
+                            Assert.That(error, Is.LessThan(.015f), $"{outfit.Id}, {weapon.Id}, height={height}, pitch={pitch}");
+                        }
+                    }
+                }
+                finally { graph.Destroy(); Object.DestroyImmediate(root); }
+            }
+        }
+
+        [Test] public void FeetFollowTheSurfaceIndependentlyAndRestoreTheAirbornePose()
+        {
+            var root = new GameObject("Foot IK test");
+            try
+            {
+                var ankleToSole = Vector3.down * .11f;
+                GroundedFeet.Foot MakeFoot(float x, out Transform ankle)
+                {
+                    var thigh = Bone(root.transform, "Thigh", new Vector3(x, .92f, 0));
+                    var knee = Bone(thigh, "Knee", new Vector3(0, -.39f, .18f));
+                    ankle = Bone(knee, "Ankle", new Vector3(0, -.40f, -.14f));
+                    return new GroundedFeet.Foot(root.transform, thigh, knee, ankle, ankleToSole, Vector3.up);
+                }
+
+                var left = MakeFoot(-.22f, out var leftAnkle);
+                var right = MakeFoot(.22f, out var rightAnkle);
+                var feet = new GroundedFeet(left, right);
+                var slope = new TestFootSurface(new Plane(new Vector3(-.3f, 1, 0).normalized, Vector3.up * .04f));
+                var originalLeft = leftAnkle.position;
+                var originalRight = rightAnkle.position;
+                feet.Apply(slope, .02f, true);
+                Assert.That(slope.Queries, Is.EqualTo(2));
+                Assert.That(slope.Plane.GetDistanceToPoint(leftAnkle.TransformPoint(ankleToSole)), Is.EqualTo(.006f).Within(.003f));
+                Assert.That(slope.Plane.GetDistanceToPoint(rightAnkle.TransformPoint(ankleToSole)), Is.EqualTo(.006f).Within(.003f));
+                Assert.That(Vector3.Angle(leftAnkle.up, slope.Plane.normal), Is.LessThan(1));
+                Assert.That(rightAnkle.position.y - leftAnkle.position.y, Is.GreaterThan(.10f));
+                Assert.That(root.transform.position, Is.EqualTo(Vector3.zero));
+
+                feet.Apply(slope, .02f, true);
+                Assert.That(slope.Queries, Is.EqualTo(2), "One late pose pass may solve each foot once.");
+                feet.Apply(slope, .02f, false);
+                Assert.That(Vector3.Distance(originalLeft, leftAnkle.position), Is.LessThan(.0001f));
+                Assert.That(Vector3.Distance(originalRight, rightAnkle.position), Is.LessThan(.0001f));
+
+                rightAnkle.localPosition += Vector3.up * .18f;
+                var swing = rightAnkle.position;
+                feet.Apply(slope, .02f, true);
+                Assert.That(slope.Queries, Is.EqualTo(3), "Lifted animation feet skip the terrain probe.");
+                Assert.That(rightAnkle.position, Is.EqualTo(swing));
+
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        private static Transform Bone(Transform parent, string name, Vector3 localPosition)
+        {
+            var bone = new GameObject(name).transform;
+            bone.SetParent(parent, false);
+            bone.localPosition = localPosition;
+            return bone;
+        }
+
+        private sealed class TestFootSurface : IFootSurface
+        {
+            internal Plane Plane { get; }
+            internal int Queries { get; private set; }
+            internal TestFootSurface(Plane plane) { Plane = plane; }
+
+            public bool TryFind(Vector3 origin, float distance, out Vector3 point, out Vector3 normal)
+            {
+                Queries++;
+                var ray = new Ray(origin, Vector3.down);
+                normal = Plane.normal;
+                bool hit = Plane.Raycast(ray, out float travel) && travel <= distance;
+                point = hit ? ray.GetPoint(travel) : default;
+                return hit;
             }
         }
     }

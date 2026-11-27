@@ -28,7 +28,7 @@ namespace AnimeCS.Play
             bool wasDisplay = _dialogKey == "config";
             _dialogKey=null;
             SetVisible(_screen.Q("overlay"),false);
-            if (wasDisplay) _game.EndInspection();
+            if (wasDisplay) _host.Preview.EndInspection();
         }
 
         void Dialog(string kind)
@@ -68,7 +68,7 @@ namespace AnimeCS.Play
             {
                 string message=input.value.Trim();
                 if (message.Length==0) return;
-                RunAction(()=>_game.Account.SendChatAsync(message),()=>{
+                RunAction(LobbyAccountAction.SendChat,message,()=>{
                     if (input.value==message) input.value="";
                     _chatDraft=input.value;
                     RefreshMessages();
@@ -102,7 +102,7 @@ namespace AnimeCS.Play
             var input=new TextField("玩家 ID"){name="add-friend-id",value=_friendDraft,maxLength=32};
             input.RegisterValueChangedCallback(e=>_friendDraft=e.newValue);body.Add(input);
             ActionButton(body,"通过 ID 添加好友","add-friend",()=>
-                RunAction(()=>_game.Account.AddFriendAsync(input.value.Trim()),()=>{input.value="";Notice("已添加好友");DrawFriendsList();}),true);
+                RunAction(LobbyAccountAction.AddFriend,input.value.Trim(),()=>{input.value="";Notice("已添加好友");DrawFriendsList();}),true);
             body.Add(new VisualElement{name="friend-list"});DrawFriendsList();
         }
 
@@ -120,7 +120,7 @@ namespace AnimeCS.Play
             var invites=State.invites??Array.Empty<string>();
             if (invites.Length>0) SectionLabel(list,"队伍邀请");
             foreach(string leader in invites)
-                Line(leader,"接受邀请","accept-"+leader,()=>RunAction(()=>_game.Account.AcceptInviteAsync(leader),()=>{Notice("已加入队伍");DrawFriendsList();}));
+                Line(leader,"接受邀请","accept-"+leader,()=>RunAction(LobbyAccountAction.AcceptInvite,leader,()=>{Notice("已加入队伍");DrawFriendsList();}));
             var party=State.party??Array.Empty<string>();
             bool isLeader=party.Length>0 && party[0]==State.id;
             bool activeRoom=!string.IsNullOrEmpty(State.battleId) && !State.battleFinished;
@@ -131,11 +131,11 @@ namespace AnimeCS.Play
             {
                 string room=State.battleId;
                 ActionButton(list,"结束小队房间","end-party-battle",()=>
-                    RunAction(()=>_game.Account.EndBattleAsync(room),()=>{Notice("小队房间已结束");DrawFriendsList();}));
+                    RunAction(LobbyAccountAction.EndBattle,room,()=>{Notice("小队房间已结束");DrawFriendsList();}));
             }
             if (party.Length>1)
             {
-                var leave=ActionButton(list,isLeader?"解散队伍":"离开队伍","leave-party",()=>RunAction(_game.Account.LeavePartyAsync,DrawFriendsList));
+                var leave=ActionButton(list,isLeader?"解散队伍":"离开队伍","leave-party",()=>RunAction(LobbyAccountAction.LeaveParty,after:DrawFriendsList));
                 leave.SetEnabled(!activeRoom);
                 if(activeRoom) leave.tooltip="当前对局结束后可用";
             }
@@ -145,7 +145,7 @@ namespace AnimeCS.Play
             foreach (string friend in friends)
             {
                 bool canInvite=!activeRoom && !party.Contains(friend) && (party.Length==0 || isLeader) && party.Length<MatchFormat.TeamSize;
-                Line(friend,canInvite?"邀请入队":null,"invite-"+friend,canInvite?()=>RunAction(()=>_game.Account.InviteAsync(friend),()=>Notice("已向 "+friend+" 发送邀请")):null);
+                Line(friend,canInvite?"邀请入队":null,"invite-"+friend,canInvite?()=>RunAction(LobbyAccountAction.Invite,friend,()=>Notice("已向 "+friend+" 发送邀请")):null);
             }
         }
 
@@ -165,7 +165,7 @@ namespace AnimeCS.Play
             body.Add(signature);
             var avatars=OwnedCharacters();
             var avatar=SelectItem(body,"头像","profile-avatar",avatars,State.avatarId);
-            ActionButton(body,"保存资料","save-profile",()=>RunAction(()=>_game.Account.SaveProfileAsync(signature.value,
+            ActionButton(body,"保存资料","save-profile",()=>RunAction(()=>_host.Account.SaveProfileAsync(signature.value,
                 avatar.index>=0?avatars[avatar.index].Id:State.avatarId,State.showCharacterId,State.showSkinId),()=>{HideDialog();Notice("个人资料已保存");}),true);
         }
 
@@ -195,19 +195,19 @@ namespace AnimeCS.Play
                 var fit = _catalog.Entries.OfType<OutfitDefinition>()
                     .FirstOrDefault(o => Owned(o) && o.Character == chars[character.index]);
                 if (!fit) return;
-                var draft = _game.ReadWardrobe().current;
+                var draft = _host.ReadWardrobe().current;
                 draft.Select(fit);
                 var skin = selected as WeaponSkinDefinition;
                 var gun = skin ? skin.Weapon : selected as WeaponDefinition;
                 if (!gun) return;
-                _game.PreviewWardrobe(draft, gun.Id, false, previewWorn: draft.WornFor(fit.Character.Faction),
+                _host.Preview.ShowWardrobe(draft, gun.Id, false, previewWorn: draft.WornFor(fit.Character.Faction),
                     previewSkin: skin ? skin.Id : "");
-                _game.CenterPreview(.37f);
+                _host.Preview.Center(.37f);
             }
             weapon.RegisterValueChangedCallback(_=>UpdateArt());
             character.RegisterValueChangedCallback(_=>UpdateArt());
             UpdateArt();
-            var save=ActionButton(body,"应用到大厅","save-display",()=>RunAction(()=>_game.Account.SaveProfileAsync(State.signature,State.avatarId,
+            var save=ActionButton(body,"应用到大厅","save-display",()=>RunAction(()=>_host.Account.SaveProfileAsync(State.signature,State.avatarId,
                 chars[character.index].Id,finishes[weapon.index].Id),()=>{HideDialog();RefreshHeader(true);Notice("大厅展示已更新");}),true);
             save.SetEnabled(chars.Length>0 && finishes.Length>0);
         }
@@ -226,7 +226,7 @@ namespace AnimeCS.Play
                 card.Add(meter);
                 card.Add(new Label($"经验 +{task.experience}     代币 +{task.credits}"));
                 var button=ActionButton(card,task.claimed?"已领取":task.progress>=task.goal?"领取奖励":"进行中","claim-"+task.id,
-                    ()=>RunAction(()=>_game.Account.ClaimAsync(task.id),()=>{if (_section=="tasks") Render();Notice("任务奖励已到账");}),true);
+                    ()=>RunAction(LobbyAccountAction.Claim,task.id,()=>{if (_section=="tasks") Render();Notice("任务奖励已到账");}),true);
                 button.SetEnabled(!task.claimed && task.progress>=task.goal);
             }
         }

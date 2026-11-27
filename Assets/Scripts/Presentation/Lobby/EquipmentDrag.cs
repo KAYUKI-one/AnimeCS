@@ -1,98 +1,105 @@
 using System;
 using System.Collections.Generic;
-using AnimeCS.Content;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace AnimeCS.Play
 {
-    internal sealed class EquipmentDrag
+    internal sealed class EquipmentDrag<TItem>
     {
-        private const float DragThreshold = 7f;
-        private const float SnapDistance = 16f;
+        private const long HoldMilliseconds = 180;
+        private const float SnapDistance = 5f;
         private const float CardHeight = 104f;
         private readonly VisualElement _root;
-        private readonly Dictionary<VisualElement, ContentDefinition> _sources = new();
+        private readonly Dictionary<Button, (TItem item, int slot, Action activate)> _sources = new();
         private readonly Dictionary<VisualElement, int> _slots = new();
-        private readonly Func<ContentDefinition, int> _destination;
-        private readonly Action<ContentDefinition, int> _drop;
-        private readonly Action<VisualElement, ContentDefinition> _renderCard;
-        private ContentDefinition _item;
-        private VisualElement _source, _eligible, _ghost, _outline;
-        private bool _snapped;
+        private readonly Action<VisualElement, TItem> _renderCard;
+        private readonly IVisualElementScheduledItem _hold;
+        private Button _source;
+        private VisualElement _eligible, _ghost, _outline;
         private float _ghostWidth;
         private int _pointer = -1;
-        private Vector2 _origin;
+        private Vector2 _position;
 
-        internal EquipmentDrag(VisualElement root, Func<ContentDefinition, int> destination,
-            Action<ContentDefinition, int> drop, Action<VisualElement, ContentDefinition> renderCard)
+        internal event Action<TItem, int> ItemRequested;
+
+        internal EquipmentDrag(VisualElement root, Action<VisualElement, TItem> renderCard)
         {
             _root = root;
-            _destination = destination;
-            _drop = drop;
             _renderCard = renderCard;
+            _hold = root.schedule.Execute(BeginDrag);
+            _hold.Pause();
             root.RegisterCallback<PointerDownEvent>(Down, TrickleDown.TrickleDown);
             root.RegisterCallback<PointerMoveEvent>(Move, TrickleDown.TrickleDown);
             root.RegisterCallback<PointerUpEvent>(Up, TrickleDown.TrickleDown);
-            root.RegisterCallback<PointerCancelEvent>(_ => Cancel());
-            root.RegisterCallback<PointerCaptureOutEvent>(evt => { if (evt.target == _root) Cancel(); });
-            root.RegisterCallback<DetachFromPanelEvent>(_ => Clear());
+            root.RegisterCallback<PointerCancelEvent>(evt => { if (evt.pointerId == _pointer) CancelDrag(); });
+            root.RegisterCallback<PointerCaptureOutEvent>(evt =>
+            {
+                if (evt.target == _root && evt.pointerId == _pointer && !_root.HasPointerCapture(_pointer)) CancelDrag();
+            });
+            root.RegisterCallback<DetachFromPanelEvent>(_ => CancelDrag());
         }
 
-        internal void Source(VisualElement element, ContentDefinition definition) => _sources.Add(element, definition);
-        internal void Slot(VisualElement element, int slot) => _slots.Add(element, slot);
-
-        internal bool CancelDrag()
+        internal void Source(Button button, TItem item, int slot)
         {
-            if (_ghost == null) return false;
-            Cancel();
-            return true;
+            void Activate() => ItemRequested?.Invoke(item, slot);
+            button.clicked += Activate;
+            _sources.Add(button, (item, slot, Activate));
         }
+
+        internal void Slot(VisualElement element, int slot) => _slots.Add(element, slot);
 
         internal void Clear()
         {
-            Cancel();
+            CancelDrag();
+            foreach (var source in _sources) source.Key.clicked -= source.Value.activate;
             _sources.Clear();
             _slots.Clear();
         }
 
         private void Down(PointerDownEvent evt)
         {
-            if (evt.button != 0) return;
-            Cancel();
+            if (_pointer >= 0 || evt.button != 0 || evt.pointerId != PointerId.mousePointerId) return;
             for (var element = evt.target as VisualElement; element != null; element = element.parent)
             {
-                if (!_sources.TryGetValue(element, out var item)) continue;
-                _item = item;
-                _source = element;
+                if (element is not Button button || !button.enabledInHierarchy || !_sources.ContainsKey(button)) continue;
+                _source = button;
                 _pointer = evt.pointerId;
-                _origin = evt.position;
-                break;
+                _position = evt.position;
+                _hold.ExecuteLater(HoldMilliseconds);
+                button.Focus();
+
+                // A Button would otherwise capture on press and receive subsequent pointer events exclusively.
+                _root.CapturePointer(_pointer);
+                evt.StopImmediatePropagation();
+                return;
             }
         }
 
         private void Move(PointerMoveEvent evt)
         {
             if (evt.pointerId != _pointer) return;
-            Vector2 point = evt.position;
-            if (_ghost == null)
-            {
-                if ((point - _origin).sqrMagnitude < DragThreshold * DragThreshold) return;
-                BeginDrag();
-            }
-            _snapped = CanSnap(point);
-            _eligible?.EnableInClassList("drop-snapped", _snapped);
-            var local = _root.WorldToLocal(point);
-            var anchor = _snapped ? _root.WorldToLocal(_eligible.worldBound.center) : local;
-            _ghost.style.left = Mathf.Clamp(anchor.x + 14, 0, Mathf.Max(0, _root.layout.width - _ghostWidth));
-            _ghost.style.top = Mathf.Clamp(anchor.y + 12, 0, Mathf.Max(0, _root.layout.height - CardHeight));
-            _ghost.EnableInClassList("snapped", _snapped);
             evt.StopImmediatePropagation();
+            _position = evt.position;
+            if ((evt.pressedButtons & 1) == 0)
+            {
+                // The input backend can report releasing the left button as a move when another button is held.
+                if (evt.button == 0) Finish();
+                else CancelDrag();
+                return;
+            }
+            if (_ghost != null) TrackPointer();
         }
 
         private void BeginDrag()
         {
-            int destination = _destination(_item);
+            if (_source == null || _source.panel != _root.panel || !_root.HasPointerCapture(_pointer))
+            {
+                CancelDrag();
+                return;
+            }
+
+            var (item, destination, _) = _sources[_source];
             foreach (var target in _slots)
             {
                 if (target.Value != destination) continue;
@@ -105,24 +112,47 @@ namespace AnimeCS.Play
                 break;
             }
             _source.AddToClassList("drag-source");
-            _ghost = new VisualElement { pickingMode = PickingMode.Ignore };
+            _ghost = new VisualElement { pickingMode = PickingMode.Ignore, usageHints = UsageHints.DynamicTransform };
             _ghostWidth = Mathf.Clamp(_source.layout.width * 1.15f, 118f, 174f);
+            _ghost.style.position = Position.Absolute;
+            _ghost.style.left = 0;
+            _ghost.style.top = 0;
             _ghost.style.width = _ghostWidth;
             _ghost.style.height = CardHeight;
             _ghost.AddToClassList("equipment-drag-ghost");
-            _renderCard(_ghost, _item);
+            _renderCard(_ghost, item);
+            IgnorePicking(_ghost);
             _root.Add(_ghost);
-            _root.CapturePointer(_pointer);
+            TrackPointer();
+        }
+
+        private static void IgnorePicking(VisualElement element)
+        {
+            element.pickingMode = PickingMode.Ignore;
+            for (int i = 0; i < element.hierarchy.childCount; i++) IgnorePicking(element.hierarchy[i]);
+        }
+
+        private void TrackPointer()
+        {
+            bool snapped = CanSnap(_position);
+            var local = _root.WorldToLocal(_position);
+            float x = Mathf.Clamp(local.x + 14, 0, Mathf.Max(0, _root.layout.width - _ghostWidth));
+            float y = Mathf.Clamp(local.y + 12, 0, Mathf.Max(0, _root.layout.height - CardHeight));
+            _ghost.style.translate = new Translate(x, y);
+            _eligible?.EnableInClassList("drop-snapped", snapped);
+            _ghost.EnableInClassList("snapped", snapped);
         }
 
         private bool CanSnap(Vector2 position)
         {
-            if (_eligible == null || !_root.worldBound.Contains(position)) return false;
-            for (var element = _root.panel?.Pick(position); element != null; element = element.parent)
+            if (_eligible == null || !_eligible.enabledInHierarchy || !_root.worldBound.Contains(position)) return false;
+            for (var element = _root.panel.Pick(position); element != null; element = element.parent)
                 if (_slots.ContainsKey(element)) return element == _eligible;
 
             var bounds = _eligible.worldBound;
-            var viewport = _eligible.GetFirstAncestorOfType<ScrollView>().contentViewport.worldBound;
+            if (bounds.Contains(position)) return false;
+            var scroll = _eligible.GetFirstAncestorOfType<ScrollView>();
+            var viewport = scroll?.contentViewport.worldBound ?? _root.worldBound;
             if (!bounds.Overlaps(viewport)) return false;
             // Use only the visible part of a slot when snapping near the edge of a scroll view.
             var nearest = new Vector2(
@@ -160,19 +190,32 @@ namespace AnimeCS.Play
         private void Up(PointerUpEvent evt)
         {
             if (evt.pointerId != _pointer) return;
-            int destination = _ghost != null && CanSnap(evt.position) ? _slots[_eligible] : -1;
-            var item = _item;
-            if (_ghost != null) evt.StopImmediatePropagation();
-            Cancel();
-            if (destination >= 0) _drop(item, destination);
+            evt.StopImmediatePropagation();
+            _position = evt.position;
+            Finish();
         }
 
-        private void Cancel()
+        private void Finish()
         {
+            var (item, slot, _) = _sources[_source];
+            bool request;
+            if (_ghost != null) request = CanSnap(_position);
+            else
+            {
+                var hit = _root.panel.Pick(_position);
+                request = _source.enabledInHierarchy && (hit == _source || _source.Contains(hit));
+            }
+
+            CancelDrag();
+            if (request) ItemRequested?.Invoke(item, slot);
+        }
+
+        internal bool CancelDrag()
+        {
+            if (_pointer < 0) return false;
             int pointer = _pointer;
             _pointer = -1;
-            _item = null;
-            _snapped = false;
+            _hold.Pause();
             _source?.RemoveFromClassList("drag-source");
             _source = null;
             if (_ghost != null)
@@ -185,7 +228,8 @@ namespace AnimeCS.Play
                 _eligible?.RemoveFromClassList("drop-snapped");
                 _eligible = null;
             }
-            if (pointer >= 0 && _root.panel != null && _root.HasPointerCapture(pointer)) _root.ReleasePointer(pointer);
+            if (_root.panel != null && _root.HasPointerCapture(pointer)) _root.ReleasePointer(pointer);
+            return true;
         }
     }
 }

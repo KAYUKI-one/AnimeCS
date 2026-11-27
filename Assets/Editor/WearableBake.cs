@@ -46,14 +46,15 @@ namespace AnimeCS.Editor
                 {
                     string path=Folder+"/"+file+".mat";var mat=AssetDatabase.LoadAssetAtPath<Material>(path);
                     if(!mat){mat=new Material(Shader.Find("Universal Render Pipeline/Lit"));AssetDatabase.CreateAsset(mat,path);}
-                    ColorUtility.TryParseHtmlString(color,out var tint);mat.SetColor("_BaseColor",tint);
+                    ColorUtility.TryParseHtmlString(color,out var tint);mat.color=tint;
                     var weave=AssetDatabase.LoadAssetAtPath<Texture2D>(Folder+"/Weave.png");
-                    mat.SetTexture("_BaseMap",weave);mat.SetTextureScale("_BaseMap",Vector2.one*(slot==WearSlot.Gloves?8:14));
+                    mat.mainTexture=weave;mat.mainTextureScale=Vector2.one*(slot==WearSlot.Gloves?8:14);
                     mat.SetFloat("_Smoothness",slot==WearSlot.Shoes?.34f:.22f);mat.SetFloat("_Cull",0);EditorUtility.SetDirty(mat);
                     data.FindProperty("_material").objectReferenceValue=mat;
                 }
                 data.ApplyModifiedPropertiesWithoutUndo();
             }
+            CharacterShading.ApplyToWearables();
             foreach(var outfit in outfits)
             {
                 var data=new SerializedObject(outfit);data.FindProperty("_hiddenRegion").objectReferenceValue=hidden;
@@ -64,9 +65,23 @@ namespace AnimeCS.Editor
             }
         }
 
+        [MenuItem("AnimeCS/美术/重烘角色身体与第一人称下身蒙皮")]
+        internal static void RefreshBodyMeshes()
+        {
+            foreach (var outfit in ContentLibrary.Catalog.SeatOutfits.Where(o => o && !o.Archived && o.Character && o.Character.Model).Distinct())
+            {
+                var data = new SerializedObject(outfit);
+                Regions(outfit.Character.Model, outfit.name, false, data.FindProperty("_bodyRegions"));
+                data.ApplyModifiedPropertiesWithoutUndo();
+                LocalBodyBake.Bind(outfit);
+            }
+            AssetDatabase.SaveAssets();
+        }
+
         static int Slot(Transform t)
         {
             string s=t?t.name:"";
+            if (s.StartsWith("SpringHair_", StringComparison.Ordinal) || s.StartsWith("SpringCloth_", StringComparison.Ordinal)) return -2;
             if(s.Contains("Hand") || s.Contains("Thumb") || s.Contains("Index") || s.Contains("Middle") || s.Contains("Ring") || s.Contains("Little"))return (int)WearSlot.Gloves;
             if(s.Contains("Foot") || s.Contains("Toes"))return (int)WearSlot.Shoes;
             if(s.Contains("Leg") || s=="Hips")return (int)WearSlot.Bottom;
@@ -75,10 +90,17 @@ namespace AnimeCS.Editor
         }
         static int Dominant(BoneWeight w,int[] slots)
         {
-            int b=w.boneIndex0;float max=w.weight0;
-            if(w.weight1>max){max=w.weight1;b=w.boneIndex1;}if(w.weight2>max){max=w.weight2;b=w.boneIndex2;}
-            if(w.weight3>max)b=w.boneIndex3;
-            return b<slots.Length?slots[b]:-1;
+            int slot = -1;
+            float best = 0;
+            void Candidate(int bone, float weight)
+            {
+                if (bone >= slots.Length || slots[bone] == -2 || weight <= best) return;
+                slot = slots[bone];
+                best = weight;
+            }
+            Candidate(w.boneIndex0, w.weight0); Candidate(w.boneIndex1, w.weight1);
+            Candidate(w.boneIndex2, w.weight2); Candidate(w.boneIndex3, w.weight3);
+            return slot;
         }
         static void Regions(GameObject source,string name,bool view,SerializedProperty result)
         {

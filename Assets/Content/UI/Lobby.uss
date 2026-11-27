@@ -292,7 +292,7 @@
 .sky .equipment-page .mount-slot.drop-snapped { border-color:#4eb0ce; background-color:#d5f2fa; }
 .sky .drop-outline { position:absolute; left:0; right:0; top:0; bottom:0; }
 .sky .equipment-drag-ghost {
-    position:absolute; padding:0 0 3px 0; align-items:stretch; overflow:hidden;
+    padding:0 0 3px 0; align-items:stretch; overflow:hidden;
     background-color:rgba(248,253,255,.79); border-width:1px; border-color:rgba(251,255,255,.9);
     border-radius:8px; opacity:.88;
 }

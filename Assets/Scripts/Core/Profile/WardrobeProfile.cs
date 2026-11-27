@@ -50,6 +50,38 @@ namespace AnimeCS.Profile
         public WardrobeLoadout current = new WardrobeLoadout();
         public WardrobeLoadout[] presets = new WardrobeLoadout[2];
 
+        internal bool Owns(ContentDefinition item) => item && !item.Archived && owned?.Contains(item.Id) == true;
+
+        internal bool CanEquip(ContentDefinition item, Side side, CharacterDefinition character)
+        {
+            if (!Owns(item)) return false;
+            if (item is WearableDefinition wear) return wear.Fits(character);
+            var weapon = item is WeaponSkinDefinition skin ? skin.Weapon : item as WeaponDefinition;
+            return Owns(weapon) && WardrobeSideGear.Available(weapon, side);
+        }
+
+        internal bool TryEquip(WardrobeLoadout draft, ContentDefinition item, Side side, CharacterDefinition character,
+            out WeaponDefinition weapon)
+        {
+            weapon = null;
+            var gear = draft?.GearFor(side);
+            if (gear == null || !CanEquip(item, side, character)) return false;
+            if (item is WearableDefinition wear)
+            {
+                gear.worn.Set(wear.Slot, wear.Id);
+                return true;
+            }
+
+            var skin = item as WeaponSkinDefinition;
+            weapon = skin ? skin.Weapon : (WeaponDefinition)item;
+            string weaponId = weapon.Id;
+            gear.SetWeapon(weapon.Class, weaponId);
+            draft.skins ??= new List<SkinChoice>();
+            draft.skins.RemoveAll(choice => choice?.weaponId == weaponId);
+            if (skin) draft.skins.Add(new SkinChoice { weaponId = weaponId, skinId = skin.Id });
+            return true;
+        }
+
         public static WardrobeProfile Create(ContentCatalog catalog)
         {
             var profile = new WardrobeProfile();
