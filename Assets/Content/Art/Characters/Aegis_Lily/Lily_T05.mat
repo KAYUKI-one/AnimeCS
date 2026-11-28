@@ -335,7 +335,7 @@ Material:
     - _BumpScale: 0.45
     - _ColorMask: 15
     - _Cull: 0
-    - _Cutoff: 0.28
+    - _Cutoff: 0.24
     - _DirectOcclusion: 0.3
     - _DirectRimWidth: 1.55
     - _DissolveNoiseStrength: 0.1
@@ -691,7 +691,7 @@ Material:
     - _Color2nd: {r: 1, g: 1, b: 1, a: 1}
     - _Color3rd: {r: 1, g: 1, b: 1, a: 1}
     - _DirectRimBackCol: {r: 0.32, g: 0.38, b: 0.54, a: 0.45}
-    - _DirectRimFrontCol: {r: 0.6, g: 0.64, b: 0.74, a: 0.46}
+    - _DirectRimFrontCol: {r: 0.35, g: 0.38, b: 0.43, a: 0.35}
     - _DissolveColor: {r: 1, g: 1, b: 1, a: 1}
     - _DissolveNoiseMask_ScrollRotate: {r: 0, g: 0, b: 0, a: 0}
     - _DissolveParams: {r: 0, g: 0, b: 0.5, a: 0.1}
@@ -747,14 +747,14 @@ Material:
     - _RimIndirColor: {r: 1, g: 1, b: 1, a: 1}
     - _RimShadeColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
-    - _SelfLight: {r: 1.9, g: 1.87, b: 1.85, a: 1}
+    - _SelfLight: {r: 1.4, g: 1.38, b: 1.36, a: 1}
     - _Shadow2ndColor: {r: 0.73, g: 0.76, b: 0.93, a: 0.44}
     - _Shadow3rdColor: {r: 0, g: 0, b: 0, a: 0}
     - _ShadowAOShift: {r: 1, g: 0, b: 1, a: 0}
     - _ShadowAOShift2: {r: 1, g: 0, b: 1, a: 0}
     - _ShadowBorderColor: {r: 0.95, g: 0.81, b: 0.79, a: 1}
     - _ShadowColor: {r: 0.66, g: 0.62, b: 0.76, a: 1}
-    - _SpecColor: {r: 0.95, g: 0.88, b: 1.05, a: 1}
+    - _SpecColor: {r: 0.95, g: 0.88, b: 1.08, a: 1}
     - _e2ga0: {r: 1, g: 0, b: 0, a: 0}
     - _e2ga1: {r: 1, g: 0, b: 0, a: 1}
     - _e2ga2: {r: 1, g: 0, b: 0, a: 0}

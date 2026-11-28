@@ -19,6 +19,7 @@ namespace AnimeCS.Editor
                 if (!skin.sharedMesh) continue;
                 // Write smooth normals into UV4 (SN_SmoothUV4) and also refine Vertex Color RGB to Unity's exact MikkTSpace tangents
                 // while preserving any Blender-authored per-part outline width mask in Vertex Color Alpha (SN_VertColor).
+                ShowcaseEyelids.Bake(skin, model.transform);
                 bool hasVertColor = skin.sharedMesh.HasVertexAttribute(VertexAttribute.Color);
                 DanbaidongCharacterSetupTool.BakeSmoothNormals(skin.sharedMesh, alsoWriteVertexColorRgb: hasVertColor);
             }

@@ -27,7 +27,7 @@ namespace AnimeCS.Editor
 
         internal static void Apply(string name, Material material)
         {
-            if (UsesDanbaidong(name))
+            if (IsCastMaterial(material))
             {
                 if (!material.shader.name.StartsWith("DanbaidongRP/PBRToon/", StringComparison.Ordinal))
                     ApplyAssignedPreset(name, material);
@@ -43,7 +43,7 @@ namespace AnimeCS.Editor
             var mode = roles.transparent.Contains(name) ? CharacterAlphaMode.Transparent :
                 roles.cutoutPrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal)) ?
                 CharacterAlphaMode.Cutout : CharacterAlphaMode.Opaque;
-            if (UsesDanbaidong(name))
+            if (IsCastMaterial(material))
             {
                 ApplyDanbaidongPreset(material, roles.Role(name), mode, forceRegenerateMaps);
                 return;
@@ -61,10 +61,13 @@ namespace AnimeCS.Editor
             EditorUtility.SetDirty(material);
         }
 
-        internal static bool UsesDanbaidong(string materialName) =>
-            materialName.StartsWith("Lily_", StringComparison.Ordinal) ||
-            materialName.StartsWith("StarTraveler_", StringComparison.Ordinal) ||
-            materialName.StartsWith("Firefly_", StringComparison.Ordinal);
+        private const string CastFolder = "Assets/Content/Art/Characters";
+        private static bool IsCastMaterial(Material material)
+        {
+            string path = AssetDatabase.GetAssetPath(material);
+            return path.StartsWith(CastFolder + "/", StringComparison.Ordinal) &&
+                !path.StartsWith(DanbaidongLookMaps.DefaultLookDevFolder + "/", StringComparison.Ordinal);
+        }
 
         private static void ApplyDanbaidongPreset(
             Material material,
@@ -75,24 +78,35 @@ namespace AnimeCS.Editor
             string name = material.name;
             bool isLily = name.StartsWith("Lily_", StringComparison.Ordinal);
             bool isFirefly = name.StartsWith("Firefly_", StringComparison.Ordinal);
-            string actor = isLily ? "Lily" : isFirefly ? "Firefly" : "StarTraveler";
+            string actor = name.Split('_')[0];
+            bool mishty = actor == "Mishty";
+            bool eyelid = name == "Mishty_Lash_04";
+            bool preparedMesh = isLily || isFirefly || mishty || actor == "StarTraveler";
 
-            var role = ResolveDanbaidongRole(name, legacyRole, mode);
+            var role = eyelid ? DanbaidongSurfaceRole.Transparent : mishty
+                ? DanbaidongMaterialPreset.InferRole(name) : ResolveDanbaidongRole(name, legacyRole, mode);
+            // Legacy faces have no directional face SDF. Shade their geometry with the skin ramp.
+            if (!preparedMesh && role == DanbaidongSurfaceRole.Face) role = DanbaidongSurfaceRole.Skin;
 
             var options = new DanbaidongApplyOptions
             {
                 ActorName = actor,
                 LookDevFolder = DanbaidongLookMaps.DefaultLookDevFolder,
-                Cutout = mode == CharacterAlphaMode.Cutout,
-                Cutoff = 0.24f,
+                Cutout = mishty ? material.IsKeywordEnabled("_ALPHATEST_ON") ||
+                    (material.HasProperty("_AlphaClip") && material.GetFloat("_AlphaClip") > .5f) : mode == CharacterAlphaMode.Cutout,
+                MultiplyOverlay = eyelid,
+                UseMeshNormals = !preparedMesh,
+                Cutoff = mishty && material.HasProperty("_Cutoff") ? material.GetFloat("_Cutoff") : 0.24f,
                 FaceSdfUsesUV3 = isFirefly,
-                UseVertexColorOutline = isLily,
-                EnableEyeSeeThrough = isLily,
+                UseVertexColorOutline = isLily || mishty,
+                EnableEyeSeeThrough = isLily || mishty,
                 ForceRegenerateMaps = forceRegenerateMaps
             };
 
-            if (isFirefly && role == DanbaidongSurfaceRole.Face)
-                options.BaseColorOverride = new Color(1f, 0.96f, 0.94f, 1f);
+            if (!preparedMesh && material.HasProperty("_Color") && !material.shader.name.StartsWith("DanbaidongRP/"))
+                options.BaseColorOverride = material.GetColor("_Color");
+            if (preparedMesh && role == DanbaidongSurfaceRole.Face)
+                options.BaseColorOverride = Color.white;
 
             if (isLily)
             {
@@ -105,6 +119,13 @@ namespace AnimeCS.Editor
             }
 
             DanbaidongMaterialPreset.Apply(material, role, options);
+            if (mishty && role is DanbaidongSurfaceRole.Face or DanbaidongSurfaceRole.Skin)
+            {
+                // The native albedos bake in amber light. Neutralize that cast while
+                // retaining the red-channel headroom measured in the daylight rig.
+                material.SetColor("_BaseColor", role == DanbaidongSurfaceRole.Face
+                    ? new Color(.97f, 1.105f, 1.15f) : new Color(.96f, 1.07f, 1.10f));
+            }
         }
 
         private static DanbaidongSurfaceRole ResolveDanbaidongRole(
@@ -126,15 +147,21 @@ namespace AnimeCS.Editor
         [MenuItem("AnimeCS/美术/重建 DanbaidongRP 角色材质与贴图")]
         public static void RebuildDanbaidongCast()
         {
-            var folders = ContentLibrary.Catalog.Entries.OfType<CharacterDefinition>().Where(c => !c.Archived && c.Model)
-                .Select(c => Path.GetDirectoryName(AssetDatabase.GetAssetPath(c.Model)).Replace('\\', '/')).Distinct().ToArray();
-            foreach (var material in AssetDatabase.FindAssets("t:Material", folders).Select(AssetDatabase.GUIDToAssetPath)
-                         .Where(path => path.EndsWith(".mat", StringComparison.OrdinalIgnoreCase))
-                         .Select(AssetDatabase.LoadAssetAtPath<Material>)
-                         .Where(m => m && UsesDanbaidong(m.name)))
+            foreach (DanbaidongSurfaceRole role in Enum.GetValues(typeof(DanbaidongSurfaceRole)))
+                if (role != DanbaidongSurfaceRole.Transparent && role != DanbaidongSurfaceRole.Lash)
+                    DanbaidongLookMaps.GetOrCreateRamp(role, forceRegenerate: true);
+
+            int count = 0;
+            foreach (string guid in AssetDatabase.FindAssets("t:Material", new[] { CastFolder }))
             {
-                ApplyAssignedPreset(material.name, material, forceRegenerateMaps: true);
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!path.EndsWith(".mat", StringComparison.OrdinalIgnoreCase)) continue;
+                var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (!material || !IsCastMaterial(material)) continue;
+                ApplyAssignedPreset(material.name, material);
+                count++;
             }
+            Debug.Log($"Refreshed {count} cast materials under {CastFolder}.");
             AssetDatabase.SaveAssets();
         }
 

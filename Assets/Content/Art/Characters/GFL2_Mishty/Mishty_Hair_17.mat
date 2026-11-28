@@ -104,13 +104,13 @@ Material:
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _DirectRimBackCol: {r: 0.32, g: 0.38, b: 0.54, a: 0.45}
-    - _DirectRimFrontCol: {r: 0.6, g: 0.64, b: 0.74, a: 0.46}
+    - _DirectRimFrontCol: {r: 0.35, g: 0.38, b: 0.43, a: 0.35}
     - _EmissionCol: {r: 0, g: 0, b: 0, a: 1}
     - _OutlineColor: {r: 0.21806051, g: 0.2138013, b: 0.26704153, a: 0.92}
     - _OutlineDirectLightingColor: {r: 1, g: 0.98, b: 1, a: 0.38}
     - _OutlinePunctualLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
     - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
-    - _SelfLight: {r: 1.9, g: 1.87, b: 1.85, a: 1}
+    - _SelfLight: {r: 1.4, g: 1.38, b: 1.36, a: 1}
     - _ShadowColor: {r: 0.66, g: 0.62, b: 0.76, a: 1}
     - _SpecColor: {r: 0.95, g: 0.9, b: 1.05, a: 1}
   m_BuildTextureStacks: []

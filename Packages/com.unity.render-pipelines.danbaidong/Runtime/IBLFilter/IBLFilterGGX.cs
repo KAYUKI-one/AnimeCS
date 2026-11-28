@@ -145,6 +145,9 @@ namespace UnityEngine.Rendering.Universal
         {
             CoreUtils.Destroy(m_convolveMaterial);
             CoreUtils.Destroy(m_GgxIblSampleData);
+            // Destroy is deferred in Play Mode. A new pipeline can initialize during this frame.
+            m_convolveMaterial = null;
+            m_GgxIblSampleData = null;
         }
 
         void FilterCubemapCommon(CommandBuffer cmd,

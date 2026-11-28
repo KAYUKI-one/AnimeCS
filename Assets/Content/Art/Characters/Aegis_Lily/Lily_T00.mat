@@ -21,19 +21,21 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Lily_T00
-  m_Shader: {fileID: 4800000, guid: 8146d972338ff894fb429f165801ea72, type: 3}
+  m_Shader: {fileID: 4800000, guid: 3d6c575ee75ce8c4b9376cfe040f1c1a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
-  - SN_VertColor
+  - FLAG_EYELASH
   - _SHADOW_RAMP
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - SN_VertColor
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
   m_CustomRenderQueue: -1
   stringTagMap: {}
-  disabledShaderPasses: []
+  disabledShaderPasses:
+  - CharacterOutline
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -279,7 +281,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ShadowRampTex:
-        m_Texture: {fileID: 2800000, guid: 19411385aa89ec24ca613e9446696f35, type: 3}
+        m_Texture: {fileID: 2800000, guid: ee4c171e98fa8eb47be62bee7f1fe167, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ShadowStrengthMask:
@@ -349,8 +351,8 @@ Material:
     - _BumpScale: 0.45
     - _ColorMask: 15
     - _Cull: 0
-    - _Cutoff: 0.28
-    - _DirectOcclusion: 0.3
+    - _Cutoff: 0.24
+    - _DirectOcclusion: 0.04
     - _DirectRimWidth: 1.2
     - _DissolveNoiseStrength: 0.1
     - _DistanceFadeMode: 0
@@ -443,10 +445,10 @@ Material:
     - _IDMaskPrior7: 0
     - _IDMaskPrior8: 0
     - _INDIR_CUBEMAP: 0
-    - _IndirDiffIntensity: 0.4
+    - _IndirDiffIntensity: 0.52
     - _IndirDiffUpDirSH: 0.08
     - _IndirSpecCubeWeight: 0.5
-    - _IndirSpecIntensity: 0.38
+    - _IndirSpecIntensity: 0.42
     - _Invisible: 0
     - _LightMaxLimit: 1.15
     - _LightMinLimit: 0.29
@@ -479,7 +481,7 @@ Material:
     - _Main3rdTex_Cull: 0
     - _Main3rdTex_UVMode: 0
     - _MainGradationStrength: 0
-    - _MainLightColorLerp: 0.18
+    - _MainLightColorLerp: 0.24
     - _MatCap2ndApplyTransparency: 1
     - _MatCap2ndBackfaceMask: 0
     - _MatCap2ndBlend: 1
@@ -508,10 +510,10 @@ Material:
     - _MatCapShadowMask: 0
     - _MatCapVRParallaxStrength: 1
     - _MatCapZRotCancel: 1
-    - _Metallic: 0.9
+    - _Metallic: 0
     - _MonochromeLighting: 0.12
     - _NormalScale: 0.24
-    - _Occlusion: 0.75
+    - _Occlusion: 0.2
     - _OffsetFactor: 0
     - _OffsetUnits: 0
     - _OutLineNormalSource: 0
@@ -562,7 +564,7 @@ Material:
     - _ParallaxMaskEdge: 0.78
     - _ParallaxMaskEdgeOffset: 0.22
     - _ParallaxOffset: 0.5
-    - _ParallaxScale: 0.032
+    - _ParallaxScale: 0
     - _PunctualRimWidth: 1.26
     - _Reflectance: 0.04
     - _ReflectionApplyTransparency: 1
@@ -612,15 +614,15 @@ Material:
     - _ShadowMainStrength: 1
     - _ShadowMaskType: 0
     - _ShadowNormalStrength: 1
-    - _ShadowOffset: 0.42
+    - _ShadowOffset: 0.46
     - _ShadowPostAO: 0
     - _ShadowReceive: 0.65
     - _ShadowSmoothNdotL: 0.36
     - _ShadowSmoothScene: 0.16
-    - _ShadowStrength: 0.84
+    - _ShadowStrength: 0.38
     - _ShadowStrengthMaskLOD: 0
     - _ShiftBackfaceUV: 0
-    - _Smoothness: 0.8
+    - _Smoothness: 0.62
     - _SpecularBlur: 0
     - _SpecularBorder: 0.5
     - _SpecularNormalStrength: 1
@@ -641,7 +643,7 @@ Material:
     - _TessFactorMax: 3
     - _TessShrink: 0
     - _TessStrength: 0.5
-    - _ToonFlagsKeywords: -1
+    - _ToonFlagsKeywords: 1
     - _TransparentMode: 0
     - _UDIMDiscardCompile: 0
     - _UDIMDiscardMode: 0
@@ -770,13 +772,13 @@ Material:
     - _RimIndirColor: {r: 1, g: 1, b: 1, a: 1}
     - _RimShadeColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
-    - _SelfLight: {r: 1.9, g: 1.87, b: 1.85, a: 1}
+    - _SelfLight: {r: 1.4, g: 1.38, b: 1.36, a: 1}
     - _Shadow2ndColor: {r: 0.73, g: 0.76, b: 0.93, a: 0.44}
     - _Shadow3rdColor: {r: 0, g: 0, b: 0, a: 0}
     - _ShadowAOShift: {r: 1, g: 0, b: 1, a: 0}
     - _ShadowAOShift2: {r: 1, g: 0, b: 1, a: 0}
     - _ShadowBorderColor: {r: 0.95, g: 0.81, b: 0.79, a: 1}
-    - _ShadowColor: {r: 0.68, g: 0.71, b: 0.8, a: 1}
+    - _ShadowColor: {r: 0.78, g: 0.76, b: 0.86, a: 1}
     - _e2ga0: {r: 1, g: 0, b: 0, a: 0}
     - _e2ga1: {r: 1, g: 0, b: 0, a: 1}
     - _e2ga2: {r: 1, g: 0, b: 0, a: 0}

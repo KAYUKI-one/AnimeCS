@@ -51,7 +51,7 @@ Material:
     - _Cull: 0
     - _Cutoff: 0.28
     - _DirectOcclusion: 0.3
-    - _DirectRimWidth: 1.2
+    - _DirectRimWidth: 0.35
     - _EnvColorLerp: 0.15
     - _FoldoutDirectLight: 0
     - _FoldoutDirectLightEnd: 0
@@ -82,7 +82,7 @@ Material:
     - _OutlinePunctualLightingOffset: -1
     - _OutlineStencilComp: 6
     - _OutlineWidth: 0.85
-    - _PunctualRimWidth: 1.26
+    - _PunctualRimWidth: 0.1925
     - _SHADOW_RAMP: 1
     - _ShadowOffset: 0.42
     - _ShadowSmoothNdotL: 0.36
@@ -91,15 +91,15 @@ Material:
     - _Smoothness: 0.8
     - _ToonFlagsKeywords: -1
     m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _BaseColor: {r: 0.9948955, g: 0.9948955, b: 0.9954627, a: 1}
     - _DirectRimBackCol: {r: 0.32, g: 0.38, b: 0.54, a: 0.45}
-    - _DirectRimFrontCol: {r: 0.6, g: 0.64, b: 0.74, a: 0.46}
+    - _DirectRimFrontCol: {r: 0.35, g: 0.38, b: 0.43, a: 0.35}
     - _EmissionCol: {r: 0, g: 0, b: 0, a: 1}
     - _OutlineColor: {r: 0.2036449, g: 0.2517326, b: 0.32454827, a: 0.9}
     - _OutlineDirectLightingColor: {r: 1, g: 0.98, b: 1, a: 0.38}
     - _OutlinePunctualLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
     - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
-    - _SelfLight: {r: 1.9, g: 1.87, b: 1.85, a: 1}
+    - _SelfLight: {r: 1.4, g: 1.38, b: 1.36, a: 1}
     - _ShadowColor: {r: 0.68, g: 0.71, b: 0.8, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

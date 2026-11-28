@@ -71,7 +71,7 @@ Material:
     - _IndirDiffIntensity: 0.42
     - _IndirDiffUpDirSH: 0.18
     - _IndirSpecCubeWeight: 0.5
-    - _IndirSpecIntensity: 0.06
+    - _IndirSpecIntensity: 0.02
     - _MainLightColorLerp: 0.18
     - _Metallic: 0
     - _NormalScale: 0
@@ -87,19 +87,19 @@ Material:
     - _ShadowOffset: 0.4
     - _ShadowSmoothNdotL: 0.24
     - _ShadowSmoothScene: 0.16
-    - _ShadowStrength: 0.72
-    - _Smoothness: 0.08
+    - _ShadowStrength: 0.88
+    - _Smoothness: 0.02
     - _ToonFlagsKeywords: -1
     m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _BaseColor: {r: 0.96, g: 1.07, b: 1.1, a: 1}
     - _DirectRimBackCol: {r: 0.32, g: 0.38, b: 0.54, a: 0.45}
-    - _DirectRimFrontCol: {r: 0.6, g: 0.64, b: 0.74, a: 0.46}
+    - _DirectRimFrontCol: {r: 0.24, g: 0.25, b: 0.27, a: 0.25}
     - _EmissionCol: {r: 0, g: 0, b: 0, a: 1}
     - _OutlineColor: {r: 0.54, g: 0.34, b: 0.34, a: 0.88}
     - _OutlineDirectLightingColor: {r: 1, g: 0.98, b: 1, a: 0.38}
     - _OutlinePunctualLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
     - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
-    - _SelfLight: {r: 1.9, g: 1.87, b: 1.85, a: 1}
+    - _SelfLight: {r: 1.4, g: 1.38, b: 1.36, a: 1}
     - _ShadowColor: {r: 0.81, g: 0.65, b: 0.63, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

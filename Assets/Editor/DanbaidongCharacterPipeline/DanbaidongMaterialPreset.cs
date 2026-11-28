@@ -11,6 +11,8 @@ namespace DanbaidongRP.CharacterPipeline.Editor
         public string ActorName;
         public string LookDevFolder;
         public bool Cutout;
+        public bool MultiplyOverlay;
+        public bool UseMeshNormals;
         public float Cutoff;
         public bool FaceSdfUsesUV3;
         public bool UseVertexColorOutline;
@@ -90,7 +92,16 @@ namespace DanbaidongRP.CharacterPipeline.Editor
 
             var albedo = DanbaidongLookMaps.GetAlbedoTexture(material);
             var tint = options.BaseColorOverride ?? (material.HasProperty("_BaseColor") ? material.GetColor("_BaseColor") : Color.white);
-            if (tint.maxColorComponent < 0.01f) tint = Color.white;
+            var average = DanbaidongLookMaps.SampleAlbedo(albedo, out float lightFraction);
+            bool skin = role is DanbaidongSurfaceRole.Face or DanbaidongSurfaceRole.Skin;
+            if (average.HasValue && (skin || role is DanbaidongSurfaceRole.Hair or DanbaidongSurfaceRole.Cloth))
+            {
+                // Cap the authored tint so repeated imports converge to the same colour.
+                float protection = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(.72f, .84f, average.Value.grayscale));
+                protection = Mathf.Max(protection, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(.045f, .25f, lightFraction)));
+                Color cap = Color.Lerp(Color.white, role == DanbaidongSurfaceRole.Face ? new Color(.965f, .98f, .97f) : skin ? new Color(.94f, .90f, .88f) : new Color(.91f, .91f, .92f), protection);
+                tint = new Color(Mathf.Min(tint.r, cap.r), Mathf.Min(tint.g, cap.g), Mathf.Min(tint.b, cap.b), tint.a);
+            }
 
             material.shader = shader;
             if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", albedo);
@@ -100,8 +111,7 @@ namespace DanbaidongRP.CharacterPipeline.Editor
             material.SetFloat("_Cull", (int)CullMode.Off);
 
             // Physical lighting balance calibrated to soft anime cel/PBR harmony (Azur Promilia / Suomi reference):
-            // Peak lit skin sits softly at ~0.88-0.92 (powdery porcelain, zero harsh exposure!) while shadows remain airy & volumetric.
-            material.SetColor("_SelfLight", new Color(1.90f, 1.87f, 1.85f, 1f));
+            material.SetColor("_SelfLight", new Color(1.40f, 1.38f, 1.36f, 1f));
             material.SetFloat("_MainLightColorLerp", role is DanbaidongSurfaceRole.Face or DanbaidongSurfaceRole.Eye or DanbaidongSurfaceRole.Lash ? 0.24f : 0.18f);
             material.SetFloat("_DirectOcclusion", role is DanbaidongSurfaceRole.Face or DanbaidongSurfaceRole.Eye ? 0.04f : 0.30f);
 
@@ -119,9 +129,9 @@ namespace DanbaidongRP.CharacterPipeline.Editor
             });
             material.SetFloat("_IndirSpecIntensity", role switch
             {
-                DanbaidongSurfaceRole.Face => 0.04f,
+                DanbaidongSurfaceRole.Face => 0.015f,
                 DanbaidongSurfaceRole.Lash => 0.04f,
-                DanbaidongSurfaceRole.Skin => 0.06f,
+                DanbaidongSurfaceRole.Skin => 0.02f,
                 DanbaidongSurfaceRole.Hair => 0.16f,
                 DanbaidongSurfaceRole.Transparent => 0.08f,
                 DanbaidongSurfaceRole.Stockings => 0.22f,
@@ -138,11 +148,11 @@ namespace DanbaidongRP.CharacterPipeline.Editor
                 case DanbaidongSurfaceRole.Face:
                 case DanbaidongSurfaceRole.Lash:
                     material.SetFloat("_Metallic", 0f);
-                    material.SetFloat("_Smoothness", 0.05f);
+                    material.SetFloat("_Smoothness", role == DanbaidongSurfaceRole.Face ? 0.02f : 0.05f);
                     break;
                 case DanbaidongSurfaceRole.Skin:
                     material.SetFloat("_Metallic", 0f);
-                    material.SetFloat("_Smoothness", 0.08f);
+                    material.SetFloat("_Smoothness", 0.02f);
                     break;
                 case DanbaidongSurfaceRole.Eye:
                     material.SetFloat("_Metallic", 0f);
@@ -200,9 +210,9 @@ namespace DanbaidongRP.CharacterPipeline.Editor
             material.SetFloat("_ShadowStrength", role switch
             {
                 DanbaidongSurfaceRole.Eye => 0.38f,
-                DanbaidongSurfaceRole.Face => 0.78f,
+                DanbaidongSurfaceRole.Face => 0.88f,
                 DanbaidongSurfaceRole.Lash => 0.72f,
-                DanbaidongSurfaceRole.Skin => 0.72f,
+                DanbaidongSurfaceRole.Skin => 0.88f,
                 DanbaidongSurfaceRole.Hair => 0.82f,
                 DanbaidongSurfaceRole.Transparent => 0.42f,
                 _ => 0.84f
@@ -264,12 +274,13 @@ namespace DanbaidongRP.CharacterPipeline.Editor
                     DanbaidongSurfaceRole.Transparent => 0.90f,
                     DanbaidongSurfaceRole.Leather => 1.50f,
                     DanbaidongSurfaceRole.Metal => 1.50f,
+                    DanbaidongSurfaceRole.Cloth when lightFraction > .045f => .35f,
                     _ => 1.20f
                 };
-                float punctualRim = role is DanbaidongSurfaceRole.Lash ? 0f : directRim * 1.05f;
+                float punctualRim = directRim * (role == DanbaidongSurfaceRole.Cloth ? .55f : 1.05f);
                 material.SetFloat("_DirectRimWidth", directRim);
                 material.SetFloat("_PunctualRimWidth", punctualRim);
-                material.SetColor("_DirectRimFrontCol", new Color(0.60f, 0.64f, 0.74f, 0.46f));
+                material.SetColor("_DirectRimFrontCol", skin ? new Color(.24f, .25f, .27f, .25f) : new Color(.35f, .38f, .43f, .35f));
                 material.SetColor("_DirectRimBackCol", new Color(0.32f, 0.38f, 0.54f, 0.45f));
             }
 
@@ -326,7 +337,7 @@ namespace DanbaidongRP.CharacterPipeline.Editor
                 if (material.HasProperty("_NoseSpecColor"))
                 {
                     material.SetColor("_NoseSpecColor", role == DanbaidongSurfaceRole.Face
-                        ? new Color(1.0f, 0.96f, 0.94f, 0.22f)
+                        ? new Color(1.0f, 0.96f, 0.94f, 0.08f)
                         : Color.clear);
                     material.SetFloat("_NoseSpecMin", 0.05f);
                     material.SetFloat("_NoseSpecMax", 0.55f);
@@ -363,8 +374,8 @@ namespace DanbaidongRP.CharacterPipeline.Editor
             // Transparent shader settings (airy sheer scalloped lace veil, eye highlights)
             if (role == DanbaidongSurfaceRole.Transparent)
             {
-                material.SetFloat("_Alpha", 0.52f);
-                material.SetFloat("_BlendSrc", (int)BlendMode.SrcAlpha);
+                material.SetFloat("_Alpha", options.MultiplyOverlay ? 1f : 0.52f);
+                material.SetFloat("_BlendSrc", (int)(options.MultiplyOverlay ? BlendMode.DstColor : BlendMode.SrcAlpha));
                 material.SetFloat("_BlendDst", (int)BlendMode.OneMinusSrcAlpha);
                 material.SetFloat("_BlendOp", (int)BlendOp.Add);
                 material.SetFloat("_ZWrite", 0f);
@@ -411,9 +422,16 @@ namespace DanbaidongRP.CharacterPipeline.Editor
                 };
                 // Albedo-harmonized colored anime line-art (warm rose-cocoa on skin/face,
                 // steel-lavender on silver hair, plum on violet hair, soft taupe-lavender on white/cream dresses!)
-                Color outlineCol = DanbaidongLookMaps.EstimateOutlineColor(material, role);
+                Color outlineCol = DanbaidongLookMaps.EstimateOutlineColor(average, role);
 
-                if (options.UseVertexColorOutline)
+                if (options.UseMeshNormals)
+                {
+                    material.SetFloat("_OutLineNormalSource", 1f);
+                    material.EnableKeyword("SN_VertNormal");
+                    material.DisableKeyword("SN_VertColor");
+                    material.DisableKeyword("SN_SmoothUV4");
+                }
+                else if (options.UseVertexColorOutline)
                 {
                     material.SetFloat("_OutLineNormalSource", 0f);
                     material.EnableKeyword("SN_VertColor");

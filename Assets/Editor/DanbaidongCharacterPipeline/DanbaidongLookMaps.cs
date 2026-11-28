@@ -74,9 +74,9 @@ namespace DanbaidongRP.CharacterPipeline.Editor
                 case DanbaidongSurfaceRole.Lash:
                     // Airy translucent porcelain anime face (Azur Promilia / Suomi reference):
                     // ultra-soft cool-rosy shadow (zero harsh orange/salmon contrast!) + subtle peach SSS terminator.
-                    deepShadow = new Color(0.90f, 0.80f, 0.83f, 1f);
-                    midShadow  = new Color(0.95f, 0.87f, 0.88f, 1f);
-                    sssBand    = new Color(1.00f, 0.91f, 0.89f, 1f);
+                    deepShadow = new Color(0.83f, 0.69f, 0.72f, 1f);
+                    midShadow  = new Color(0.90f, 0.76f, 0.76f, 1f);
+                    sssBand    = new Color(0.94f, 0.80f, 0.77f, 1f);
                     litColor   = Color.white;
                     specPeak   = 0.0f;
                     specPower  = 4.0f;
@@ -84,9 +84,9 @@ namespace DanbaidongRP.CharacterPipeline.Editor
 
                 case DanbaidongSurfaceRole.Skin:
                     // Powdery soft anime skin: gentle rose-lavender shadow + creamy peach rolloff, zero burnt-orange or plastic spec.
-                    deepShadow = new Color(0.86f, 0.75f, 0.78f, 1f);
-                    midShadow  = new Color(0.93f, 0.84f, 0.85f, 1f);
-                    sssBand    = new Color(0.99f, 0.90f, 0.87f, 1f);
+                    deepShadow = new Color(0.82f, 0.68f, 0.71f, 1f);
+                    midShadow  = new Color(0.89f, 0.75f, 0.75f, 1f);
+                    sssBand    = new Color(0.94f, 0.80f, 0.77f, 1f);
                     litColor   = Color.white;
                     specPeak   = 0.0f;
                     specPower  = 4.0f;
@@ -506,7 +506,7 @@ namespace DanbaidongRP.CharacterPipeline.Editor
         /// - Hair gets rich hue-matched deeper-tinted ink (steel-lavender for silver hair, plum for violet hair, cocoa for blonde)
         /// - Cloth/Stockings/Leather/Metal harmonize with the material's main albedo (soft lavender-taupe on cream/white dresses!)
         /// </summary>
-        public static Color EstimateOutlineColor(Material material, DanbaidongSurfaceRole role)
+        internal static Color EstimateOutlineColor(Color? average, DanbaidongSurfaceRole role)
         {
             if (role == DanbaidongSurfaceRole.Face)
                 return new Color(0.56f, 0.36f, 0.36f, 0.86f);
@@ -522,15 +522,41 @@ namespace DanbaidongRP.CharacterPipeline.Editor
                 _ => new Color(0.34f, 0.32f, 0.40f, 0.90f)
             };
 
-            var albedoTex = GetAlbedoTexture(material);
+            if (!average.HasValue) return fallback;
+            var avg = average.Value;
+            Color.RGBToHSV(avg, out float h, out float s, out float val);
+
+            if (role == DanbaidongSurfaceRole.Hair)
+            {
+                // Harmonious anime hair line-art: slightly deeper & richer with subtle cool-lavender ink poise
+                float outS = Mathf.Clamp(s * 1.25f + 0.14f, 0.16f, 0.52f);
+                float outV = Mathf.Clamp(val * 0.44f, 0.24f, 0.44f);
+                // For near-achromatic silver/white hair, steer hue toward soft cool slate-lavender
+                float outH = s < 0.12f ? 0.68f : h;
+                Color ink = Color.HSVToRGB(outH, outS, outV);
+                return new Color(ink.r, ink.g, ink.b, 0.92f);
+            }
+
+            // Cloth / Stockings / Leather / Metal: cream/white cloth gets delicate taupe-lavender line,
+            // dark fabrics get rich deep ink, colorful fabrics get hue-matched deeper lines!
+            float cS = Mathf.Clamp(s * 1.15f + 0.10f, 0.10f, 0.46f);
+            float cV = Mathf.Clamp(val * 0.45f, 0.18f, 0.46f);
+            float cH = s < 0.10f ? 0.67f : h;
+            Color clothInk = Color.HSVToRGB(cH, cS, cV);
+            return new Color(clothInk.r, clothInk.g, clothInk.b, 0.90f);
+        }
+
+        internal static Color? SampleAlbedo(Texture albedoTex, out float lightFraction)
+        {
+            lightFraction = 0f;
             string sourcePath = albedoTex ? AssetDatabase.GetAssetPath(albedoTex) : null;
             if (string.IsNullOrEmpty(sourcePath) || !File.Exists(sourcePath))
-                return fallback;
+                return null;
 
             var input = new Texture2D(2, 2, TextureFormat.RGBA32, false, false);
             try
             {
-                if (!input.LoadImage(File.ReadAllBytes(sourcePath))) return fallback;
+                if (!input.LoadImage(File.ReadAllBytes(sourcePath))) return null;
 
                 // Sample 24x24 grid ignoring transparent pixels and near-black UV padding
                 double rSum = 0, gSum = 0, bSum = 0, wSum = 0;
@@ -545,35 +571,17 @@ namespace DanbaidongRP.CharacterPipeline.Editor
                         if (c.a < 0.25f) continue;
                         float lum = c.grayscale;
                         if (lum < 0.04f) continue;
+                        if (lum > .82f) lightFraction++;
                         rSum += c.r;
                         gSum += c.g;
                         bSum += c.b;
                         wSum += 1.0;
                     }
                 }
-                if (wSum < 4.0) return fallback;
+                if (wSum < 4.0) return null;
 
-                var avg = new Color((float)(rSum / wSum), (float)(gSum / wSum), (float)(bSum / wSum), 1f);
-                Color.RGBToHSV(avg, out float h, out float s, out float val);
-
-                if (role == DanbaidongSurfaceRole.Hair)
-                {
-                    // Harmonious anime hair line-art: slightly deeper & richer with subtle cool-lavender ink poise
-                    float outS = Mathf.Clamp(s * 1.25f + 0.14f, 0.16f, 0.52f);
-                    float outV = Mathf.Clamp(val * 0.44f, 0.24f, 0.44f);
-                    // For near-achromatic silver/white hair, steer hue toward soft cool slate-lavender
-                    float outH = s < 0.12f ? 0.68f : h;
-                    Color ink = Color.HSVToRGB(outH, outS, outV);
-                    return new Color(ink.r, ink.g, ink.b, 0.92f);
-                }
-
-                // Cloth / Stockings / Leather / Metal: cream/white cloth gets delicate taupe-lavender line,
-                // dark fabrics get rich deep ink, colorful fabrics get hue-matched deeper lines!
-                float cS = Mathf.Clamp(s * 1.15f + 0.10f, 0.10f, 0.46f);
-                float cV = Mathf.Clamp(val * 0.45f, 0.18f, 0.46f);
-                float cH = s < 0.10f ? 0.67f : h;
-                Color clothInk = Color.HSVToRGB(cH, cS, cV);
-                return new Color(clothInk.r, clothInk.g, clothInk.b, 0.90f);
+                lightFraction /= (float)wSum;
+                return new Color((float)(rSum / wSum), (float)(gSum / wSum), (float)(bSum / wSum), 1f);
             }
             finally
             {

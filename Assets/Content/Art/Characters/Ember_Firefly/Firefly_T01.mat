@@ -126,7 +126,7 @@ Material:
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
     - _DirectOcclusion: 0.04
-    - _DirectRimWidth: 0.85
+    - _DirectRimWidth: 0.25
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvColorLerp: 0.15
@@ -156,10 +156,10 @@ Material:
     - _GlossyReflections: 0
     - _INDIR_CUBEMAP: 0
     - _IndirDiffIntensity: 0.45
-    - _IndirDiffUpDirSH: 0.25
+    - _IndirDiffUpDirSH: 0.18
     - _IndirSpecCubeWeight: 0.5
-    - _IndirSpecIntensity: 0.04
-    - _MainLightColorLerp: 0.28
+    - _IndirSpecIntensity: 0.015
+    - _MainLightColorLerp: 0.24
     - _Metallic: 0
     - _NormalScale: 1
     - _NoseSpecMax: 0.55
@@ -168,23 +168,23 @@ Material:
     - _Occlusion: 0.2
     - _OcclusionStrength: 1
     - _OutLineNormalSource: 2
-    - _OutlineClampScale: 0.65
-    - _OutlineDirectLightingOffset: -0.25
+    - _OutlineClampScale: 0.62
+    - _OutlineDirectLightingOffset: -0.2
     - _OutlinePunctualLightingOffset: -1
     - _OutlineStencilComp: 6
-    - _OutlineWidth: 0.48
+    - _OutlineWidth: 0.52
     - _Parallax: 0.005
-    - _PunctualRimWidth: 0.9775
+    - _PunctualRimWidth: 0.2625
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _ReceiveTracedReflections: 1
     - _SHADOW_RAMP: 1
     - _SceneShadowWeight: 0
-    - _ShadowOffset: 0.48
-    - _ShadowSmoothNdotL: 0.56
+    - _ShadowOffset: 0.46
+    - _ShadowSmoothNdotL: 0.48
     - _ShadowSmoothScene: 0.16
-    - _ShadowStrength: 0.92
-    - _Smoothness: 0.05
+    - _ShadowStrength: 0.88
+    - _Smoothness: 0.02
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -194,22 +194,22 @@ Material:
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 0.96, b: 0.94, a: 1}
+    - _BaseColor: {r: 0.965, g: 0.98, b: 0.97, a: 1}
     - _BaseColorOutter: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DirectRimBackCol: {r: 0.38, g: 0.46, b: 0.65, a: 0.55}
-    - _DirectRimFrontCol: {r: 0.85, g: 0.9, b: 1, a: 0.6}
+    - _DirectRimBackCol: {r: 0.32, g: 0.38, b: 0.54, a: 0.45}
+    - _DirectRimFrontCol: {r: 0.24, g: 0.25, b: 0.27, a: 0.25}
     - _EmissionCol: {r: 0, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0.13, g: 0.13, b: 0.13, a: 0.13}
     - _FaceFrontDirWS: {r: 0, g: 0, b: 1, a: 0}
     - _FaceRightDirWS: {r: 1, g: 0, b: 0, a: 0}
     - _HeadCenterWS: {r: 0, g: 0, b: 0, a: 1}
-    - _NoseSpecColor: {r: 1, g: 0.96, b: 0.94, a: 0.22}
-    - _OutlineColor: {r: 0.38, g: 0.22, b: 0.23, a: 0.88}
-    - _OutlineDirectLightingColor: {r: 0.95, g: 0.92, b: 1, a: 0.3}
+    - _NoseSpecColor: {r: 1, g: 0.96, b: 0.94, a: 0.08}
+    - _OutlineColor: {r: 0.56, g: 0.36, b: 0.36, a: 0.86}
+    - _OutlineDirectLightingColor: {r: 1, g: 0.98, b: 1, a: 0.38}
     - _OutlinePunctualLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
     - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
-    - _SelfLight: {r: 2.05, g: 2, b: 1.97, a: 1}
+    - _SelfLight: {r: 1.4, g: 1.38, b: 1.36, a: 1}
     - _ShadowColor: {r: 0.86, g: 0.72, b: 0.7, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []

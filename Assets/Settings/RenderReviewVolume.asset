@@ -45,13 +45,13 @@ MonoBehaviour:
     m_Value: 1
   contrast:
     m_OverrideState: 1
-    m_Value: 1.08
+    m_Value: 0.98
   linearSectionStart:
     m_OverrideState: 1
-    m_Value: 0.22
+    m_Value: 0.18
   linearSectionLength:
     m_OverrideState: 1
-    m_Value: 0.42
+    m_Value: 0.52
   blackPow:
     m_OverrideState: 1
     m_Value: 1.22
@@ -142,7 +142,7 @@ MonoBehaviour:
     m_Value: 0
   contrast:
     m_OverrideState: 1
-    m_Value: 2
+    m_Value: 0
   colorFilter:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
@@ -173,16 +173,16 @@ MonoBehaviour:
     m_Value: 2
   threshold:
     m_OverrideState: 1
-    m_Value: 1.18
+    m_Value: 1.42
   intensity:
     m_OverrideState: 1
-    m_Value: 0.22
+    m_Value: 0.12
   lumRnageScale:
     m_OverrideState: 1
     m_Value: 0.22
   preFilterScale:
     m_OverrideState: 1
-    m_Value: 2
+    m_Value: 1
   blurCompositeWeight:
     m_OverrideState: 1
     m_Value: {x: 0.3, y: 0.3, z: 0.26, w: 0.15}

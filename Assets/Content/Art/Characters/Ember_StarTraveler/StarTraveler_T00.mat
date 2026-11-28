@@ -124,7 +124,7 @@ Material:
     - _Cutoff: 0.24
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
-    - _DirectOcclusion: 0.34
+    - _DirectOcclusion: 0.3
     - _DirectRimWidth: 0
     - _DstBlend: 0
     - _DstBlendAlpha: 0
@@ -154,11 +154,11 @@ Material:
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _INDIR_CUBEMAP: 0
-    - _IndirDiffIntensity: 0.45
-    - _IndirDiffUpDirSH: 0.1
+    - _IndirDiffIntensity: 0.44
+    - _IndirDiffUpDirSH: 0.08
     - _IndirSpecCubeWeight: 0.5
     - _IndirSpecIntensity: 0.04
-    - _MainLightColorLerp: 0.28
+    - _MainLightColorLerp: 0.24
     - _Metallic: 0
     - _NormalScale: 1
     - _NoseSpecMax: 0.55
@@ -179,10 +179,10 @@ Material:
     - _ReceiveTracedReflections: 1
     - _SHADOW_RAMP: 1
     - _SceneShadowWeight: 0
-    - _ShadowOffset: 0.48
-    - _ShadowSmoothNdotL: 0.56
+    - _ShadowOffset: 0.46
+    - _ShadowSmoothNdotL: 0.48
     - _ShadowSmoothScene: 0.16
-    - _ShadowStrength: 0.78
+    - _ShadowStrength: 0.72
     - _Smoothness: 0.05
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -196,8 +196,8 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColorOutter: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DirectRimBackCol: {r: 0.38, g: 0.46, b: 0.65, a: 0.55}
-    - _DirectRimFrontCol: {r: 0.85, g: 0.9, b: 1, a: 0.6}
+    - _DirectRimBackCol: {r: 0.32, g: 0.38, b: 0.54, a: 0.45}
+    - _DirectRimFrontCol: {r: 0.35, g: 0.38, b: 0.43, a: 0.35}
     - _EmissionCol: {r: 0, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0.13, g: 0.13, b: 0.13, a: 0.13}
     - _FaceFrontDirWS: {r: 0, g: 0, b: 1, a: 0}
@@ -208,7 +208,7 @@ Material:
     - _OutlineDirectLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
     - _OutlinePunctualLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
     - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
-    - _SelfLight: {r: 2.05, g: 2, b: 1.97, a: 1}
+    - _SelfLight: {r: 1.4, g: 1.38, b: 1.36, a: 1}
     - _ShadowColor: {r: 0.86, g: 0.72, b: 0.7, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []

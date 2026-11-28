@@ -78,8 +78,8 @@ namespace StylizedCharacters
             AddCapsule(chest, HumanBodyBones.Neck, .35f, upper, BodyClearance);
             AddCapsule(HumanBodyBones.Hips, chest, .39f, lower, BodyClearance);
             upper.AddRange(lower);
-            AddCapsule(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, .15f, upper);
-            AddCapsule(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, .15f, upper);
+            AddCapsule(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, .15f, upper, BodyClearance * .20f);
+            AddCapsule(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, .15f, upper, BodyClearance * .20f);
             int thighStart = lower.Count;
             AddCapsule(HumanBodyBones.LeftUpperLeg, HumanBodyBones.LeftLowerLeg, .22f, lower, BodyClearance);
             AddCapsule(HumanBodyBones.RightUpperLeg, HumanBodyBones.RightLowerLeg, .22f, lower, BodyClearance);
@@ -90,7 +90,7 @@ namespace StylizedCharacters
             AddCapsule(HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand, .14f, upper);
             AddCapsule(chest, HumanBodyBones.Neck, .28f, upper, name: "Back", forwardOffset: -.23f);
             // Front upper chest / clavicle guard so long front hair & braids never clip into the chest/collar while running!
-            AddCapsule(chest, HumanBodyBones.Neck, .34f, upper, BodyClearance * 1.15f, name: "FrontChest", forwardOffset: .20f);
+            AddCapsule(chest, HumanBodyBones.Neck, .34f, upper, BodyClearance * 1.15f, name: "FrontChest", forwardOffset: .24f);
             AddCapsule(HumanBodyBones.Neck, HumanBodyBones.Head, .42f, upper, BodyClearance, name: "NeckGuard");
             var hips = _animator.GetBoneTransform(HumanBodyBones.Hips);
             var leftHip = _animator.GetBoneTransform(HumanBodyBones.LeftUpperLeg);
@@ -125,7 +125,7 @@ namespace StylizedCharacters
                 // Dedicated face/cheek guard sphere so front bangs & side locks stay outside the face mesh during fast motion!
                 var faceGuard = new GameObject("Face spring collider").AddComponent<SpringSphereCollider>();
                 faceGuard.transform.SetParent(head, false);
-                faceGuard.transform.position = head.position + up * .26f + transform.forward * (headScale * .24f);
+                faceGuard.transform.position = head.position + up * .26f + transform.forward * (headScale * .28f);
                 faceGuard.radius = Mathf.Max(.001f, faceGuard.transform.InverseTransformVector(up).magnitude * .66f);
                 heads.Add(faceGuard);
             }

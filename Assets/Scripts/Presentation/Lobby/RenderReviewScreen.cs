@@ -36,7 +36,9 @@ namespace AnimeCS.Play
             BindOrbit();
             _viewport.RegisterCallback<GeometryChangedEvent>(_ => Resize());
 
-            var controls = Add(work, "review-controls");
+            var controls = new ScrollView(ScrollViewMode.Vertical);
+            controls.AddToClassList("review-controls");
+            work.Add(controls);
             var motion = Group(controls, "动作");
             Choices(motion, "review-motion", new[] { "站立", "跑动", "下蹲", "漫步", "展示" }, i => _stage.Action = (RenderReviewStage.Motion)i);
             var actions = Add(motion, "review-row");
@@ -50,6 +52,14 @@ namespace AnimeCS.Play
 
             var lights = Group(controls, "灯光");
             Choices(lights, "review-light", new[] { "棚拍", "日光", "逆光" }, i => _stage.SetLighting((RenderReviewStage.Lighting)i));
+            var tuning = new Foldout { text = "实时调参", value = false, name = "review-tuning" };
+            controls.Add(tuning);
+            Slider(tuning, "主光水平偏移", "yaw", -180f, 180f, 0f, _stage.SetKeyYawOffset);
+            Slider(tuning, "主光俯仰偏移", "pitch", -32f, 47f, 0f, _stage.SetKeyPitchOffset);
+            Slider(tuning, "描边倍率", "outline", 0f, 2f, 1f, _stage.SetOutline);
+            Slider(tuning, "边缘光倍率", "rim", 0f, 2f, 1f, _stage.SetRim);
+            Slider(tuning, "Bloom", "bloom", 0f, .6f, _stage.BloomIntensity, _stage.SetBloom);
+            Slider(tuning, "曝光 EV", "exposure", -2f, 2f, _stage.Exposure, _stage.SetExposure);
             var camera = Add(Group(controls, "镜头"), "review-row");
             Button(camera, "全身", "review-full", () => _stage.Frame(false));
             Button(camera, "特写", "review-closeup", () => _stage.Frame(true));
@@ -149,6 +159,18 @@ namespace AnimeCS.Play
             var group = Add(host, "review-group");
             Label(group, title, "review-group-title");
             return group;
+        }
+
+        private static void Slider(VisualElement host, string label, string name, float min, float max, float initial, Action<float> apply)
+        {
+            var caption = Label(host, $"{label}  {initial:0.00}", "review-group-title");
+            var slider = new Slider(min, max) { name = "review-" + name, value = initial };
+            slider.RegisterValueChangedCallback(e =>
+            {
+                caption.text = $"{label}  {e.newValue:0.00}";
+                apply(e.newValue);
+            });
+            host.Add(slider);
         }
 
         private static void Choices(VisualElement parent, string name, string[] labels, Action<int> select)

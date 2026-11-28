@@ -95,13 +95,13 @@ Material:
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _DirectRimBackCol: {r: 0.32, g: 0.38, b: 0.54, a: 0.45}
-    - _DirectRimFrontCol: {r: 0.6, g: 0.64, b: 0.74, a: 0.46}
+    - _DirectRimFrontCol: {r: 0.35, g: 0.38, b: 0.43, a: 0.35}
     - _EmissionCol: {r: 0, g: 0, b: 0, a: 1}
-    - _OutlineColor: {r: 0.28, g: 0.23, b: 0.38, a: 0.88}
+    - _OutlineColor: {r: 0.3826848, g: 0.35084572, b: 0.27040425, a: 0.9}
     - _OutlineDirectLightingColor: {r: 1, g: 0.98, b: 1, a: 0.38}
     - _OutlinePunctualLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
     - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
-    - _SelfLight: {r: 1.9, g: 1.87, b: 1.85, a: 1}
+    - _SelfLight: {r: 1.4, g: 1.38, b: 1.36, a: 1}
     - _ShadowColor: {r: 0.68, g: 0.62, b: 0.76, a: 1}
     - _StockingsColorInside: {r: 1, g: 0.94, b: 0.96, a: 1}
     - _StockingsColorOutside: {r: 0.7, g: 0.64, b: 0.82, a: 1}

@@ -166,10 +166,10 @@ Material:
     - _GlossyReflections: 0
     - _INDIR_CUBEMAP: 0
     - _IndirDiffIntensity: 0.52
-    - _IndirDiffUpDirSH: 0.1
+    - _IndirDiffUpDirSH: 0.08
     - _IndirSpecCubeWeight: 0.5
     - _IndirSpecIntensity: 0.42
-    - _MainLightColorLerp: 0.28
+    - _MainLightColorLerp: 0.24
     - _Metallic: 0
     - _NormalScale: 1
     - _Occlusion: 0.2
@@ -183,17 +183,17 @@ Material:
     - _Parallax: 0.005
     - _ParallaxMaskEdge: 0.78
     - _ParallaxMaskEdgeOffset: 0.22
-    - _ParallaxScale: 0.032
+    - _ParallaxScale: 0
     - _PunctualRimWidth: 0.5
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _ReceiveTracedReflections: 1
     - _SHADOW_RAMP: 1
     - _SceneShadowWeight: 0
-    - _ShadowOffset: 0.48
-    - _ShadowSmoothNdotL: 0.42
+    - _ShadowOffset: 0.46
+    - _ShadowSmoothNdotL: 0.36
     - _ShadowSmoothScene: 0.16
-    - _ShadowStrength: 0.42
+    - _ShadowStrength: 0.38
     - _Smoothness: 0.62
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -218,7 +218,7 @@ Material:
     - _OutlineDirectLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
     - _OutlinePunctualLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
     - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
-    - _SelfLight: {r: 2.05, g: 2, b: 1.97, a: 1}
+    - _SelfLight: {r: 1.4, g: 1.38, b: 1.36, a: 1}
     - _ShadowColor: {r: 0.78, g: 0.76, b: 0.86, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []

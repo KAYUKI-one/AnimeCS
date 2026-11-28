@@ -26,7 +26,7 @@ namespace AnimeCS.Tests
             yield return SceneManager.LoadSceneAsync(GameplayScene);
             var roster = ReadSceneCatalog().SeatOutfits.Select(outfit => outfit.Character).Distinct().ToArray();
             Assert.That(roster.Select(character => character.name), Is.EquivalentTo(new[]
-                { "Rover", "Lily", "Mornye", "Michele", "Flor", "StarTraveler", "Firefly", "Nora" }));
+                { "Rover", "Lily", "Mishty", "Mornye", "Michele", "Flor", "StarTraveler", "Firefly", "Nora" }));
             var unsupported = new GameObject("No humanoid");
             try { Assert.That(HumanoidSecondaryMotion.Attach(unsupported), Is.Null); }
             finally { Object.Destroy(unsupported); }
@@ -56,7 +56,17 @@ namespace AnimeCS.Tests
                         Assert.That(spring.capsuleColliders, Is.Not.Empty, spring.name);
                         Assert.That(spring.capsuleColliders.All(collider =>
                             collider.radius > 0 && collider.height > 0 && collider.transform.IsChildOf(animator.transform)), Is.True, spring.name);
-                        Assert.That(spring.sphereColliders.Length, Is.EqualTo(IsHair(spring) ? 1 : 0), spring.name);
+                        if (IsHair(spring))
+                        {
+                            Assert.That(spring.sphereColliders.Select(c => c.name), Is.EquivalentTo(new[]
+                            {
+                                "Head spring collider", "Face spring collider",
+                                "LeftUpperArm spring collider", "RightUpperArm spring collider"
+                            }), spring.name);
+                            Assert.That(spring.sphereColliders.All(c => c.radius > 0f &&
+                                c.transform.IsChildOf(animator.transform)), Is.True, spring.name);
+                        }
+                        else Assert.That(spring.sphereColliders, Is.Empty, spring.name);
                         AssertFinite(spring.CurrentTipPosition);
                     }
                     if (springs.Any(VerifyReachableCapsule))

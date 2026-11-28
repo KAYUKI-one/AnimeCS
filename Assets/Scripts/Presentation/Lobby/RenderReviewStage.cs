@@ -21,8 +21,15 @@ namespace AnimeCS.Play
         private readonly Light _key, _fill, _rim;
         private readonly Material _floor, _plinth, _accentWall, _trimMetal;
         private readonly Mesh _backdrop;
-        private readonly VolumeProfile _environment;
+        private readonly VolumeProfile _environment, _grading;
         private readonly GradientSky _sky;
+        private readonly Bloom _bloom;
+        private readonly ColorAdjustments _colorAdjustments;
+        private readonly MaterialPropertyBlock _surfaceProperties = new();
+        private float _presetYaw, _presetPitch, _yawOffset, _pitchOffset;
+        private float _outlineScale = 1f, _rimScale = 1f, _presetRim;
+        internal float BloomIntensity => _bloom ? _bloom.intensity.value : 0f;
+        internal float Exposure => _colorAdjustments ? _colorAdjustments.postExposure.value : 0f;
         private readonly int _layer;
         private readonly MatchPresentation _style;
         private readonly RuntimeAnimatorController _showcaseController;
@@ -96,7 +103,7 @@ namespace AnimeCS.Play
             _fill = Lamp("Fill", LightType.Point, new Vector3(-2.4f, 1.35f, 0.9f));
             var fillData = _fill.GetUniversalAdditionalLightData();
             fillData.shapeRadius = 0.85f;
-            fillData.baseContribution = 0.22f;
+            fillData.baseContribution = 0.09f;
             fillData.rimContribution = 0.12f;
             fillData.outlineContribution = 0f;
             _rim = Lamp("Rim", LightType.Point, new Vector3(-1.6f, 2.25f, -1.9f));
@@ -104,7 +111,7 @@ namespace AnimeCS.Play
             rimData.shapeRadius = 0.35f;
             rimData.baseContribution = 0.0f;
             rimData.rimContribution = 1.0f;
-            rimData.outlineContribution = 0.55f;
+            rimData.outlineContribution = 0.25f;
             RenderSettings.sun = _key;
             RenderSettings.skybox = null;
             RenderSettings.fog = false;
@@ -121,6 +128,10 @@ namespace AnimeCS.Play
                 grading.isGlobal = true;
                 grading.priority = 10f;
                 grading.sharedProfile = style.renderReviewGrade;
+                // Volume.profile clones each override; each showroom owns its grading controls.
+                _grading = grading.profile;
+                _grading.TryGet(out _bloom);
+                _grading.TryGet(out _colorAdjustments);
             }
             SetLighting(Lighting.Studio);
             Frame(false);
@@ -244,6 +255,7 @@ namespace AnimeCS.Play
             projector.CollectRenderers();
             _turn = _targetTurn = _elapsed = _crouch = 0f;
             _avatar.SetActive(true);
+            ApplySurfaceControls();
         }
 
         internal void SetLighting(Lighting lighting)
@@ -265,19 +277,66 @@ namespace AnimeCS.Play
             SetArchitecturalFill(_accentWall, day ? new Color(.18f, .21f, .28f) : rim ? new Color(.04f, .06f, .12f) : new Color(.12f, .14f, .20f));
             RenderSettings.ambientLight = day ? new Color(.34f, .38f, .46f) : rim ? new Color(.14f, .16f, .24f) : new Color(.24f, .27f, .34f);
             _sky.skyIntensityMode.Override(SkyIntensityMode.Exposure);
-            _sky.exposure.Override(day ? -0.85f : rim ? -1.95f : -1.35f);
+            _sky.exposure.Override(day ? -1.15f : rim ? -1.95f : -1.65f);
             _sky.top.Override(day ? new Color(.44f, .58f, .82f) : rim ? new Color(.16f, .26f, .46f) : new Color(.28f, .35f, .50f));
             _sky.middle.Override(day ? new Color(.62f, .60f, .58f) : rim ? new Color(.22f, .18f, .30f) : new Color(.36f, .36f, .40f));
             _sky.bottom.Override(day ? new Color(.22f, .20f, .22f) : new Color(.10f, .10f, .14f));
             _key.color = day ? new Color(1f, .96f, .90f) : rim ? new Color(.98f, .95f, 1f) : new Color(1f, .97f, .94f);
-            _key.intensity = day ? 2.55f : rim ? 1.80f : 2.20f;
+            _key.intensity = day ? 1.70f : rim ? 1.25f : 1.50f;
             // 3/4 side-top angles (114° / 236° / 76°) sculpt 3D form softly without blasting straight-on white!
-            _key.transform.rotation = Quaternion.Euler(day ? 38f : 32f, rim ? 76f : day ? 236f : 114f, 0f);
+            _presetYaw = rim ? 76f : day ? 236f : 114f;
+            _presetPitch = day ? 38f : 32f;
+            UpdateKeyDirection();
             _fill.color = rim ? new Color(.88f, .58f, 1f) : new Color(.78f, .85f, 1f);
             _fill.intensity = rim ? 1.45f : 1.15f;
             _rim.color = rim ? new Color(.32f, .88f, 1f) : new Color(.84f, .90f, 1f);
-            _rim.intensity = rim ? 5.8f : 3.0f;
+            _presetRim = rim ? 4.0f : 1.30f;
+            _rim.intensity = _presetRim * _rimScale;
         }
+
+        private void UpdateKeyDirection() =>
+            _key.transform.rotation = Quaternion.Euler(Mathf.Clamp(_presetPitch + _pitchOffset, 0f, 85f), _presetYaw + _yawOffset, 0f);
+
+        internal void SetKeyYawOffset(float value) { _yawOffset = value; UpdateKeyDirection(); }
+        internal void SetKeyPitchOffset(float value) { _pitchOffset = value; UpdateKeyDirection(); }
+        internal void SetOutline(float value) { _outlineScale = value; ApplySurfaceControls(); }
+        internal void SetRim(float value)
+        {
+            _rimScale = value;
+            _rim.intensity = _presetRim * value;
+            ApplySurfaceControls();
+        }
+
+        private void ApplySurfaceControls()
+        {
+            if (!_avatar) return;
+            foreach (var renderer in _avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                var slots = renderer.sharedMaterials;
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    var material = slots[i];
+                    if (!material || !material.HasProperty("_OutlineWidth")) continue;
+                    renderer.GetPropertyBlock(_surfaceProperties, i);
+                    _surfaceProperties.SetFloat("_OutlineWidth", material.GetFloat("_OutlineWidth") * _outlineScale);
+                    if (material.HasProperty("_DirectRimFrontCol"))
+                    {
+                        ScaleRim("_DirectRimFrontCol");
+                        ScaleRim("_DirectRimBackCol");
+                    }
+                    renderer.SetPropertyBlock(_surfaceProperties, i);
+
+                    void ScaleRim(string property)
+                    {
+                        Color color = material.GetColor(property);
+                        _surfaceProperties.SetColor(property, new Color(color.r * _rimScale, color.g * _rimScale, color.b * _rimScale, color.a));
+                    }
+                }
+            }
+        }
+
+        internal void SetBloom(float value) { if (_bloom) _bloom.intensity.Override(value); }
+        internal void SetExposure(float value) { if (_colorAdjustments) _colorAdjustments.postExposure.Override(value); }
 
         private static void SetArchitecturalFill(Material mat, Color emission)
         {
@@ -378,11 +437,14 @@ namespace AnimeCS.Play
             if (_accentWall) Object.Destroy(_accentWall);
             if (_trimMetal) Object.Destroy(_trimMetal);
             if (_backdrop) Object.Destroy(_backdrop);
-            if (_environment)
+            DestroyProfile(_grading);
+            DestroyProfile(_environment);
+            static void DestroyProfile(VolumeProfile profile)
             {
-                foreach (var effect in _environment.components)
+                if (!profile) return;
+                foreach (var effect in profile.components)
                     if (effect) Object.Destroy(effect);
-                Object.Destroy(_environment);
+                Object.Destroy(profile);
             }
             if (_previousScene.IsValid() && _previousScene.isLoaded)
                 SceneManager.SetActiveScene(_previousScene);

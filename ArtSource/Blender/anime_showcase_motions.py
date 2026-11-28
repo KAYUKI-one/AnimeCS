@@ -123,7 +123,7 @@ def pose_anime(rig, action_name, frac, frame):
             ua, la, hd = [side + k for k in ("UpperArm", "LowerArm", "Hand")]
             ua_pos = heads[rest[ua].parent.name] + rotations[rest[ua].parent.name] @ (rest[ua].head_local - rest[ua].parent.head_local)
             arm_len = (rest[la].head_local - rest[ua].head_local).length + (rest[hd].head_local - rest[la].head_local).length
-            hand_goal = ua_pos + Vector((sign * 0.145, -0.035 + 0.008 * s, -arm_len * 0.945))
+            hand_goal = ua_pos + Vector((sign * 0.145, -0.035 + 0.009 * math.sin(tau - 0.38), -arm_len * 0.945))
             _two_bone(rig, rest, heads, rotations, shift, ua, la, hd, hand_goal, Vector((sign * 0.45, 0.85, -0.15)), frame=frame)
             hand_rot = Quaternion((0, 1, 0), sign * -0.14) @ Quaternion((1, 0, 0), -0.08) @ rotations[la]
             _set_bone(rig, rest, heads, rotations, shift, hd, hand_rot, frame=frame)
@@ -131,8 +131,8 @@ def pose_anime(rig, action_name, frac, frame):
 
     elif action_name == "AnimeWalk":
         # Light, graceful anime RPG walk (upright, natural arm pendulum, heel-toe stride)
-        bob = 0.020 * abs(math.sin(tau)) - 0.018
-        sway_x = 0.024 * math.cos(tau)
+        bob = 0.009 * (1.0 - math.cos(2.0 * tau - 0.22)) - 0.014
+        sway_x = 0.019 * math.cos(tau - 0.15)
         shift = Vector((sway_x, 0.0, bob))
 
         hip_yaw = 0.085 * math.cos(tau)
@@ -157,7 +157,7 @@ def pose_anime(rig, action_name, frac, frame):
             foot_goal.y += stride_y
             foot_goal.z += lift_z
             _two_bone(rig, rest, heads, rotations, shift, u, l, f, foot_goal, Vector((sign * 0.05, -1.0, 0.0)), frame=frame)
-            foot_pitch = -0.20 * math.sin(phase) if math.sin(phase) > 0 else -0.10 * math.cos(phase)
+            foot_pitch = -0.16 * math.sin(phase) - 0.08 * math.cos(phase)
             _set_bone(rig, rest, heads, rotations, shift, f, Quaternion((1, 0, 0), foot_pitch), frame=frame)
             _set_bone(rig, rest, heads, rotations, shift, t, Quaternion((1, 0, 0), max(0.0, -foot_pitch * 0.5)), frame=frame)
 
@@ -177,8 +177,8 @@ def pose_anime(rig, action_name, frac, frame):
 
     elif action_name == "AnimeRun":
         # Energetic athletic anime RPG run (natural bent-elbow side pump — ZERO rifle pose!)
-        bob = 0.036 * abs(math.sin(tau)) - 0.035
-        sway_x = 0.020 * math.cos(tau)
+        bob = 0.016 * (1.0 - math.cos(2.0 * tau - 0.30)) - 0.022
+        sway_x = 0.015 * math.cos(tau - 0.12)
         shift = Vector((sway_x, 0.0, bob))
 
         hip_yaw = 0.12 * math.cos(tau)
@@ -200,7 +200,7 @@ def pose_anime(rig, action_name, frac, frame):
             foot_goal.y += stride_y
             foot_goal.z += lift_z
             _two_bone(rig, rest, heads, rotations, shift, u, l, f, foot_goal, Vector((sign * 0.06, -1.0, 0.0)), frame=frame)
-            foot_pitch = -0.32 * math.sin(phase) if math.sin(phase) > 0 else -0.14 * math.cos(phase)
+            foot_pitch = -0.24 * math.sin(phase) - 0.10 * math.cos(phase)
             _set_bone(rig, rest, heads, rotations, shift, f, Quaternion((1, 0, 0), foot_pitch), frame=frame)
             _set_bone(rig, rest, heads, rotations, shift, t, Quaternion((1, 0, 0), max(0.0, -foot_pitch * 0.4)), frame=frame)
 
@@ -284,9 +284,9 @@ def main():
     bpy.context.scene.render.fps = 30
     anim = rig.animation_data_create()
     specs = [
-        ("AnimeIdle", 72, 12),
-        ("AnimeWalk", 34, 16),
-        ("AnimeRun", 22, 16),
+        ("AnimeIdle", 108, 24),
+        ("AnimeWalk", 36, 24),
+        ("AnimeRun", 24, 24),
         ("AnimePose", 90, 12),
     ]
     for name, length, steps in specs:

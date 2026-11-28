@@ -21,17 +21,18 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Cantarella_T02
-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
+  m_Shader: {fileID: 4800000, guid: 8146d972338ff894fb429f165801ea72, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - SN_VertNormal
+  - _SHADOW_RAMP
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
   m_CustomRenderQueue: -1
-  stringTagMap:
-    RenderType: Opaque
+  stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
   m_LockedProperties: 
@@ -62,6 +63,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: 5d62c35f76ed04d4080dc6f3dc4d9cd7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _IndirSpecCubemap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: 5d62c35f76ed04d4080dc6f3dc4d9cd7, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -70,12 +75,24 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _NormalMap:
+        m_Texture: {fileID: 2800000, guid: d56ad489487ac69419e23a8ebce10ce5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _PBRMask:
+        m_Texture: {fileID: 2800000, guid: 5041d19b90186fe4e912a71ead4ed5a6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ParallaxMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShadowRampTex:
+        m_Texture: {fileID: 2800000, guid: 19411385aa89ec24ca613e9446696f35, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SpecGlossMap:
@@ -105,33 +122,81 @@ Material:
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
     - _Cull: 0
-    - _Cutoff: 0.5
+    - _Cutoff: 0.24
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
+    - _DirectOcclusion: 0.3
+    - _DirectRimWidth: 0.35
     - _DstBlend: 0
     - _DstBlendAlpha: 0
+    - _EnvColorLerp: 0.15
     - _EnvironmentReflections: 1
+    - _FoldoutDirectLight: 0
+    - _FoldoutDirectLightEnd: 0
+    - _FoldoutEmissRim: 0
+    - _FoldoutEmissRimEnd: 0
+    - _FoldoutIndirectLight: 0
+    - _FoldoutIndirectLightEnd: 0
+    - _FoldoutOutline: 2
+    - _FoldoutOutlineEnd: 0
+    - _FoldoutPBRProp: 0
+    - _FoldoutPBRPropEnd: 0
+    - _FoldoutShadowRamp: 2
+    - _FoldoutShadowRampEnd: 0
+    - _FoldoutTex: 0
+    - _FoldoutTexEnd: 0
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Metallic: 0
+    - _INDIR_CUBEMAP: 0
+    - _IndirDiffIntensity: 0.4
+    - _IndirDiffUpDirSH: 0.08
+    - _IndirSpecCubeWeight: 0.5
+    - _IndirSpecIntensity: 0.38
+    - _MainLightColorLerp: 0.18
+    - _Metallic: 0.9
+    - _NormalScale: 0.24
+    - _Occlusion: 0.75
     - _OcclusionStrength: 1
+    - _OutLineNormalSource: 1
+    - _OutlineClampScale: 0.62
+    - _OutlineDirectLightingOffset: -0.2
+    - _OutlinePunctualLightingOffset: -1
+    - _OutlineStencilComp: 6
+    - _OutlineWidth: 0.85
     - _Parallax: 0.005
+    - _PunctualRimWidth: 0.1925
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _Smoothness: 0.14
+    - _ReceiveTracedReflections: 1
+    - _SHADOW_RAMP: 1
+    - _ShadowOffset: 0.42
+    - _ShadowSmoothNdotL: 0.36
+    - _ShadowSmoothScene: 0.16
+    - _ShadowStrength: 0.84
+    - _Smoothness: 0.8
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
+    - _ToonFlagsKeywords: -1
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _BaseColor: {r: 0.9990681, g: 0.9990681, b: 0.9991717, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _DirectRimBackCol: {r: 0.32, g: 0.38, b: 0.54, a: 0.45}
+    - _DirectRimFrontCol: {r: 0.35, g: 0.38, b: 0.43, a: 0.35}
+    - _EmissionCol: {r: 0, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0.035, g: 0.035, b: 0.035, a: 0.035}
+    - _OutlineColor: {r: 0.1610326, g: 0.12854563, b: 0.2184351, a: 0.9}
+    - _OutlineDirectLightingColor: {r: 1, g: 0.98, b: 1, a: 0.38}
+    - _OutlinePunctualLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
+    - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
+    - _SelfLight: {r: 1.4, g: 1.38, b: 1.36, a: 1}
+    - _ShadowColor: {r: 0.68, g: 0.71, b: 0.8, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

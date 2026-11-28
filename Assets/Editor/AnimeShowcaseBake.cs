@@ -84,7 +84,8 @@ namespace AnimeCS.Editor
             {
                 var t = sm.AddAnyStateTransition(target);
                 t.hasExitTime = false;
-                t.duration = 0.22f;
+                t.hasFixedDuration = true;
+                t.duration = modeValue == 1 ? .16f : .24f;
                 t.canTransitionToSelf = false;
                 t.AddCondition(AnimatorConditionMode.Equals, modeValue, "Mode");
             }
@@ -95,9 +96,44 @@ namespace AnimeCS.Editor
             AddAnyTransition(walk, 3);
             AddAnyTransition(pose, 4);
 
+            AddBlinkLayer(controller);
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
             return controller;
+        }
+
+        private static void AddBlinkLayer(AnimatorController controller)
+        {
+            var clip = new AnimationClip { name = "Relaxed blink", frameRate = 60f };
+            var curve = new AnimationCurve();
+            foreach (var key in new[] { new Keyframe(0, 0), new Keyframe(2.14f, 0),
+                         new Keyframe(2.22f, 100), new Keyframe(2.25f, 100), new Keyframe(2.40f, 0),
+                         new Keyframe(6.06f, 0), new Keyframe(6.14f, 100), new Keyframe(6.31f, 0),
+                         new Keyframe(7.4f, 0) })
+                curve.AddKey(key);
+            foreach (string path in new[] { "Aegis_Lily/Lily", "Ember_Firefly/Firefly", "GFL2_Mishty/Mishty" })
+            {
+                string modelPath = "Assets/Content/Art/Characters/" + path + ".fbx";
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+                var skin = model.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+                    .Single(r => r.sharedMesh.GetBlendShapeIndex("ShowcaseBlink") >= 0);
+                string bindingPath = AnimationUtility.CalculateTransformPath(skin.transform, model.transform);
+                var binding = EditorCurveBinding.FloatCurve(bindingPath, typeof(SkinnedMeshRenderer), "blendShape.ShowcaseBlink");
+                AnimationUtility.SetEditorCurve(clip, binding, curve);
+            }
+            var settings = AnimationUtility.GetAnimationClipSettings(clip);
+            settings.loopTime = true;
+            AnimationUtility.SetAnimationClipSettings(clip, settings);
+            AssetDatabase.AddObjectToAsset(clip, controller);
+            controller.AddLayer("Eyelids");
+            var layers = controller.layers;
+            var face = layers[layers.Length - 1];
+            face.defaultWeight = 1f;
+            var blink = face.stateMachine.AddState("Blink");
+            blink.writeDefaultValues = false;
+            blink.motion = clip;
+            face.stateMachine.defaultState = blink;
+            controller.layers = layers;
         }
     }
 }
