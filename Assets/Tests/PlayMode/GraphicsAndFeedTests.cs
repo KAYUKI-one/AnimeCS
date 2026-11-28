@@ -186,7 +186,7 @@ namespace AnimeCS.Tests
                 game.Restart();
                 yield return WaitForMatch(game);
                 var world = Camera.main;
-                var hands = world.GetComponentsInChildren<Camera>(true).Single(camera => camera != world);
+                Assert.That(world.GetComponentsInChildren<Camera>(true), Is.EqualTo(new[] { world }));
                 var center = new Vector3(.5f, .5f, 0f);
                 void AssertCenteredAim(Camera camera)
                 {
@@ -206,38 +206,27 @@ namespace AnimeCS.Tests
                 game.AspectMode = PlayAspect.Native;
                 yield return new WaitForEndOfFrame();
                 var nativeWorld = world.projectionMatrix;
-                var nativeHands = hands.projectionMatrix;
                 var nativeRect = world.rect;
                 Assert.That(nativeWorld.m11 / nativeWorld.m00,
                     Is.EqualTo((float)world.pixelWidth / world.pixelHeight).Within(.002f));
-                Assert.That(nativeHands.m11 / nativeHands.m00,
-                    Is.EqualTo((float)hands.pixelWidth / hands.pixelHeight).Within(.002f));
                 AssertCenteredAim(world);
-                AssertCenteredAim(hands);
 
                 game.AspectMode = PlayAspect.Widescreen;
                 yield return new WaitForEndOfFrame();
                 var wideWorld = world.projectionMatrix;
-                var wideHands = hands.projectionMatrix;
                 Assert.That(wideWorld.m11 / wideWorld.m00, Is.EqualTo(16f / 9f).Within(.001f));
-                Assert.That(wideHands.m11 / wideHands.m00, Is.EqualTo(16f / 9f).Within(.001f));
                 AssertCenteredAim(world);
-                AssertCenteredAim(hands);
 
                 game.AspectMode = PlayAspect.Stretched;
                 yield return new WaitForEndOfFrame();
                 Assert.That(world.projectionMatrix.m00 / wideWorld.m00, Is.EqualTo(4f / 3f).Within(.001f));
-                Assert.That(hands.projectionMatrix.m00 / wideHands.m00, Is.EqualTo(4f / 3f).Within(.001f));
                 Assert.That(world.projectionMatrix.m11, Is.EqualTo(wideWorld.m11).Within(.001f));
-                Assert.That(hands.projectionMatrix.m11, Is.EqualTo(wideHands.m11).Within(.001f));
                 AssertCenteredAim(world);
-                AssertCenteredAim(hands);
 
                 game.AspectMode = PlayAspect.Native;
                 yield return new WaitForEndOfFrame();
                 Assert.That(world.rect, Is.EqualTo(nativeRect));
                 Assert.That(world.projectionMatrix.m00, Is.EqualTo(nativeWorld.m00).Within(.001f));
-                Assert.That(hands.projectionMatrix.m00, Is.EqualTo(nativeHands.m00).Within(.001f));
 
                 game.AspectMode = PlayAspect.Stretched;
                 yield return SceneManager.LoadSceneAsync(Scene);
