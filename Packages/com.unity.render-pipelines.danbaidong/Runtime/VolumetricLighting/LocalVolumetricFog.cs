@@ -178,7 +178,9 @@ namespace UnityEngine.Rendering.Universal
                 {
                     hash = hash * 23 + data.texture.GetEntityId().GetHashCode();
                     hash = hash * 23 + data.texture.updateCount.GetHashCode();
+#if UNITY_EDITOR
                     hash = hash * 23 + data.texture.imageContentsHash.GetHashCode();
+#endif
                 }
                 if (data.material != null)
                 {
