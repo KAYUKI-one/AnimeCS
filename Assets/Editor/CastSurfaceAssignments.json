@@ -1,9 +1,9 @@
 {
   "face": ["Rover_T02", "Lily_T01", "Nora_T01", "Michele_T02", "Flor_T00", "Laevatain_T00", "Mornye_T00", "BlackMiku_T00", "StarTraveler_T05", "Firefly_T01"],
   "hair": ["Rover_T04", "Lily_T05", "Lily_T06", "Flor_T05", "Flor_T06", "Laevatain_T05", "Mornye_T02", "Mornye_T03", "BlackMiku_T02", "BlackMiku_T23", "Michele_T01", "Nora_T00", "StarTraveler_T12", "Firefly_T02"],
-  "metal": ["BlackMiku_T11", "BlackMiku_BABABA", "BlackMiku_T26"],
+  "metal": ["BlackMiku_T11", "BlackMiku_BABABA", "BlackMiku_T26", "StarTraveler_Metal", "Firefly_Metal"],
   "satin": ["BlackMiku_T04", "BlackMiku_T05", "BlackMiku_T16", "BlackMiku_T17"],
-  "transparent": ["Lily_T07", "BlackMiku_T28", "Mornye_T08", "Cantarella_T06", "StarTraveler_T03", "StarTraveler_T04"],
-  "cutoutPrefixes": ["BlackMiku_T", "StarTraveler_T00", "StarTraveler_T12", "Firefly_T04"],
+  "transparent": ["Lily_T07", "BlackMiku_T28", "Mornye_T08", "Cantarella_T06", "StarTraveler_T03", "StarTraveler_T04", "Firefly_EyeGlow"],
+  "cutoutPrefixes": ["BlackMiku_T", "StarTraveler_T00", "StarTraveler_T12", "Firefly_T04", "StarTraveler_Lash", "Firefly_Lash"],
   "singleSidedShell": ["Mornye_T08"]
 }

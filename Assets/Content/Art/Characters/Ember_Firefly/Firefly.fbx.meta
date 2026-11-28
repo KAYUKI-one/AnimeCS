@@ -7,6 +7,26 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: Firefly_Eye
+    second: {fileID: 2100000, guid: 06e9cfb076463a449b872028b1783531, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Firefly_EyeGlow
+    second: {fileID: 2100000, guid: 3edde718ed5ac854898f79a526cc1034, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Firefly_Lash
+    second: {fileID: 2100000, guid: 77c816eb3a57c8642846c8516071339e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Firefly_Metal
+    second: {fileID: 2100000, guid: da48b99ecdf326d43abed7f098d040d3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: Firefly_T00
     second: {fileID: 2100000, guid: aac4d604ef326ef4d81b1f3225c6eb2f, type: 2}
   - first:

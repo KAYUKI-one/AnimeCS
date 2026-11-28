@@ -27,6 +27,7 @@ MonoBehaviour:
   lobbyShaders: {fileID: 20000000, guid: 4a60cd51ae35e5e479d3ad54cf3a0ff9, type: 2}
   matchShaders: {fileID: 20000000, guid: 277b2ae077d1386489ebb136a34820e0, type: 2}
   secondaryMotion: {fileID: 11400000, guid: 10bfc41990d48f34e918450e1449b8cb, type: 2}
+  renderReviewGrade: {fileID: 11400000, guid: 284a24383d4201a42a72ec3e8576c569, type: 2}
   skyLight: {r: 0.84, g: 0.87, b: 0.9, a: 1}
   horizonLight: {r: 0.69, g: 0.71, b: 0.73, a: 1}
   groundLight: {r: 0.44, g: 0.41, b: 0.37, a: 1}

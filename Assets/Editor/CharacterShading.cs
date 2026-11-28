@@ -68,37 +68,56 @@ namespace AnimeCS.Editor
         {
             bool face = role == CharacterSurfaceRole.Face;
             bool hair = role == CharacterSurfaceRole.Hair;
+            bool metal = role == CharacterSurfaceRole.Metal;
+            bool eye = material.name is "StarTraveler_T02" or "Firefly_Eye";
+            bool lash = material.name is "StarTraveler_Lash" or "Firefly_Lash" or "StarTraveler_T00";
+            bool firefly = material.name.StartsWith("Firefly_", StringComparison.Ordinal);
             bool cutout = mode == CharacterAlphaMode.Cutout;
-            var faceMap = face ? FaceLightMap(material) : null;
+            var faceMap = face || eye || lash ? FaceLightMap(material, firefly ? "Firefly" : "StarTraveler") : null;
             bool transparent = mode == CharacterAlphaMode.Transparent;
             var shader = Shader.Find("DanbaidongRP/PBRToon/" +
-                (transparent ? "Transparent" : faceMap ? "Face" : hair ? "Hair" : "Base"));
+                (transparent ? "Transparent" : eye ? "Eye" : faceMap ? "Face" : hair ? "Hair" : "Base"));
             if (!shader) throw new InvalidOperationException("DanbaidongRP must be imported before styling the new characters.");
             var albedo = material.mainTexture;
             var tint = material.color;
             material.shader = shader;
             material.mainTexture = albedo;
-            material.color = tint;
+            material.color = firefly && face ? new Color(1f, .94f, .91f, tint.a) : tint;
             material.renderQueue = -1;
             material.SetFloat("_Cull", (int)CullMode.Off);
-            material.SetFloat("_Metallic", .02f);
-            material.SetFloat("_Smoothness", hair ? .42f : face ? .25f : .28f);
-            material.SetFloat("_ShadowOffset", face ? .48f : .49f);
-            material.SetFloat("_ShadowSmoothNdotL", face ? .27f : .23f);
-            material.SetColor("_ShadowColor", face ? new Color(.69f, .53f, .51f, 1) : new Color(.46f, .51f, .60f, 1));
-            material.SetFloat("_MainLightColorLerp", .12f);
-            material.SetFloat("_EnvColorLerp", .20f);
-            material.SetFloat("_IndirDiffIntensity", .71f);
-            material.SetFloat("_IndirSpecIntensity", hair ? .82f : .60f);
-            material.SetFloat("_DirectRimWidth", hair ? 1.35f : .78f);
-            material.SetFloat("_PunctualRimWidth", hair ? 1.25f : .72f);
-            material.SetColor("_DirectRimFrontCol", new Color(.55f, .60f, .66f, .65f));
+            material.SetFloat("_Metallic", metal ? .47f : 0f);
+            material.SetFloat("_Smoothness", eye ? .52f : metal ? .62f : hair ? .49f : face ? .19f : .29f);
+            material.SetFloat("_ShadowOffset", faceMap ? .54f : .44f);
+            material.SetFloat("_ShadowSmoothNdotL", faceMap ? .13f : .105f);
+            var shade = face || lash ? new Color(.83f, .65f, .61f, 1f) : eye ? new Color(.78f, .75f, .84f, 1f) :
+                hair ? new Color(.68f, .66f, .74f, 1f) : metal ? new Color(.57f, .61f, .69f, 1f) : new Color(.73f, .75f, .82f, 1f);
+            var surface = eye ? "Eye" : face || lash ? "Skin" : hair ? "Hair" : metal ? "Metal" : "Cloth";
+            material.SetColor("_ShadowColor", shade);
+            if (!transparent)
+            {
+                material.SetTexture("_ShadowRampTex", CharacterLookMaps.Ramp(surface, shade, metal ? .10f : hair ? .045f : .016f));
+                material.SetFloat("_FoldoutShadowRamp", 2f);
+                material.SetFloat("_SHADOW_RAMP", 1f);
+                material.EnableKeyword("_SHADOW_RAMP");
+            }
+            if (material.HasProperty("_PBRMask"))
+                material.SetTexture("_PBRMask", CharacterLookMaps.MaterialMask(material, hair, metal));
+            material.SetFloat("_MainLightColorLerp", face || eye ? .24f : .15f);
+            material.SetFloat("_EnvColorLerp", .25f);
+            material.SetFloat("_IndirDiffIntensity", eye ? .59f : .78f);
+            material.SetFloat("_IndirSpecIntensity", hair || metal ? .70f : .38f);
+            if (material.HasProperty("_DirectRimWidth"))
+            {
+                material.SetFloat("_DirectRimWidth", hair ? .87f : .53f);
+                material.SetFloat("_PunctualRimWidth", hair ? .88f : .50f);
+                material.SetColor("_DirectRimFrontCol", new Color(.40f, .43f, .49f, .65f));
+            }
             material.SetFloat("_AlphaClip", cutout ? 1f : 0f);
             material.SetFloat("_Cutoff", .24f);
             if (cutout) material.EnableKeyword("_ALPHATEST_ON");
             else material.DisableKeyword("_ALPHATEST_ON");
-            bool eyeLayer = material.name is "StarTraveler_T01" or "StarTraveler_T02";
-            bool outline = !face && !eyeLayer && !cutout && !transparent;
+            bool eyeLayer = eye || lash || material.name == "StarTraveler_T01";
+            bool outline = !face && !eyeLayer && (!cutout || hair) && !transparent;
             material.SetShaderPassEnabled("CharacterOutline", outline);
             if (material.HasProperty("_FoldoutOutline"))
             {
@@ -107,19 +126,36 @@ namespace AnimeCS.Editor
             }
             if (outline)
             {
-                material.SetFloat("_OutLineNormalSource", 1f);
-                material.EnableKeyword("SN_VertNormal");
-                material.SetFloat("_OutlineWidth", hair ? .70f : .53f);
-                material.SetColor("_OutlineColor", new Color(.10f, .085f, .11f, .88f));
+                material.SetFloat("_OutLineNormalSource", 2f);
+                material.DisableKeyword("SN_VertNormal");
+                material.DisableKeyword("SN_VertColor");
+                material.EnableKeyword("SN_SmoothUV4");
+                material.SetFloat("_OutlineWidth", hair ? .40f : .36f);
+                material.SetFloat("_OutlineStencilComp", (int)CompareFunction.NotEqual);
+                material.SetColor("_OutlineColor", hair ? new Color(.28f, .22f, .25f, .78f) :
+                    new Color(.19f, .16f, .18f, .78f));
             }
             if (faceMap)
             {
                 material.SetTexture("_FaceLightMap", faceMap);
-                material.SetShaderPassEnabled("CharacterTransparent", false);
-                material.SetFloat("_ShadowStrength", .61f);
-                material.SetFloat("_ShadowSmoothScene", .05f);
-                material.SetColor("_ShadowColor", new Color(.75f, .62f, .60f, 1f));
+                material.SetFloat("_FaceSdfUV3", firefly ? 1f : 0f);
+                material.SetFloat("_ShadowStrength", eye ? .40f : .71f);
+                material.SetFloat("_ShadowSmoothScene", .038f);
+                material.SetFloat("_SceneShadowWeight", eye ? .21f : .33f);
+                material.SetFloat("_FringeShadowWeight", eye ? .19f : .48f);
+                if (material.HasProperty("_FaceFormWeight"))
+                    material.SetFloat("_FaceFormWeight", lash ? 0f : .29f);
+                material.SetShaderPassEnabled("CharacterTransparent", lash);
+                material.SetFloat("_FoldoutEyelash", lash ? 2f : 0f);
+                if (lash)
+                {
+                    material.SetTexture("_BaseMapOutter", albedo);
+                    material.SetColor("_BaseColorOutter", tint);
+                    material.SetFloat("_AlphaOutter", .46f);
+                }
             }
+            if (eye) material.SetFloat("_ParallaxScale", firefly ? 0f : .006f);
+            ConfigureToonFlags(material, hair ? 2 : eye || lash ? 1 : face ? 3 : -1);
             if (transparent)
             {
                 material.SetFloat("_Alpha", .85f);
@@ -133,10 +169,19 @@ namespace AnimeCS.Editor
             EditorUtility.SetDirty(material);
         }
 
-        private static Texture2D FaceLightMap(Material material)
+        private static void ConfigureToonFlags(Material material, int value)
         {
-            if (material.name != "StarTraveler_T05") return null;
-            string path = Path.GetDirectoryName(AssetDatabase.GetAssetPath(material)).Replace('\\', '/') + "/StarTravelerFaceSDF.png";
+            if (!material.HasProperty("_ToonFlagsKeywords")) return;
+            string[] flags = { "FLAG_HAIRSHADOW", "FLAG_EYELASH", "FLAG_HAIRMASK", "FLAG_FACE" };
+            material.SetFloat("_ToonFlagsKeywords", value);
+            for (int i = 0; i < flags.Length; i++)
+                if (i == value) material.EnableKeyword(flags[i]);
+                else material.DisableKeyword(flags[i]);
+        }
+
+        private static Texture2D FaceLightMap(Material material, string actor)
+        {
+            string path = Path.GetDirectoryName(AssetDatabase.GetAssetPath(material)).Replace('\\', '/') + $"/{actor}FaceSDF.png";
             if (AssetImporter.GetAtPath(path) is not TextureImporter importer) return null;
             if (importer.sRGBTexture || importer.wrapMode != TextureWrapMode.Clamp ||
                 importer.textureCompression != TextureImporterCompression.Uncompressed)

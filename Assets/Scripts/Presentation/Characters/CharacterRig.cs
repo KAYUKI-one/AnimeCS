@@ -131,7 +131,7 @@ namespace AnimeCS.Play
                 }
                 HeadMount=new GameObject("Head fittings").transform;HeadMount.SetParent(Head,false);
                 HeadMount.rotation=body.transform.parent ? body.transform.parent.rotation : Quaternion.identity;
-                CharacterFaceLighting.Bind(body, HeadMount);
+                CharacterFaceLighting.Bind(body, HeadMount, definition);
             }
             var controller=stanceController ? stanceController : definition ? definition.Controller : null;
             if (controller && animator) animator.runtimeAnimatorController=controller;

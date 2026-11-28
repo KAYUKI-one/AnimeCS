@@ -4,7 +4,7 @@ StarTraveler_T02	左目	tex_06_01_eye_d__y0.png	1.0
 StarTraveler_T02	右目	tex_06_01_eye_d__y0.png	1.0
 StarTraveler_T03	左目hi	tex_06_01_eye_h1__y0.png	1.0
 StarTraveler_T04	右目hi	tex_06_01_eye_h1__y11.png	1.0
-StarTraveler_T05	睫毛	tex_06_head_003_d__y0a3+_noalpha.png	1.0
+StarTraveler_Lash	睫毛	tex_06_head_003_d__y0a3+_noalpha.png	1.0
 StarTraveler_T05	mouth	tex_06_head_003_d__y0a3+_noalpha.png	1.0
 StarTraveler_T05	she	tex_06_head_003_d__y0a3+_noalpha.png	1.0
 StarTraveler_T06	耳朵	tex_00_ear_human_d__y0a3.png	1.0
@@ -20,7 +20,7 @@ StarTraveler_T07	蝴蝶结上	tex_06_cloth_004_d__y0a3.png	1.0
 StarTraveler_T07	蝴蝶结下	tex_06_cloth_004_d__y0a3.png	1.0
 StarTraveler_T08	蝴蝶结	tex_06_hairdress_003_d__y0a3.png	1.0
 StarTraveler_T07	袖子	tex_06_cloth_004_d__y0a3.png	1.0
-StarTraveler_T07	袖甲	tex_06_cloth_004_d__y0a3.png	1.0
+StarTraveler_Metal	袖甲	tex_06_cloth_004_d__y0a3.png	1.0
 StarTraveler_T07	手臂	tex_06_cloth_004_d__y0a3.png	1.0
 StarTraveler_T09	手臂skin	skin 0.png	1.0
 StarTraveler_T10	臀部	tex_biggirl_cloth01_004_d__y0a3+_noalpha.png	1.0

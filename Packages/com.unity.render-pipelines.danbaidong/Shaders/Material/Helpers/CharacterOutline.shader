@@ -7,6 +7,7 @@ Shader "DanbaidongRP/Helpers/Outline"
             [KeysEnum(SN_VertColor, SN_VertNormal)]
             _OutLineNormalSource            ("Smooth Normal Source", float)         = 0
             _OutlineColor                   ("Outline Color", Color)                = (0, 0, 0, 0.8)
+            [HideInInspector]_OutlineStencilComp("Outline stencil comparison", Float) = 8
             _OutlineWidth                   ("Width", Range(0, 10))                 = 1.0
             _OutlineClampScale              ("ClampScale", Range(0.01, 5))          = 1
             [Title(Lighting)]
@@ -40,6 +41,12 @@ Shader "DanbaidongRP/Helpers/Outline"
 
             Cull Front
             ZWrite On
+            Stencil
+            {
+                Ref 96
+                ReadMask 240
+                Comp [_OutlineStencilComp]
+            }
 
             HLSLPROGRAM
             #pragma target 4.5
@@ -51,7 +58,8 @@ Shader "DanbaidongRP/Helpers/Outline"
 
             // -------------------------------------
             // Material Keywords
-            #pragma shader_feature_local SN_VertColor SN_VertNormal
+            #pragma shader_feature_local SN_VertColor SN_VertNormal SN_SmoothUV4
+            #pragma shader_feature_local_fragment _ALPHATEST_ON
 
 
             // -------------------------------------
@@ -106,6 +114,7 @@ Shader "DanbaidongRP/Helpers/Outline"
             float _OutlinePunctualLightingOffset;
 
             float _AlphaClip;
+            float _Cutoff;
             CBUFFER_END
 
             TEXTURE2D(_BaseMap);
@@ -118,6 +127,7 @@ Shader "DanbaidongRP/Helpers/Outline"
                 float4 tangent  :TANGENT;
                 float4 color    :COLOR; // rgb:SmoothNormal a:outlineWidth
                 float4 uv       :TEXCOORD0;
+                float3 smoothUV :TEXCOORD3;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -150,8 +160,12 @@ Shader "DanbaidongRP/Helpers/Outline"
                 float3 normalOS = v.normal.xyz;
                 float3 biTangentOS = cross(normalOS, tangentOS) * v.tangent.w * GetOddNegativeScale();
 
-                #if defined(SN_VertColor)
+                #if defined(SN_VertColor) || defined(SN_SmoothUV4)
+                #if defined(SN_SmoothUV4)
+                float3 smoothNormalTS = any(v.smoothUV) ? v.smoothUV * 2 - 1 : float3(0, 0, 1);
+                #else
                 float3 smoothNormalTS = v.color.rgb * 2 - 1;
+                #endif
                 float3x3 TBN_TSOS= float3x3(tangentOS, biTangentOS, normalOS);
 
                 float3 smoothNormalOS = mul(smoothNormalTS, TBN_TSOS);
@@ -183,8 +197,8 @@ Shader "DanbaidongRP/Helpers/Outline"
 
                 // Alpha Clip
                 float4 mainTexColor = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, i.uv.xy);
-            #if _USE_ALPHA_CLIPPING
-                clip(mainTexColor.a - _AlphaClip);
+            #if defined(_ALPHATEST_ON)
+                AlphaDiscard(mainTexColor.a, _Cutoff);
             #endif
 
                 // Input

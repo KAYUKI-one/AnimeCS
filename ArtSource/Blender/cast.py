@@ -13,6 +13,7 @@ from mathutils import Matrix, Quaternion, Vector
 sys.path.insert(0, str(Path(__file__).parent))
 from motion import author_actions, pose, garment_stances
 from drape import mark_surfaces, bake_clearance
+from face_sdf import bake_face_sdf
 from secondary_skin import add_secondary
 from cast_roster import fit_garment_point, folders as cast_folders, garment_tailoring, playable, smooth
 
@@ -60,6 +61,12 @@ def flor_color(name):
 def materials(label, body, folder):
     slots, discard, mapping, new = list(body.data.materials), set(), {}, []
     records = []
+    split_regions = {
+        "Firefly": {"目": "Eye", "目光": "EyeGlow", "眉睫": "Lash",
+                    "衣金屬": "Metal", "胸針飾": "Metal", "髮飾金屬": "Metal"},
+        "StarTraveler": {"睫毛": "Lash", "袖甲": "Metal"},
+    }.get(label, {})
+    separate = 0
     for idx, mat in enumerate(slots):
         name = mat.name.lower()
         if label=="Laevatain" and name in {"m_actor_laevat_cloth_03","m_eyeshadow_common_01","m_hairshadow_common_01"}:
@@ -81,9 +88,14 @@ def materials(label, body, folder):
         if label == "BlackMiku" and mat.name == "头纱" and (not image or not image.size[0]):
             image = bpy.data.images.load(str(file.parent/"data"/"mantilla.png"), check_existing=True)
         if image and image.size[0] > 0:
-            key = image.name
+            region = split_regions.get(mat.name)
+            key = (image.name, region) if region else image.name
             if key not in mapping:
-                mat_name = label + "_T%02d" % len(mapping)
+                if region:
+                    mat_name = label + "_" + region
+                    separate += 1
+                else:
+                    mat_name = label + "_T%02d" % (len(mapping) - separate)
                 path = folder / (mat_name + ".png")
                 src = Path(bpy.path.abspath(image.filepath))
                 if src.is_file() and src.suffix.lower() == ".png":
@@ -248,6 +260,11 @@ def convert(label, file):
         face_sdf = next(file.parent.rglob("tex_04_01_human_sdf__r0y0+_noalpha.png"), None)
         if face_sdf:
             shutil.copyfile(face_sdf, folder / "StarTravelerFaceSDF.png")
+        ilm = next(file.parent.rglob("tex_06_cloth_004_ilm__y0a3+_noalpha.png"), None)
+        if ilm:
+            shutil.copyfile(ilm, folder / "StarTravelerClothILM.png")
+    if label == "Firefly":
+        bake_face_sdf(body, folder, label)
     iris_materials = {"StarTraveler": {"左目", "右目"}, "Firefly": {"目"}}.get(label)
     if iris_materials:
         iris = {index for face in body.data.polygons

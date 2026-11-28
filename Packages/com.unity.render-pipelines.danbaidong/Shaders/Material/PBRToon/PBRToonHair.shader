@@ -75,9 +75,10 @@ Shader "DanbaidongRP/PBRToon/Hair"
 
         // Outline
         [FoldoutBegin(_FoldoutOutlineEnd, PassSwitch, CharacterOutline)]_FoldoutOutline("Outline", float) = 0
-            [KeysEnum(SN_VertColor, SN_VertNormal)]
+            [KeysEnum(SN_VertColor, SN_VertNormal, SN_SmoothUV4)]
             _OutLineNormalSource                    ("Smooth Normal Source", Float)         = 0
             _OutlineColor                           ("Outline Color", Color)                = (0, 0, 0, 0.8)
+            [HideInInspector]_OutlineStencilComp("Outline stencil comparison", Float) = 8
             _OutlineWidth                           ("Width", Range(0, 10))                 = 1.0
             _OutlineClampScale                      ("ClampScale", Range(0.01, 5))          = 1
             [Title(Lighting)]
@@ -135,6 +136,7 @@ Shader "DanbaidongRP/PBRToon/Hair"
             // Shader Stages
             #pragma vertex ForwardToonVert
             #pragma fragment ForwardToonFrag
+            #pragma shader_feature_local_fragment _ALPHATEST_ON
 
             // -------------------------------------
             // Material Keywords
@@ -315,6 +317,9 @@ Shader "DanbaidongRP/PBRToon/Hair"
 
                 // Tex Sample
                 float4 mainTex = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, UV);
+                #if defined(_ALPHATEST_ON)
+                AlphaDiscard(mainTex.a, _Cutoff);
+                #endif
                 float4 pbrMask = SAMPLE_TEXTURE2D(_PBRMask, sampler_PBRMask, UV);
                 float3 bumpTS = UnpackNormalScale(SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, UV), _NormalScale);
                 

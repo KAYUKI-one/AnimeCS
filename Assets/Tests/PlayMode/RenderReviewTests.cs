@@ -4,6 +4,7 @@ using AnimeCS.Play;
 using NUnit.Framework;
 using StylizedCharacters;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -42,6 +43,11 @@ namespace AnimeCS.Tests
             var camera = stage.GetComponentInChildren<Camera>();
             Assert.That(camera.targetTexture, Is.Not.Null);
             Assert.That(camera.GetUniversalAdditionalCameraData().antialiasing, Is.EqualTo(AntialiasingMode.SubpixelMorphologicalAntiAliasing));
+            var firefly = stage.GetComponentsInChildren<SkinnedMeshRenderer>()
+                .Single(renderer => renderer.name == "FireflyBody");
+            Assert.That(firefly.sharedMesh.HasVertexAttribute(VertexAttribute.TexCoord2), Is.True, "projected face SDF");
+            Assert.That(firefly.sharedMesh.HasVertexAttribute(VertexAttribute.TexCoord3), Is.True, "smoothed outline normals");
+            Assert.That(firefly.sharedMaterials.Any(m => m.shader.name == "DanbaidongRP/PBRToon/Eye"), Is.True);
             var width = camera.targetTexture.width;
             yield return LobbyTestServices.Capture("RenderReviewFirefly");
 
@@ -63,12 +69,19 @@ namespace AnimeCS.Tests
             int face = System.Array.FindIndex(skin.sharedMaterials, material => material.shader.name == "DanbaidongRP/PBRToon/Face");
             Assert.That(face, Is.GreaterThanOrEqualTo(0));
             Assert.That(skin.sharedMaterials[face].GetTexture("_FaceLightMap").name, Is.EqualTo("StarTravelerFaceSDF"));
+            Assert.That(skin.sharedMaterials.Any(material => material.shader.name == "DanbaidongRP/PBRToon/Eye"), Is.True);
+            var hair = skin.sharedMaterials.Single(material => material.shader.name == "DanbaidongRP/PBRToon/Hair");
+            Assert.That(hair.IsKeywordEnabled("FLAG_HAIRMASK") && hair.GetTexture("_ShadowRampTex"), Is.True);
             var eyeHighlights = skin.sharedMaterials.Where(material => material.name is "StarTraveler_T03" or "StarTraveler_T04").ToArray();
             Assert.That(eyeHighlights, Has.Length.EqualTo(2));
             Assert.That(eyeHighlights.All(material => material.renderQueue >= 3000 && !material.GetShaderPassEnabled("ShadowCaster")), Is.True);
             var properties = new MaterialPropertyBlock();
             skin.GetPropertyBlock(properties, face);
             Assert.That(properties.GetVector("_FaceFrontDirWS").sqrMagnitude, Is.GreaterThan(.9f));
+            Assert.That(properties.GetVector("_HeadCenterWS").y, Is.GreaterThan(.8f));
+            var fringe = stage.GetComponentsInChildren<SkinnedMeshRenderer>().Single(renderer => renderer.name == "Fringe shadow");
+            Assert.That(fringe.sharedMesh.vertexCount, Is.GreaterThan(0));
+            Assert.That(fringe.sharedMaterial.GetFloat("_FriStencilComp"), Is.EqualTo((float)CompareFunction.Equal));
             var distance = camera.transform.position.z;
             yield return LobbyTestServices.Capture("RenderReviewStarTraveler");
             Click("review-closeup");

@@ -143,6 +143,11 @@ namespace AnimeCS.Editor
             var mesh=new Mesh{name=source.name+"Legs",indexFormat=original.Count>65535?IndexFormat.UInt32:IndexFormat.UInt16};
             mesh.vertices=Keep(source.vertices);mesh.normals=Keep(source.normals);mesh.tangents=Keep(source.tangents);
             mesh.uv=Keep(source.uv);mesh.uv2=Keep(source.uv2);mesh.colors32=Keep(source.colors32);
+            mesh.uv3=Keep(source.uv3);
+            var smooth = new List<Vector3>();
+            source.GetUVs(CharacterOutlineImport.SmoothNormalChannel, smooth);
+            if (smooth.Count == source.vertexCount)
+                mesh.SetUVs(CharacterOutlineImport.SmoothNormalChannel, original.Select(i => smooth[i]).ToList());
             mesh.bindposes=source.bindposes;mesh.boneWeights=Keep(source.boneWeights);mesh.subMeshCount=faces.Count;
             for(int i=0;i<faces.Count;i++)mesh.SetTriangles(faces[i],i,false);
             var v=new Vector3[source.vertexCount];var n=new Vector3[v.Length];var t=new Vector3[v.Length];

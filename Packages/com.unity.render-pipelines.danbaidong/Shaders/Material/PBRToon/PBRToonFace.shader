@@ -20,6 +20,11 @@ Shader "DanbaidongRP/PBRToon/Face"
             
             [NoScaleOffset]
             _FaceLightMap                           ("FaceLightMap", 2D)                    = "white" {}
+            [Toggle]_FaceSdfUV3                     ("Face SDF uses UV3", Float)             = 0
+            [HideInInspector]_HeadCenterWS          ("Head Center", Vector)                 = (0,0,0,1)
+            _SceneShadowWeight                     ("Scene shadow weight", Range(0,1))     = 1
+            _FringeShadowWeight                    ("Fringe shadow weight", Range(0,1))    = 1
+            _FaceFormWeight                        ("Soft form shading", Range(0,1))      = 0
             [HideInInspector]_FaceRightDirWS        ("Face Right", Vector)                 = (1,0,0,0)
             [HideInInspector]_FaceFrontDirWS        ("Face Forward", Vector)               = (0,0,1,0)
 
@@ -76,9 +81,10 @@ Shader "DanbaidongRP/PBRToon/Face"
 
         // Outline
         [FoldoutBegin(_FoldoutOutlineEnd, PassSwitch, CharacterOutline)]_FoldoutOutline("Outline", float) = 0
-            [KeysEnum(SN_VertColor, SN_VertNormal)]
+            [KeysEnum(SN_VertColor, SN_VertNormal, SN_SmoothUV4)]
             _OutLineNormalSource                    ("Smooth Normal Source", Float)         = 0
             _OutlineColor                           ("Outline Color", Color)                = (0, 0, 0, 0.8)
+            [HideInInspector]_OutlineStencilComp("Outline stencil comparison", Float) = 8
             _OutlineWidth                           ("Width", Range(0, 10))                 = 1.0
             _OutlineClampScale                      ("ClampScale", Range(0.01, 5))          = 1
             [Title(Lighting)]
@@ -144,6 +150,7 @@ Shader "DanbaidongRP/PBRToon/Face"
             // Shader Stages
             #pragma vertex ForwardToonVert
             #pragma fragment ForwardToonFrag
+            #pragma shader_feature_local_fragment _ALPHATEST_ON
 
             // -------------------------------------
             // Material Keywords
@@ -242,6 +249,10 @@ Shader "DanbaidongRP/PBRToon/Face"
             // FaceDirection
             float3 _FaceRightDirWS;
             float3 _FaceFrontDirWS;
+            float _FaceSdfUV3;
+            float _SceneShadowWeight;
+            float _FringeShadowWeight;
+            float _FaceFormWeight;
 
             // Alpha Test
             float   _Cutoff;
@@ -269,6 +280,7 @@ Shader "DanbaidongRP/PBRToon/Face"
                 float4 color        :COLOR;
                 float2 uv0          :TEXCOORD0;
                 float2 uv1          :TEXCOORD1;
+                float2 sdfUV        :TEXCOORD2;
                 UNITY_VERTEX_INPUT_INSTANCE_ID 
             };
 
@@ -303,7 +315,7 @@ Shader "DanbaidongRP/PBRToon/Face"
                 o.biTangentWS = cross(o.normalWS, o.tangentWS) * v.tangent.w * GetOddNegativeScale();
                 o.color = v.color;
                 o.uv.xy = TRANSFORM_TEX(v.uv0.xy, _BaseMap);
-                o.uv.zw = v.uv1.xy;
+                o.uv.zw = lerp(v.uv1, v.sdfUV, _FaceSdfUV3);
 
                 // Face lightmap dot value
                 {
@@ -336,6 +348,9 @@ Shader "DanbaidongRP/PBRToon/Face"
 
                 // Tex Sample
                 float4 mainTex = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, UV);
+                #if defined(_ALPHATEST_ON)
+                AlphaDiscard(mainTex.a, _Cutoff);
+                #endif
                 float4 faceLightMap = SAMPLE_TEXTURE2D(_FaceLightMap, sampler_FaceLightMap, faceLightMapUV);
 
                 // Property prepare
@@ -388,7 +403,7 @@ Shader "DanbaidongRP/PBRToon/Face"
                 float4 gbuffer0 = SAMPLE_TEXTURE2D_X_LOD(_GBuffer0, sampler_PointClamp, screenUV, 0);
                 if (HasHairShadowFlag(gbuffer0))
                 {
-                    hairShadowArea = 0;
+                    hairShadowArea = 1 - _FringeShadowWeight;
                 }
 
 
@@ -448,9 +463,10 @@ Shader "DanbaidongRP/PBRToon/Face"
                         
                         float shadowNdotL = SigmoidSharp(halfLambert, _ShadowOffset, _ShadowSmoothNdotL * 5);
                         float faceMapShadow = SigmoidSharp(faceSDF, i.faceLightDot.y, _ShadowSmoothNdotL * 5) * faceShadowArea;
-                        float shadowScene = SigmoidSharp(shadowAttenuation, 0.5, _ShadowSmoothScene * 5);
+                        float shadowScene = lerp(1, SigmoidSharp(shadowAttenuation, 0.5, _ShadowSmoothScene * 5), _SceneShadowWeight);
                         float shadowArea = min(faceMapShadow, shadowScene); // Face Modify shadow
                         shadowArea = min(shadowArea, hairShadowArea);
+                        shadowArea *= lerp(1, smoothstep(.24, .88, halfLambert), _FaceFormWeight);
                         shadowArea = lerp(1, shadowArea, _ShadowStrength);
 
                         float3 shadowRamp = lerp(_ShadowColor.rgb, float3(1, 1, 1), shadowArea);

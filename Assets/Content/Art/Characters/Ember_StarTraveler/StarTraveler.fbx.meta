@@ -7,6 +7,16 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: StarTraveler_Lash
+    second: {fileID: 2100000, guid: b99d579263d5a5040948157ba0d2462e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: StarTraveler_Metal
+    second: {fileID: 2100000, guid: 915030e101a498443bf6abc20c4463e0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: StarTraveler_T00
     second: {fileID: 2100000, guid: 46070929d4f13524cb58863247a1f101, type: 2}
   - first:

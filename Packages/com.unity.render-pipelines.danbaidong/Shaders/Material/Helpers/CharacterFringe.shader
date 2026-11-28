@@ -8,6 +8,7 @@ Shader "DanbaidongRP/Helpers/CharacterFringe"
             _ScreenOffsetScaleY("ScreenOffsetScaleY", Range(-2, 2))         = 1
 
             _CamViewDirWorldOffsetScale("CamViewDirWorld OffsetScale", Range(0, 1))         = 0.5
+            [HideInInspector]_HeadCenterWS("Head Center", Vector)                          = (0,0,0,1)
 
             [Title(Shadow Caster Stencil)]
             _FriStencil("Stencil ID", Float) = 96 // SHADINGMODELS_CHARACTER

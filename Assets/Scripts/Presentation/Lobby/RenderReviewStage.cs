@@ -84,6 +84,13 @@ namespace AnimeCS.Play
             _environment.Add<VisualSky>(true).skyType.value = SkyType.Gradient;
             _sky = _environment.Add<GradientSky>(true);
             volume.sharedProfile = _environment;
+            if (style.renderReviewGrade)
+            {
+                var grading = Add("Global Volume").AddComponent<Volume>();
+                grading.isGlobal = true;
+                grading.priority = 10f;
+                grading.sharedProfile = style.renderReviewGrade;
+            }
             SetLighting(Lighting.Studio);
             Frame(false);
         }
@@ -176,11 +183,11 @@ namespace AnimeCS.Play
             _sky.top.value = day ? new Color(.45f, .57f, .72f) : new Color(.30f, .35f, .43f);
             _sky.middle.value = new Color(.38f, .39f, .42f);
             _sky.bottom.value = new Color(.16f, .17f, .19f);
-            _key.color = day ? new Color(1f, .91f, .76f) : new Color(1f, .97f, .92f);
-            _key.intensity = day ? 1.05f : rim ? .75f : .88f;
-            _key.transform.rotation = Quaternion.Euler(day ? 44f : 32f, rim ? 28f : day ? 218f : 141f, 0f);
-            _fill.color = new Color(.72f, .84f, 1f);
-            _fill.intensity = rim ? 1.8f : 2.2f;
+            _key.color = day ? new Color(1f, .94f, .84f) : new Color(1f, .95f, .88f);
+            _key.intensity = day ? .96f : rim ? .63f : .88f;
+            _key.transform.rotation = Quaternion.Euler(day ? 37f : 24f, rim ? 28f : day ? 216f : 158f, 0f);
+            _fill.color = new Color(.85f, .91f, 1f);
+            _fill.intensity = rim ? 1.8f : 2.35f;
             _rim.color = rim ? new Color(.58f, .77f, 1f) : new Color(.75f, .86f, 1f);
             _rim.intensity = rim ? 6f : 3.3f;
         }

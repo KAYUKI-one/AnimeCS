@@ -328,6 +328,7 @@ Shader "DanbaidongRP/Helpers/CharacterEyelashOutter"
 
                 // Tex Sample
                 float4 mainTex = SAMPLE_TEXTURE2D(_BaseMapOutter, sampler_BaseMapOutter, lerp(UV, parallaxUV, parallaxMask));
+                alpha *= mainTex.a;
 
                 // Property prepare
                 float emission               = 1 - mainTex.a;

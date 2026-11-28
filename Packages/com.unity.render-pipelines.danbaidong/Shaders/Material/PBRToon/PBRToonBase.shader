@@ -66,9 +66,10 @@ Shader "DanbaidongRP/PBRToon/Base"
 
         // Outline
         [FoldoutBegin(_FoldoutOutlineEnd, PassSwitch, CharacterOutline)]_FoldoutOutline("Outline", float) = 0
-            [KeysEnum(SN_VertColor, SN_VertNormal)]
+            [KeysEnum(SN_VertColor, SN_VertNormal, SN_SmoothUV4)]
             _OutLineNormalSource                    ("Smooth Normal Source", Float)         = 0
             _OutlineColor                           ("Outline Color", Color)                = (0, 0, 0, 0.8)
+            [HideInInspector]_OutlineStencilComp("Outline stencil comparison", Float) = 8
             _OutlineWidth                           ("Width", Range(0, 10))                 = 1.0
             _OutlineClampScale                      ("ClampScale", Range(0.01, 5))          = 1
             [Title(Lighting)]

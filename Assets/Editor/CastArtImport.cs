@@ -82,6 +82,7 @@ namespace AnimeCS.Editor
                 serialized.FindProperty("_faction").enumValueIndex=(int)Enum.Parse<Side>(member.faction);
                 Set(serialized, "_model", Load<GameObject>(member.BodyPath));
                 Set(serialized, "_controller", controller);
+                CharacterFringeBake.Bind(serialized, member.BodyPath);
                 var picture = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/UI/Portraits/" + name + ".png");
                 if (picture) Set(serialized, "_portrait", picture);
                 var icon = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Content/UI/Portraits/" + name + "Icon.png");

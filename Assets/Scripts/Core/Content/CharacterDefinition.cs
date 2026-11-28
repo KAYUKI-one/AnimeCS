@@ -11,6 +11,8 @@ namespace AnimeCS.Content
         [SerializeField, InspectorName("守方肩背标识")] private GameObject _defendInsignia;
         [SerializeField, InspectorName("动画控制器（可选）")] private RuntimeAnimatorController _controller;
         [SerializeField, InspectorName("持枪挂点路径（可选）")] private string _weaponSocket;
+        [SerializeField, InspectorName("刘海投影网格")] private Mesh _fringeMesh;
+        [SerializeField, InspectorName("刘海投影材质")] private Material _fringeMaterial;
         public override ContentKind Kind => ContentKind.Character;
         [SerializeField, InspectorName("所属阵营")] private Side _faction;
         public Side Faction => _faction;
@@ -31,5 +33,7 @@ namespace AnimeCS.Content
         public GameObject Insignia(Side side) => side == Side.Attack ? _attackInsignia : _defendInsignia;
         public RuntimeAnimatorController Controller => _controller;
         public string WeaponSocket => _weaponSocket;
+        public Mesh FringeMesh => _fringeMesh;
+        public Material FringeMaterial => _fringeMaterial;
     }
 }
