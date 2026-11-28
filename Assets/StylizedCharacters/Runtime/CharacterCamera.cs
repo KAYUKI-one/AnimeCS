@@ -29,7 +29,7 @@ namespace StylizedCharacters
         {
             _yaw = Mathf.Repeat(_yaw + lookDegrees.x, 360);
             _pitch = Mathf.Clamp(_pitch - lookDegrees.y, -35, 73);
-            _distance = Mathf.Clamp(_distance - wheelSteps * .22f, .60f, 5f);
+            _distance = Mathf.Clamp(_distance * Mathf.Pow(.77f, wheelSteps), .60f, 6.5f);
         }
 
         public void Present(Vector3 eye, float yaw, float pitch, Transform actor, int visibleLayers, bool orbitAllowed = true)

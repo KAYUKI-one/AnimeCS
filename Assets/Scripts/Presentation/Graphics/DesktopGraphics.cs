@@ -41,8 +41,10 @@ namespace AnimeCS.Play
             if (!source) return;
             _pipeline=source;
             _shadowDistance=source.shadowDistance;
-            MaxSamples=Mathf.Max(1,SystemInfo.GetRenderTextureSupportedMSAASampleCount(
-                new RenderTextureDescriptor(128,128,RenderTextureFormat.DefaultHDR,24){msaaSamples=8}));
+            MaxSamples=source.scriptableRenderer.supportedRenderingFeatures.msaa
+                ? Mathf.Max(1,SystemInfo.GetRenderTextureSupportedMSAASampleCount(
+                    new RenderTextureDescriptor(128,128,RenderTextureFormat.DefaultHDR,24){msaaSamples=8}))
+                : 1;
             Default=new PictureQuality(Mathf.RoundToInt(source.renderScale*100),source.msaaSampleCount,source.mainLightShadowmapResolution);
             Apply(new PictureQuality(PlayerPrefs.GetInt(ScaleKey,Default.Scale),PlayerPrefs.GetInt(SamplesKey,Default.Samples),
                 PlayerPrefs.GetInt(ShadowKey,Default.Shadow)),false);

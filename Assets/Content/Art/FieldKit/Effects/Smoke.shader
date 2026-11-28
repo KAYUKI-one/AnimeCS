@@ -10,7 +10,7 @@ Shader "AnimeCS/Smoke puffs"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/Core.hlsl"
             TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
             float4 _HoleA[6],_HoleB[6];
             float4 _SmokeOrigin, _SmokeTime;

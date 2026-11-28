@@ -405,6 +405,7 @@ namespace AnimeCS.Play
             _lobby = new LobbyScreen(_lobbyHost,_presentation.lobby,_presentation.lobbyTheme,_catalog,this);
             _lobby.LocalMatchRequested += Restart;
             _lobby.PartyMatchRequested += StartAccountBattle;
+            _lobby.RenderReviewRequested += OpenRenderReview;
             _lobby.MapRequested += SelectMap;
             _lobby.OpeningSideRequested += SetOpeningSide;
             _lobby.AspectRequested += SetLobbyAspect;
@@ -454,6 +455,7 @@ namespace AnimeCS.Play
         public void Restart()
         {
             if (_preparing) return;
+            CloseRenderReview();
             if (_online!=null) { RestartOnlineRoom(); return; }
             if (!_queuedStart) ShowLineup();
             _queuedStart=true;
@@ -510,6 +512,7 @@ namespace AnimeCS.Play
 
         public void ReturnToLobby()
         {
+            ReleaseRenderReview();
             StopOnline();
             if (_entry!=null) StopCoroutine(_entry);
             _entry=null; _queuedStart=_preparing=false; _loading.style.display=DisplayStyle.None;
@@ -532,7 +535,12 @@ namespace AnimeCS.Play
         private void LateUpdate()
         {
             if (_preparing) return;
-            if (InLobby) { _preview.Present(); return; }
+            if (InLobby)
+            {
+                if (_renderReview != null) _renderReview.Present();
+                else _preview.Present();
+                return;
+            }
             if (!Ready) return;
             float alpha=Mathf.Clamp01((float)(_time*MatchRules.TickRate));
             if (_online!=null)
@@ -589,6 +597,12 @@ namespace AnimeCS.Play
         {
             if (_keyboard == null || _queuedStart || _preparing) return;
             _keyboard.ReadMenuKeys(out bool pause, out bool shop);
+            if (_renderReview != null)
+            {
+                if (pause) CloseRenderReview();
+                else _renderReview.Animate();
+                return;
+            }
             if (InLobby) { _preview.BeforeAnimation(); if (pause) _lobby.Back(); return; }
             if (_online!=null) { UpdateOnline(pause,shop); return; }
             if (!Ready) return;
@@ -645,7 +659,8 @@ namespace AnimeCS.Play
             if (playing && self.Health > 0 && !_keyboard.Shopping)
             {
                 if (Keyboard.current?.vKey.wasPressedThisFrame == true) SetThirdPerson(!ThirdPerson);
-                if (ThirdPerson && mouse != null) _characterCamera.Orbit(mouse.delta.ReadValue() * Sensitivity, mouse.scroll.ReadValue().y / 120f);
+                if (ThirdPerson && mouse != null)
+                    _characterCamera.Orbit(mouse.delta.ReadValue() * Sensitivity, OrbitWheelSteps(mouse.scroll.ReadValue().y));
             }
             if (playing && self.Health<=0 && !_keyboard.Shopping && mouse!=null)
             {
@@ -776,11 +791,13 @@ namespace AnimeCS.Play
 
         private void OnDestroy()
         {
+            ReleaseRenderReview();
             if (_lobby != null)
             {
                 _lobby.CancelPointerInteraction();
                 _lobby.LocalMatchRequested -= Restart;
                 _lobby.PartyMatchRequested -= StartAccountBattle;
+                _lobby.RenderReviewRequested -= OpenRenderReview;
                 _lobby.MapRequested -= SelectMap;
                 _lobby.OpeningSideRequested -= SetOpeningSide;
                 _lobby.AspectRequested -= SetLobbyAspect;

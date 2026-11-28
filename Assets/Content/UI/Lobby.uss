@@ -309,3 +309,72 @@
 .compact .sky .roster-card Image { height:57px; }
 .compact .sky .equipment-page .mount-slot { min-height:43px; }
 .compact .sky .equipment-page .wear-rail .mount-slot Image { height:22px; }
+
+.sky .render-review-entry {
+    align-self:flex-start; margin:8px 0 0; padding:7px 14px;
+    border-width:1px; border-color:#b6d2db; border-radius:5px;
+    background-color:#eef8fc; color:#23536a; -unity-font-style:bold;
+}
+.sky .render-review-entry:hover { background-color:#d8eef6; }
+
+.render-review {
+    position:absolute; top:0; bottom:0; left:0; right:0;
+    padding:15px 20px 13px; background-color:#111923; color:#edf4fc;
+}
+.render-review Label { color:#edf4fc; margin:0; padding:0; }
+.render-review .review-header { flex-direction:row; align-items:center; margin-bottom:12px; flex-shrink:0; }
+.render-review .review-title { font-size:23px; -unity-font-style:bold; margin-left:15px; flex-grow:1; }
+.render-review .review-resolution { color:#9fb3c8; font-size:12px; margin-left:8px; }
+.render-review .review-work { flex-direction:row; flex-grow:1; min-height:118px; }
+.render-review .review-viewport {
+    flex-grow:1; min-width:0; background-color:#1c2735; border-radius:8px;
+    border-width:1px; border-color:#36465b; overflow:hidden;
+    -unity-background-scale-mode:stretch-to-fill;
+}
+.render-review .review-character {
+    position:absolute; left:15px; top:14px; padding:6px 10px;
+    background-color:rgba(17,25,35,.83); border-radius:4px;
+    font-size:16px; -unity-font-style:bold; white-space:normal;
+}
+.render-review .review-hint {
+    position:absolute; left:15px; bottom:12px; padding:5px 9px;
+    background-color:rgba(17,25,35,.78); border-radius:4px; color:#c0cede; font-size:11px;
+}
+.render-review .review-controls {
+    width:224px; flex-shrink:0; margin-left:12px; padding:12px;
+    border-width:1px; border-color:#2c3b4e; border-radius:8px; background-color:#182332;
+}
+.render-review .review-group { margin-bottom:12px; }
+.render-review .review-group-title { font-size:12px; color:#a6bad0; -unity-font-style:bold; margin-bottom:6px; }
+.render-review .review-row { flex-direction:row; margin-bottom:3px; }
+.render-review .review-button {
+    margin:0 4px 0 0; padding:6px 9px; min-height:27px;
+    background-color:#243246; border-width:1px; border-color:#3b4c62;
+    border-radius:4px; color:#edf4fc; font-size:12px; -unity-text-align:middle-center;
+}
+.render-review .review-button:hover { background-color:#334960; border-color:#6684a2; }
+.render-review .review-button.selected {
+    background-color:#c5e9f2; border-color:#d7f3fc; color:#163744; -unity-font-style:bold;
+}
+.render-review .review-row .review-button { flex-grow:1; flex-basis:0; min-width:0; padding-left:4px; padding-right:4px; }
+.render-review .review-row .review-button:last-child { margin-right:0; }
+.render-review .review-roster { margin-top:11px; padding-bottom:1px; flex-shrink:0; height:94px; }
+.render-review .review-roster .unity-scroll-view__content-container { flex-direction:row; }
+.render-review .review-card {
+    width:112px; height:78px; margin-right:7px; padding:2px; flex-shrink:0;
+    justify-content:flex-start; overflow:hidden;
+}
+.render-review .review-card Image { height:53px; flex-shrink:0; width:100%; border-radius:2px; }
+.render-review .review-card-name {
+    color:#edf4fc; -unity-text-align:middle-center; flex-grow:1;
+    white-space:nowrap; text-overflow:ellipsis; overflow:hidden;
+}
+.render-review .review-card.selected .review-card-name { color:#163744; }
+.compact .render-review { padding:9px 11px 7px; }
+.compact .render-review .review-controls { width:186px; margin-left:8px; padding:8px; }
+.compact .render-review .review-group { margin-bottom:8px; }
+.compact .render-review .review-header { margin-bottom:7px; }
+.compact .render-review .review-title { font-size:19px; }
+.compact .render-review .review-roster { margin-top:6px; height:70px; }
+.compact .render-review .review-card { width:91px; height:57px; margin-right:5px; }
+.compact .render-review .review-card Image { height:36px; }

@@ -36,14 +36,14 @@ TagManager:
   - 
   - 
   - Local Body Hidden
-  - 
+  - Render Review
   m_SortingLayers:
   - name: Default
     uniqueID: 0
     locked: 0
   m_RenderingLayers:
   - Default
-  - Light Layer 1
+  - MainLightShadows
   - Light Layer 2
   - Light Layer 3
   - Light Layer 4

@@ -95,13 +95,13 @@ namespace AnimeCS.Tests
         [Test] public void RangeIssuesBothFactionsAndRepopulatesHeadshotTargetsWithoutEnding()
         {
             var profile = WardrobeProfile.Create(_catalog);
-            profile.current.attackOutfitId = "outfit.laevatain";
+            profile.current.attackOutfitId = "outfit.firefly";
             profile.current.outfitId = profile.current.defendOutfitId = "outfit.lily";
             _match=new LocalMatch(_catalog,_rules,_arena,17,FirstSide.Defend,profile,MatchMode.AimPractice);
             _seats=Enumerable.Range(0,10).Select(_match.BindSeat).ToArray();
             var player=_seats[0]; Assert.That(player.Read().HasObjective,Is.False);
             Assert.That(player.Read().Side, Is.EqualTo(Side.Attack));
-            Assert.That(CharacterAt(player.Read()), Is.EqualTo("character.laevatain"));
+            Assert.That(CharacterAt(player.Read()), Is.EqualTo("character.firefly"));
             Assert.That(_arena.Alive.Count(x=>x),Is.EqualTo(6));
             var targets = CharactersOnSide(Side.Defend, aliveOnly: true);
             Assert.That(targets, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily", "character.michele" }));
@@ -506,13 +506,13 @@ namespace AnimeCS.Tests
         public void MatchEndsOnlyAtThirteenAndResetsSideBudgets(int wins, int losses)
         {
             var profile = WardrobeProfile.Create(_catalog);
-            profile.current.outfitId = profile.current.attackOutfitId = "outfit.blackmiku";
+            profile.current.outfitId = profile.current.attackOutfitId = "outfit.startraveler";
             profile.current.defendOutfitId = "outfit.lily";
             _match = new LocalMatch(_catalog, _rules, _arena, 29, FirstSide.Attack, profile);
             _seats = Enumerable.Range(0, LocalMatch.Seats).Select(_match.BindSeat).ToArray();
             var attackers = CharactersOnSide(Side.Attack);
             var defenders = CharactersOnSide(Side.Defend);
-            Assert.That(attackers, Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain", "character.nora" }));
+            Assert.That(attackers, Is.EquivalentTo(new[] { "character.flor", "character.startraveler", "character.firefly", "character.nora" }));
             Assert.That(defenders, Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily", "character.michele" }));
             int attackCount = 0;
             for (int round = 1; round <= wins + losses; round++)

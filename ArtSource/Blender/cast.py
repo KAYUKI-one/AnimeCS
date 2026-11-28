@@ -17,6 +17,7 @@ from secondary_skin import add_secondary
 from cast_roster import fit_garment_point, folders as cast_folders, garment_tailoring, playable, smooth
 
 names = {"Rover": "男漂泊", "Cantarella": "坎特", "Lily": "护士服", "Flor": "修模绑骨后）_by_鸣潮_4ce938", "BlackMiku":"黑色礼服miku", "Laevatain":"莱万汀", "Mornye":"莫宁", "Michele":"米雪儿", "Nora":"诺诺"}
+names.update({"StarTraveler": "星临者", "Firefly": "流萤·春日手信"})
 source, destination, *selected = sys.argv[sys.argv.index("--") + 1:]
 source, destination = Path(source), Path(destination)
 body_only="--body-only" in selected
@@ -242,6 +243,21 @@ def convert(label, file):
             if a>0: vg[name].add([idx],a/total,"REPLACE")
     folder = destination/"Characters"/cast_folders[label]
     folder.mkdir(parents=True, exist_ok=True)
+    if label == "StarTraveler":
+        # The PMX supplies a light-direction map for the mesh's second UV channel.
+        face_sdf = next(file.parent.rglob("tex_04_01_human_sdf__r0y0+_noalpha.png"), None)
+        if face_sdf:
+            shutil.copyfile(face_sdf, folder / "StarTravelerFaceSDF.png")
+    iris_materials = {"StarTraveler": {"左目", "右目"}, "Firefly": {"目"}}.get(label)
+    if iris_materials:
+        iris = {index for face in body.data.polygons
+                if body.data.materials[face.material_index].name in iris_materials for index in face.vertices}
+        if not iris:
+            raise ValueError(f"{label} has no iris geometry for first-person eye calibration.")
+        center = [(min(body.data.vertices[i].co[axis] for i in iris) +
+                   max(body.data.vertices[i].co[axis] for i in iris)) * .5 for axis in range(3)]
+        eye = (-center[0], center[2], -center[1])
+        (folder / (label + "Face.txt")).write_text(" ".join(f"{v:.7f}" for v in eye), encoding="ascii")
     materials(label, body, folder)
     rig = bpy.data.objects.new("Skeleton",bpy.data.armatures.new("Biped"))
     bpy.context.collection.objects.link(rig)
@@ -310,5 +326,9 @@ def convert(label, file):
 for label in selected or playable:
     folders = [d for d in source.iterdir() if d.is_dir() and names[label] in d.name]
     files = [file for folder in folders for file in folder.rglob("*.pmx")]
+    if label == "Firefly":
+        files = [file for file in files if names[label] in file.stem]
+        if len(files) != 1:
+            raise ValueError("Expected the Firefly body PMX. The separately supplied sword is omitted.")
     file = next(f for f in files if "veil" in f.stem) if label == "BlackMiku" else files[0] if files else next(folders[0].rglob("*.blend"))
     convert(label,file)

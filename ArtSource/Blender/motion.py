@@ -6,7 +6,8 @@ from mathutils import Matrix, Quaternion, Vector
 # World-space foot spread, stagger, idle hip dip and lateral weight shift in metres.
 garment_stances = {"Cantarella": (.012,.023,-.022,.010), "Lily": (.032,.034,-.033,-.012),
                    "Flor": (.024,.038,-.027,.014), "BlackMiku": (.026,.030,-.026,-.008),
-                   "Mornye": (.020,.032,-.027,.010), "Laevatain": (.040,.040,-.038,-.009)}
+                   "Mornye": (.020,.032,-.027,.010), "Laevatain": (.040,.040,-.038,-.009),
+                   "StarTraveler": (0.,0.,-.073,0.), "Firefly": (0.,0.,-.073,0.)}
 
 def pose(rig, action, fraction, frame=None, garment=None):
     rest = rig.data.bones

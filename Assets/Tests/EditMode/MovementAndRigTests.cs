@@ -9,12 +9,49 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.InputSystem;
 using UnityEngine.Playables;
 
 namespace AnimeCS.Tests
 {
     public sealed class MovementAndRigTests
     {
+        [Test] public void ThirdPersonZoomConsumesNormalizedWheelTicks()
+        {
+            var input = InputSystem.settings;
+            var previous = input.scrollDeltaBehavior;
+            var holder = new GameObject("Test orbit camera");
+            try
+            {
+                var camera = holder.AddComponent<Camera>();
+                var orbit = new CharacterCamera(camera);
+                var eye = Vector3.up * 1.62f;
+                float Distance()
+                {
+                    orbit.Present(eye, 0, 0, null, 0);
+                    return Vector3.Distance(holder.transform.position, eye - Vector3.up * .43f);
+                }
+
+                input.scrollDeltaBehavior = InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
+                orbit.SetThirdPerson(true, 0);
+                float before = Distance();
+                orbit.Orbit(Vector2.zero, LocalGame.OrbitWheelSteps(1f));
+                Assert.That(Distance(), Is.LessThan(before - .5f));
+                orbit.Orbit(Vector2.zero, LocalGame.OrbitWheelSteps(-1f));
+                Assert.That(Distance(), Is.EqualTo(before).Within(.001f));
+                if (Application.platform == RuntimePlatform.WindowsEditor)
+                {
+                    input.scrollDeltaBehavior = InputSettings.ScrollDeltaBehavior.KeepPlatformSpecificInputRange;
+                    Assert.That(LocalGame.OrbitWheelSteps(120f), Is.EqualTo(1f));
+                }
+            }
+            finally
+            {
+                input.scrollDeltaBehavior = previous;
+                Object.DestroyImmediate(holder);
+            }
+        }
+
         [Test] public void PlayableOutfitsShareLayeredLocomotionAndKeepTheirDrapeCorrectives()
         {
             const string path = "Assets/Content/Art/Characters/Locomotion.controller";

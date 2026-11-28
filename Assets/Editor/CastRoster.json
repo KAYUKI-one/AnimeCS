@@ -12,7 +12,7 @@
     {
       "name": "BlackMiku",
       "folder": "Ember_BlackMiku",
-      "playOrder": 4,
+      "playOrder": -1,
       "displayName": "黑色 Miku",
       "faction": "Attack",
       "headwearHeight": 0.048,
@@ -21,8 +21,26 @@
     {
       "name": "Laevatain",
       "folder": "Ember_Laevatain",
-      "playOrder": 5,
+      "playOrder": -1,
       "displayName": "莱万汀",
+      "faction": "Attack",
+      "headwearHeight": 0.064,
+      "animationDonor": false
+    },
+    {
+      "name": "StarTraveler",
+      "folder": "Ember_StarTraveler",
+      "playOrder": 4,
+      "displayName": "星临者",
+      "faction": "Attack",
+      "headwearHeight": 0.064,
+      "animationDonor": false
+    },
+    {
+      "name": "Firefly",
+      "folder": "Ember_Firefly",
+      "playOrder": 5,
+      "displayName": "流萤 · 春日手信",
       "faction": "Attack",
       "headwearHeight": 0.064,
       "animationDonor": false

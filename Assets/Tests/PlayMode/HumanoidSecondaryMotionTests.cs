@@ -26,7 +26,7 @@ namespace AnimeCS.Tests
             yield return SceneManager.LoadSceneAsync(GameplayScene);
             var roster = ReadSceneCatalog().SeatOutfits.Select(outfit => outfit.Character).Distinct().ToArray();
             Assert.That(roster.Select(character => character.name), Is.EquivalentTo(new[]
-                { "Rover", "Lily", "Mornye", "Michele", "Flor", "BlackMiku", "Laevatain", "Nora" }));
+                { "Rover", "Lily", "Mornye", "Michele", "Flor", "StarTraveler", "Firefly", "Nora" }));
             var unsupported = new GameObject("No humanoid");
             try { Assert.That(HumanoidSecondaryMotion.Attach(unsupported), Is.Null); }
             finally { Object.Destroy(unsupported); }

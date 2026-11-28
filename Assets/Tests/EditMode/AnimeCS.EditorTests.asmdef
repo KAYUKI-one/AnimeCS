@@ -1,6 +1,6 @@
 {
   "name": "AnimeCS.EditorTests",
-  "references": ["AnimeCS.Runtime", "AnimeCS.Editor", "StylizedCharacters.Editor", "StylizedCharacters.Runtime"],
+  "references": ["AnimeCS.Runtime", "AnimeCS.Editor", "StylizedCharacters.Editor", "StylizedCharacters.Runtime", "Unity.InputSystem"],
   "optionalUnityReferences": ["TestAssemblies"],
   "includePlatforms": ["Editor"]
 }

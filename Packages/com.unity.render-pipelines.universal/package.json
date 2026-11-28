@@ -1,0 +1,10 @@
+{
+  "name": "com.unity.render-pipelines.universal",
+  "version": "17.0.3",
+  "displayName": "AnimeCS URP Shader Header Compatibility",
+  "description": "Forwards the legacy include paths used by character shader packages to Danbaidong RP. Contains no renderer or C# assemblies.",
+  "unity": "6000.0",
+  "dependencies": {
+    "com.unity.render-pipelines.danbaidong": "17.0.3"
+  }
+}

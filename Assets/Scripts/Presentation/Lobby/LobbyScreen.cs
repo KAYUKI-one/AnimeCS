@@ -25,6 +25,7 @@ namespace AnimeCS.Play
         Vector2 _inventoryScroll;
         static readonly string[] SlotNames={"头饰","上衣","手套","下衣","鞋子"};
         internal event Action LocalMatchRequested, PartyMatchRequested;
+        internal event Action RenderReviewRequested;
         internal event Action<MapDefinition> MapRequested;
         internal event Action<FirstSide> OpeningSideRequested;
         internal event Action<PlayAspect> AspectRequested;
@@ -54,6 +55,8 @@ namespace AnimeCS.Play
                 ["mode"] = ModeOptions, ["settings"] = Settings, ["tasks"] = Tasks, ["shop"] = Shop
             };
             BindNavigation();
+            _screen.Q<Button>("render-review").clicked += () => RenderReviewRequested?.Invoke();
+            _screen.Q<Button>("auth-render-review").clicked += () => RenderReviewRequested?.Invoke();
             var manual = _screen.Q("manual-summary");
             bool manualExpanded = true;
             _screen.Q<Button>("manual-toggle").clicked += () =>

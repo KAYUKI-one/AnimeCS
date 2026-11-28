@@ -36,12 +36,12 @@ MonoBehaviour:
   - character: {fileID: 11400000, guid: 10f7e19b689ab5e498d7ed4c98c5c3c1, type: 2}
     model: {fileID: 919132149155446097, guid: 509a1dd762874144b8b95f1e03aa3cde, type: 3}
     viewModel: {fileID: 919132149155446097, guid: 509a1dd762874144b8b95f1e03aa3cde, type: 3}
-  - character: {fileID: 11400000, guid: 39a5a6ec63229ea439baf992b86de5df, type: 2}
-    model: {fileID: 919132149155446097, guid: 6899905cf28971349b64b609293c0d7a, type: 3}
-    viewModel: {fileID: 919132149155446097, guid: 6899905cf28971349b64b609293c0d7a, type: 3}
-  - character: {fileID: 11400000, guid: 10b1cac9d18c6e34f9ab869b8b238792, type: 2}
-    model: {fileID: 919132149155446097, guid: d9c457cb8ff2d5a4fa2da43aaf95e2fd, type: 3}
-    viewModel: {fileID: 919132149155446097, guid: d9c457cb8ff2d5a4fa2da43aaf95e2fd, type: 3}
+  - character: {fileID: 11400000, guid: 36591aa4f0b9f6248b0fe64b88cdb6c8, type: 2}
+    model: {fileID: 919132149155446097, guid: f6b04d572958c8e43ba55b937402cdc1, type: 3}
+    viewModel: {fileID: 919132149155446097, guid: f6b04d572958c8e43ba55b937402cdc1, type: 3}
+  - character: {fileID: 11400000, guid: 5e0618a5b943b584592b4928167186a7, type: 2}
+    model: {fileID: 919132149155446097, guid: 7e8df61ff2ea42b4496a897a27519615, type: 3}
+    viewModel: {fileID: 919132149155446097, guid: 7e8df61ff2ea42b4496a897a27519615, type: 3}
   - character: {fileID: 11400000, guid: a5c69e93dc0eee643afc136759b30814, type: 2}
     model: {fileID: 919132149155446097, guid: 83553daead78c3043ac4ae70b74cb91d, type: 3}
     viewModel: {fileID: 919132149155446097, guid: 83553daead78c3043ac4ae70b74cb91d, type: 3}

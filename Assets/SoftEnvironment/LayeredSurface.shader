@@ -40,7 +40,7 @@ Shader "Soft Environment/Layered Surface"
     {
         Tags {"RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" "Queue"="Geometry"}
         HLSLINCLUDE
-        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+        #include "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/Core.hlsl"
         TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
         TEXTURE2D(_BumpMap); TEXTURE2D(_ORM); TEXTURE2D(_Layer);
         TEXTURE2D(_BlendMask); TEXTURE2D(_LayerSurface);
@@ -87,7 +87,7 @@ Shader "Soft Environment/Layered Surface"
             Tags {"LightMode"="UniversalForwardOnly"}
             Cull [_Cull]
             HLSLPROGRAM
-            #pragma target 3.5
+            #pragma target 4.5
             #pragma vertex Vert
             #pragma fragment Frag
             #pragma shader_feature_local _PAINTED
@@ -103,11 +103,11 @@ Shader "Soft Environment/Layered Surface"
             #pragma multi_compile _ LIGHTMAP_SHADOW_MIXING
             #pragma multi_compile _ SHADOWS_SHADOWMASK
             #pragma multi_compile _ USE_LEGACY_LIGHTMAPS
-            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Fog.hlsl"
+            #pragma multi_compile_fog
             #pragma multi_compile_instancing
-            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
+            #include_with_pragmas "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/DOTS.hlsl"
             #define _SPECULAR_COLOR 1
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/Lighting.hlsl"
             #include "SoftLighting.hlsl"
             struct App {float4 pos:POSITION;half3 normal:NORMAL;half4 tangent:TANGENT;float2 uv:TEXCOORD0;float2 lm:TEXCOORD1;half4 color:COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID};
             struct Pix {float4 pos:SV_POSITION;float3 ws:TEXCOORD0;half3 normal:TEXCOORD1;half4 tangent:TEXCOORD2;float2 uv:TEXCOORD3;float2 lm:TEXCOORD4;half2 shade:TEXCOORD5;
@@ -183,9 +183,9 @@ Shader "Soft Environment/Layered Surface"
             #pragma vertex ShadowPassVertex
             #pragma fragment ShadowPassFragment
             #pragma multi_compile_instancing
-            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
+            #include_with_pragmas "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/DOTS.hlsl"
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
+            #include "Packages/com.unity.render-pipelines.danbaidong/Shaders/ShadowCasterPass.hlsl"
             ENDHLSL
         }
         Pass
@@ -199,8 +199,8 @@ Shader "Soft Environment/Layered Surface"
             #pragma vertex DepthOnlyVertex
             #pragma fragment DepthOnlyFragment
             #pragma multi_compile_instancing
-            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/DepthOnlyPass.hlsl"
+            #include_with_pragmas "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/DOTS.hlsl"
+            #include "Packages/com.unity.render-pipelines.danbaidong/Shaders/DepthOnlyPass.hlsl"
             ENDHLSL
         }
         Pass
@@ -214,10 +214,10 @@ Shader "Soft Environment/Layered Surface"
             #pragma vertex DepthNormalsVertex
             #pragma fragment DepthNormalsFragment
             #pragma multi_compile_instancing
-            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
+            #include_with_pragmas "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/DOTS.hlsl"
             #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
-            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/RenderingLayers.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/Shaders/DepthNormalsPass.hlsl"
+            #include_with_pragmas "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/RenderingLayers.hlsl"
+            #include "Packages/com.unity.render-pipelines.danbaidong/Shaders/DepthNormalsPass.hlsl"
             ENDHLSL
         }
         Pass
@@ -229,7 +229,7 @@ Shader "Soft Environment/Layered Surface"
             #pragma vertex BakeVertex
             #pragma fragment BakeFragment
             #pragma shader_feature_local _PAINTED
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
+            #include "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/MetaInput.hlsl"
             struct BakeIn {float4 pos:POSITION;float2 uv:TEXCOORD0;float2 lm:TEXCOORD1;float2 dyn:TEXCOORD2;half4 color:COLOR;};
             struct BakeOut {float4 pos:SV_POSITION;float2 uv:TEXCOORD0;half weight:TEXCOORD1;};
             BakeOut BakeVertex(BakeIn i)

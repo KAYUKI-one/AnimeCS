@@ -1081,7 +1081,7 @@ Shader "Toon/Toon" {
             }
 
             HLSLPROGRAM
-            #pragma target 2.0
+            #pragma target 4.5
             #pragma prefer_hlslcc gles
             #pragma exclude_renderers d3d11_9x
 

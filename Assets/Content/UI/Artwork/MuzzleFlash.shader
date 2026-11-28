@@ -11,7 +11,7 @@ Shader "AnimeCS/Muzzle Flash"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/Core.hlsl"
             struct Attr { float3 positionOS:POSITION; float2 uv:TEXCOORD0; };
             struct Out { float4 positionCS:SV_POSITION; float2 uv:TEXCOORD0; };
             Out Vert(Attr input)

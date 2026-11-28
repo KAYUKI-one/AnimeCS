@@ -69,6 +69,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a3c21a1a85e690a45996b0c555968f1f, type: 2}
   - {fileID: 11400000, guid: cd48c2083c87bbf459401172573bde7d, type: 2}
   - {fileID: 11400000, guid: 3326ff49709b34c43abf82dd9e916797, type: 2}
+  - {fileID: 11400000, guid: 36591aa4f0b9f6248b0fe64b88cdb6c8, type: 2}
+  - {fileID: 11400000, guid: 7d169f414e3469e49aa867ad43ac2d88, type: 2}
+  - {fileID: 11400000, guid: 5e0618a5b943b584592b4928167186a7, type: 2}
+  - {fileID: 11400000, guid: 4e0508f654fad6c49af21b53984bb0e4, type: 2}
   _map: {fileID: 11400000, guid: ca26f863b78fdf149a86c4000df065ca, type: 2}
   _character: {fileID: 11400000, guid: dd19b401d68736749b2a2131983df047, type: 2}
   _outfit: {fileID: 11400000, guid: 3b2ab2c2cded36a4d984b7a14ba0d07a, type: 2}
@@ -77,8 +81,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d26709bb8d2317b43b95992f361cddbb, type: 2}
   - {fileID: 11400000, guid: 7f7493e28310ab64e81636ead83637fc, type: 2}
   - {fileID: 11400000, guid: a837939bd456ab44f820016d35f822d1, type: 2}
-  - {fileID: 11400000, guid: d21eaa081a594804288a8ca7d7b73c04, type: 2}
-  - {fileID: 11400000, guid: 14f0272e8d9ec854f88f43fcef0c9309, type: 2}
+  - {fileID: 11400000, guid: 7d169f414e3469e49aa867ad43ac2d88, type: 2}
+  - {fileID: 11400000, guid: 4e0508f654fad6c49af21b53984bb0e4, type: 2}
   - {fileID: 11400000, guid: a3c21a1a85e690a45996b0c555968f1f, type: 2}
   - {fileID: 11400000, guid: 3326ff49709b34c43abf82dd9e916797, type: 2}
   _attackPistol: {fileID: 11400000, guid: c6229a5749d5fd04c859e42d06731efe, type: 2}

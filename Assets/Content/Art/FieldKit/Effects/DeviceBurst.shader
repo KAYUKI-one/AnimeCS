@@ -11,7 +11,7 @@ Shader "AnimeCS/Device burst"
             #pragma vertex vert
             #pragma fragment frag
             #pragma editor_sync_compilation
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/Core.hlsl"
             TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
             struct Attributes {float4 pos:POSITION;float2 uv:TEXCOORD0;half4 tint:COLOR;};
             struct Varyings {float4 pos:SV_POSITION;float2 uv:TEXCOORD0;half4 tint:COLOR;};

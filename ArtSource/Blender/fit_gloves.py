@@ -1,4 +1,4 @@
-"""Retarget a locally exported game's glove shell onto each character's hand and finger bind pose."""
+"""Fit gloves from a local GLTF export folder or an existing fitted FBX onto the cast."""
 import bpy,bmesh,re,sys
 from pathlib import Path
 from mathutils import Vector,Matrix
@@ -9,9 +9,14 @@ source,art=map(Path,params[:2])
 out=art/'Wearables'/'Iris';out.mkdir(parents=True,exist_ok=True)
 for cast in params[2:] or playable:
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.gltf(filepath=str(source/'Gloves/gloves.gltf'))
+    fitted = source.suffix.lower() == ".fbx"
+    if fitted:
+        bpy.ops.import_scene.fbx(filepath=str(source), use_anim=False, ignore_leaf_bones=False)
+    else:
+        bpy.ops.import_scene.gltf(filepath=str(source/'Gloves/gloves.gltf'))
     old=next(o for o in bpy.context.scene.objects if o.type=='ARMATURE')
-    glove=next(o for o in bpy.context.scene.objects if o.name.endswith('.viewmodel'))
+    glove=next(o for o in bpy.context.scene.objects if o.type=='MESH' and
+               (o.find_armature()==old if fitted else o.name.endswith('.viewmodel')))
     bpy.ops.import_scene.fbx(filepath=str(art/'Characters'/folders[cast]/(cast+'.fbx')),use_anim=False,ignore_leaf_bones=False)
     rig=next(o for o in bpy.context.scene.objects if o.type=='ARMATURE' and o!=old)
     def head(ob,n): return ob.matrix_world@ob.data.bones[n].head_local
@@ -21,17 +26,19 @@ for cast in params[2:] or playable:
         x.normalize();return Matrix((x,y,x.cross(y))).transposed()
     mapping={};seg={}
     for side,long in [('L','Left'),('R','Right')]:
-        origin=head(old,'hand_'+side);new=head(rig,long+'Hand')
-        across=head(old,'finger_index_0_'+side)-head(old,'finger_pinky_0_'+side)
+        def source_bone(gltf, fbx):
+            return long+fbx if fitted else gltf+'_'+side
+        across=head(old,source_bone('finger_index_0','IndexProximal'))-head(old,source_bone('finger_pinky_0','LittleProximal'))
         across2=head(rig,long+'IndexProximal')-head(rig,long+'LittleProximal')
         breadth=across2.length/across.length
         def add(src,dst,tip,dest_tip,previous=None,last=False):
-            key=src+'_'+side;dest=long+dst
+            key=source_bone(src,dst);dest=long+dst
             h=head(old,key);k=head(rig,dest)
+            source_tip=source_bone(previous if last else tip,dest_tip)
             if last:
-                axis=h-head(old,previous+'_'+side);axis2=k-head(rig,long+dest_tip)
+                axis=h-head(old,source_tip);axis2=k-head(rig,long+dest_tip)
             else:
-                axis=head(old,tip+'_'+side)-h;axis2=head(rig,long+dest_tip)-k
+                axis=head(old,source_tip)-h;axis2=head(rig,long+dest_tip)-k
             local=frame(axis,across);dest_frame=frame(axis2,across2)
             length=axis2.length/axis.length
             scale=Matrix.Diagonal(Vector((breadth*1.07,length,breadth*1.07)))
@@ -39,18 +46,21 @@ for cast in params[2:] or playable:
             seg[key]=(h,k,dest_frame@scale@local.transposed())
         add('hand','Hand','finger_middle_0','MiddleProximal')
         add('arm_lower','LowerArm','hand','Hand')
-        for suffix in ('_TWIST','_TWIST1'):
-            key='arm_lower_'+side+suffix;mapping[key]=long+'LowerArm';seg[key]=seg['arm_lower_'+side]
+        if not fitted:
+            for suffix in ('_TWIST','_TWIST1'):
+                key='arm_lower_'+side+suffix;mapping[key]=long+'LowerArm';seg[key]=seg['arm_lower_'+side]
         for f,newf in [('pinky','Little'),('middle','Middle'),('index','Index'),('ring','Ring'),('thumb','Thumb')]:
             for i,ph in enumerate(['Proximal','Intermediate','Distal']):
                 key='finger_'+f+'_'+str(i)
                 add(key,newf+ph,'finger_'+f+'_'+str(i+1),newf+('Intermediate' if i==0 or i==2 else 'Distal'),'finger_'+f+'_1',last=i==2)
-            meta='finger_'+f+'_meta_'+side;mapping[meta]=long+'Hand';seg[meta]=seg['hand_'+side]
+            if not fitted:
+                meta='finger_'+f+'_meta_'+side;mapping[meta]=long+'Hand';seg[meta]=seg['hand_'+side]
     # Remove the original character's bare arms. Only the accessory is transferred.
-    bm=bmesh.new();bm.from_mesh(glove.data)
-    bmesh.ops.delete(bm,geom=[f for f in bm.faces if f.material_index>=2],context='FACES')
-    bmesh.ops.delete(bm,geom=[v for v in bm.verts if not v.link_faces],context='VERTS')
-    bm.to_mesh(glove.data);bm.free()
+    if not fitted:
+        bm=bmesh.new();bm.from_mesh(glove.data)
+        bmesh.ops.delete(bm,geom=[f for f in bm.faces if f.material_index>=2],context='FACES')
+        bmesh.ops.delete(bm,geom=[v for v in bm.verts if not v.link_faces],context='VERTS')
+        bm.to_mesh(glove.data);bm.free()
     source_names=[g.name for g in glove.vertex_groups];weights=[]
     for vertex in glove.data.vertices:
         original=glove.matrix_world@vertex.co;result=Vector((0,0,0));total=0;groups={}

@@ -21,7 +21,7 @@ Shader "Soft Environment/Painted Sky"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.danbaidong/ShaderLibrary/Lighting.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half4 _Zenith, _Horizon, _SunTint;
                 float _Artwork, _Saturation, _ElevationScale, _Rotation, _SunRadius;

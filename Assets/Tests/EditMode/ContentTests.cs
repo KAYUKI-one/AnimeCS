@@ -21,7 +21,7 @@ namespace AnimeCS.Tests
             Assert.That(catalog.Entries.OfType<WeaponDefinition>().Count(), Is.GreaterThanOrEqualTo(12));
             Assert.That(catalog.Entries.OfType<UtilityDefinition>().Select(x => x.Effect).Distinct().Count(), Is.EqualTo(3));
             Assert.That(catalog.SeatOutfits.Where(outfit => outfit.Character.Faction == Side.Attack)
-                .Select(outfit => outfit.Character.Id), Is.EquivalentTo(new[] { "character.flor", "character.blackmiku", "character.laevatain", "character.nora" }));
+                .Select(outfit => outfit.Character.Id), Is.EquivalentTo(new[] { "character.flor", "character.startraveler", "character.firefly", "character.nora" }));
             Assert.That(catalog.SeatOutfits.Where(outfit => outfit.Character.Faction == Side.Defend)
                 .Select(outfit => outfit.Character.Id), Is.EquivalentTo(new[] { "character.mornye", "character.rover", "character.lily", "character.michele" }));
             Assert.That(catalog.Entries.Any(entry => entry && !entry.Archived &&
@@ -68,10 +68,10 @@ namespace AnimeCS.Tests
             var catalog = ContentLibrary.Catalog;
             var profile = WardrobeProfile.Create(catalog);
             var skins = catalog.Entries.OfType<WeaponSkinDefinition>().Take(2).ToArray();
-            profile.current.outfitId = "outfit.blackmiku";
-            profile.current.attackOutfitId = "outfit.blackmiku";
+            profile.current.outfitId = "outfit.startraveler";
+            profile.current.attackOutfitId = "outfit.startraveler";
             profile.current.defendOutfitId = "outfit.lily";
-            profile.presets[0].attackOutfitId = "outfit.laevatain";
+            profile.presets[0].attackOutfitId = "outfit.firefly";
             profile.presets[0].defendOutfitId = "outfit.rover";
             profile.current.skins.Add(new SkinChoice { weaponId = skins[0].Weapon.Id, skinId = skins[0].Id });
             profile.current.skins.Add(new SkinChoice { weaponId = skins[1].Weapon.Id, skinId = skins[0].Id });
@@ -83,12 +83,12 @@ namespace AnimeCS.Tests
                 File.WriteAllText(temp,legacy.Insert(legacy.IndexOf('{')+1,"\"displayMask\":true,"));
                 var copy = store.Load(catalog);
                 Assert.That(copy.current.outfitId, Is.EqualTo(profile.current.outfitId));
-                Assert.That(copy.current.OutfitFor(Side.Attack), Is.EqualTo("outfit.blackmiku"));
+                Assert.That(copy.current.OutfitFor(Side.Attack), Is.EqualTo("outfit.startraveler"));
                 Assert.That(copy.current.OutfitFor(Side.Defend), Is.EqualTo("outfit.lily"));
                 Assert.That(copy.current.SkinFor(skins[0].Weapon.Id), Is.EqualTo(skins[0].Id));
                 Assert.That(copy.current.SkinFor(skins[1].Weapon.Id), Is.Null);
                 Assert.That(copy.presets.Length, Is.EqualTo(2)); Assert.That(copy.presets[0], Is.Not.SameAs(copy.presets[1]));
-                Assert.That(copy.presets[0].OutfitFor(Side.Attack), Is.EqualTo("outfit.laevatain"));
+                Assert.That(copy.presets[0].OutfitFor(Side.Attack), Is.EqualTo("outfit.firefly"));
                 Assert.That(copy.presets[0].OutfitFor(Side.Defend), Is.EqualTo("outfit.rover"));
                 File.WriteAllText(temp, "{"); Assert.That(store.Load(catalog).current.outfitId, Is.EqualTo(profile.current.outfitId));
             }

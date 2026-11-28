@@ -48,7 +48,8 @@ namespace AnimeCS.Editor
             var catalog = ContentLibrary.Catalog;
             var outfits = new List<OutfitDefinition>();
             var cast = PlayableCast();
-            foreach(string oldId in new[]{"character.operator","outfit.station","outfit.nightshift","character.cantarella","outfit.cantarella"})
+            foreach(string oldId in new[]{"character.operator","outfit.station","outfit.nightshift","character.cantarella","outfit.cantarella",
+                "character.blackmiku","outfit.blackmiku","character.laevatain","outfit.laevatain"})
             {var old=catalog.Find<ContentDefinition>(oldId);if(!old)continue;var entry=new SerializedObject(old);entry.FindProperty("_archived").boolValue=true;entry.ApplyModifiedPropertiesWithoutUndo();}
             foreach (var member in cast)
             {
