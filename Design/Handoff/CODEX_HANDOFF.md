@@ -30,23 +30,53 @@
 
 ---
 
-## 二、可直接复制给 Codex 的下一步接续提示词
+## 二、高光/皮肤泛白问题的精确根因诊断（供 Codex 优先修复）
+
+用户实机截图（流萤、莉莉）反馈：**整体服装与深色部分基本达标，但面部/皮肤以及原本偏白的浅色色块（白衣、浅发）叠加光照后仍明显发白发亮，缺乏参考图的柔润通透感。** 经核查 `PBRToonFace.shader`、`PBRToonBase.shader`、`DanbaidongTonemapping.hlsl`、`RenderReviewVolume.asset`、`RenderReviewStage.cs` 与贴图采样，确认由以下 5 个叠加效应共同导致：
+
+1. **多路光照直接相加导致总辐照系数 `> 1.0`（白光堆叠）**：
+   - `PBRToonFace.shader`（L421, 504–506, 567–569, 579, 600–601）与 `PBRToonBase.shader` 中：`最终色 = DirectDiffuse + DirectSpec(含NoseSpec) + PunctualFillDiffuse + IndirectDiffuse + IndirectSpec + RimLight`。
+   - 当前 Studio 参数下，`_key.intensity = 2.20` 与 `_SelfLight = 1.90`（`Ember_Firefly` 甚至仍为 `2.05`）混合后 `dirLight.lightColor ≈ 2.13`，仅主光漫反射项 `2.13 / PI ≈ 0.678`，再加上点光源补光 `_fill`（`intensity = 1.15, baseContribution = 0.22`）、天空 SH 漫反射（`GradientSky.exposure = -1.35`, `_IndirDiffIntensity = 0.45`）、电介质高光 `F * DV + _NoseSpecColor` 与边缘光，**叠加总亮度增益接近 `1.05 ~ 1.25`**。
+   - 此外注意：`PBRToonFace.shader` 第 361 行将 `directOcclusion` 硬编码为 `1`（CBUFFER 里的 `_DirectOcclusion` 仅在 `PBRToonBase.shader` L476 生效，对 `Face` 无效），因此降低 `_DirectOcclusion` 无法压低脸部主光亮度。
+2. **高明度贴图碰上线性空间叠加与逐通道 ToneMapping 去饱和（浅色色块越照越白）**：
+   - 实测贴图：`Lily_T01.png` 平均 RGB `(0.893, 0.770, 0.755)`（`maxLum = 0.960`）；`Firefly_T01.png` 平均 `(0.917, 0.865, 0.856)`（`maxLum = 1.000`）；`Lily_T03.png` 白裙 `maxLum = 0.976`。
+   - 深色布料乘以 `1.15` 仍在合理区间，但浅肤色/白衣/浅发 Linear 本底已达 `0.78–1.00`，乘以 `>1.0` 的叠加光照后整体冲过 `1.0`，进入 `GranTurismoTonemap`（`Common.hlsl` L110–112 逐 R/G/B 通道独立压缩）：当 R 通道先触及 `shoulderStart` 向 `peak = 1.0` 压平时，G/B 通道仍在 `contrast = 1.08` 的线性段上升，导致**高光去饱和漂白**（暖桃肤色褪成白纸色、浅发与白衣褶皱被抹平）。
+3. **`RenderReviewVolume.asset` 对比度与 Bloom 放大泛白**：
+   - `Tonemapping`（`mode = 4`, `contrast = 1.08`, `linearSectionStart = 0.22`, `linearSectionLength = 0.42`）+ `ColorAdjustments`（`contrast = 2`）会抬高中高亮度；`Bloom`（`threshold = 1.18, preFilterScale = 2, intensity = 0.22`）会对超过阈值的白衣/发梢边缘做 `2x` 预滤波放大。
+4. **`v6` `FaceRamp` 阴影底色过浅 + 脸部缺乏立体微阴影**：
+   - `DanbaidongLookMaps.cs` 的 `FaceRamp` 目前 `deepShadow = (0.90, 0.80, 0.83)`、`_ShadowStrength = 0.78`，导致即便是背光半张脸明度也维持在 `~0.83` 以上，整张脸趋于扁平泛白。
+5. **遗漏路径导致 `Ember_Firefly` 等角色未吃上最新预设**：
+   - 实际目录为 `Assets/Content/Art/Characters/Ember_Firefly` 和 `Ember_StarTraveler`（不是 `Firefly` / `StarTraveler`），流萤目前仍残留旧版 `v4` 过亮参数（`_SelfLight = 2.05`, `_DirectRimWidth = 0.85`）。
+
+---
+
+## 三、可直接复制给 Codex 的下一步接续提示词
 
 ```text
-请先阅读 Design/Handoff/CODEX_HANDOFF.md 和 Design/DanbaidongRP_Portable_Pipeline.md，当前 git 分支为 codex/danbaidong-rp。
+请先阅读 Design/Handoff/CODEX_HANDOFF.md（重点看第二节“高光/皮肤泛白问题的精确根因诊断”）和 Design/DanbaidongRP_Portable_Pipeline.md，当前 git 分支为 codex/danbaidong-rp。
 
-当前已完成：
-- DanbaidongRP 最小侵入修复 + 莉莉 & 少前2米什缇（含眼部 eyeblend 透明混合修复、柔和瓷感肤质、材质自适配着色描边、清晰头像 MishtyIcon.png）；
-- RenderReviewStage 建筑感廊柱展厅背景（告别纯黑背景）+ 3/4 侧顶光与 GradientSky 标定；
-- 修复正向走路的 AnimeShowcase.controller 与升级防穿模碰撞体。
+【本轮首要任务：先彻底解决“面部/皮肤及浅色服装头发叠光泛白”，达到蓝色星原式柔润通透质感，不要魔改 DanbaidongRP 核心 Shader】
 
-接下来请专注于“打包验证、展示交互面板增强、动画与物理精修”：
-1. 先执行一轮 EditMode 测试 + Windows 64 位增量打包（Builds/Windows/AnimeCS.exe），确保最新的 RenderReviewStage 建筑展厅背景、米什缇眼部与 v6 着色描边全部进入可执行包且 0 报错。
-2. 展示体验与实时调参面板：保留 FPS 代码不删除，可在大厅一键直达（或默认进入）Render Review，并在 Render Review 面板增加：
-   - 主光源水平角 / 俯仰角滑块，方便实时旋转光照检查 Face SDF 与刘海阴影；
-   - 描边粗细 / 边缘光强度 / Bloom 强度的实时预览滑块；
-   - 展厅背景切换（建筑棚拍 / 户外天空 / 深色逆光）。
-3. 动画与表情进一步升级：为 Assets/Resources/AnimeShowcase.controller 引入更自然的二次元 RPG 动作（含眨眼 BlendShape、轻松待机呼吸、自然慢走/跑动/转身过渡），保持 RenderReviewTests 通过。
-4. 防穿模物理实机精修：检查莉莉麻花辫/头纱与米什缇头发/裙摆在「漫步」「跑动」「转身」下的贴合度，微调 HumanoidSecondaryMotion.cs 中前刘海角度上限与肩胸/大腿胶囊尺寸。
-5. 每次完成阶段后把最新改动与验证结果追加到 Design/Handoff/CODEX_HANDOFF.md。
+请按以下具体方案逐项落地并截屏对比验证（同时兼顾 莉莉 / 米什缇 / 流萤）：
+1. 压住白光堆叠与总曝光上限（目标：受光面部与白衣在 HDR Linear 中保持在 ~0.72~0.85，留出高光与红晕层次，不冲破 1.0）：
+   - 在 Assets/Scripts/Presentation/Lobby/RenderReviewStage.cs：
+     * 降低主光与补光叠加总量：Studio _key.intensity 从 2.20 降到 ~1.45~1.55（Daylight ~1.70，Rim ~1.25）；
+     * 将阴影侧 _fill 的 baseContribution 从 0.22 降到 0.08~0.10（或 _fill.intensity 降至 0.65），避免正面/侧面多光源漫反射反复相加冲白；
+     * 适当回调 GradientSky.exposure（如 Studio -1.65 EV，Daylight -1.15 EV），让暗部靠天空 SH 保留通透色彩而非整体提白。
+   - 在 Assets/Editor/DanbaidongCharacterPipeline/DanbaidongMaterialPreset.cs：
+     * 降低材质 _SelfLight（从 1.90 降到 ~1.35~1.42），防止 _MainLightColorLerp 把方向光抬高；
+     * 对 Face / Skin / 浅色高明度贴图增加柔和的 _BaseColor 轻微暖肉调压白保护（例如 Face/Skin 若贴图平均亮度 > 0.80，给一个温和防过曝系数 ~0.88~0.92 + 极淡桃色偏转 (0.94, 0.90, 0.88)，浅白布料/浅发最高控制在 ~0.88~0.92），让高光不再一照就成纯白块；
+     * Face / Skin 进一步收敛诱发泛白的附加高光：_IndirSpecIntensity = 0.01~0.02、_Smoothness = 0.02、_NoseSpecColor.a 降至 0.08、_DirectRimFrontCol 强度降至 0.22~0.28；Face/Skin 的 _ShadowStrength 调回 ~0.85~0.90，配合柔润但不苍白的暖蜜桃 sRGB FaceRamp/SkinRamp（deepShadow 约 (0.83, 0.69, 0.72), sssBand 约 (0.94, 0.80, 0.77)）恢复面颊红晕与鼻下/颈部立体柔和暗部；
+     * 注意在 PBRToonFace.shader 中 _DirectOcclusion 未参与计算（L361 为常量 1），请通过 _SelfLight、_BaseColor、_ShadowRampTex、_IndirDiffIntensity 与场景灯光强度来控制面部亮度，不要修改 DanbaidongRP Shader。
+2. 调整后处理曲线避免逐通道压白（Assets/Settings/RenderReviewVolume.asset）：
+   - GranTurismo Tonemapping 目前 contrast = 1.08 且 ColorAdjustments.contrast = 2 会把中高亮往白推：请把 Tonemapping.contrast 降到 ~0.95~1.00，linearSectionStart ~0.18，linearSectionLength ~0.48~0.55，ColorAdjustments.contrast 设为 0，Bloom.intensity 降至 ~0.12（preFilterScale 降至 1.0，threshold 提高到 1.35~1.50），保证只有真正的金属高光和自发光才会泛光，白衣和脸颊绝不溢白。
+3. 补齐全部角色的预设刷新（修正之前漏掉目录名的问题）：
+   - 对 Assets/Content/Art/Characters/ 下全部实际目录（Aegis_Lily、GFL2_Mishty、Ember_Firefly、Ember_StarTraveler 等）统一重新生成 Ramp 并重跑 DanbaidongMaterialPreset.Apply（注意保留 Mishty_Lash_04 眼睑叠加层的 DstColor / OneMinusSrcAlpha 透明混合与蕾丝 AlphaClip）。
+   - 用 RenderReviewStage 在 Studio / Daylight 光照下分别截取 莉莉、流萤、米什缇 对比图并用 read_file 肉眼确认面部肤色柔和有层次、白衣与浅发褶皱分明。
+
+【完成泛白修复后，再继续推进展示体验与动画物理】
+4. 运行 EditMode 测试、PlayMode (RenderReviewTests) 与 Windows 64 位增量打包（Builds/Windows/AnimeCS.exe），确保 0 报错且打包生效。
+5. 展示体验与实时调参面板：保留 FPS 代码不删除，可在大厅一键直达或默认进入 Render Review，并在面板增加主光角度（水平/俯仰）、描边粗细、边缘光强度、Bloom/曝光实时滑块。
+6. 动画与防穿模精修：为 AnimeShowcase.controller 引入更自然的二次元 RPG 待机/眨眼/走跑动画，并在实机「漫步」「跑动」「转身」下微调 HumanoidSecondaryMotion.cs 防穿模参数。
+7. 每次完成阶段后把最新改动与验证结果追加到 Design/Handoff/CODEX_HANDOFF.md。
 ```
