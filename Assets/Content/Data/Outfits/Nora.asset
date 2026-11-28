@@ -47,7 +47,7 @@ MonoBehaviour:
   - source: {fileID: 512210313034403653, guid: d2809ec58baae3f40805d9dcad6672b6, type: 3}
     partitioned: {fileID: 4300000, guid: 2f360be4588012f4f89aaa2065cc5525, type: 2}
     firstPersonLower: {fileID: 0}
-    firstPersonVisible:
+    firstPersonVisible: 
     soleAnchors: []
     lowerMaterialSlots: 
     materials:

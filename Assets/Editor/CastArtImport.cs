@@ -233,6 +233,15 @@ namespace AnimeCS.Editor
                     m = new Material(Shader.Find("Universal Render Pipeline/Lit"));
                     m.name = original.name;
                     var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/" + original.name + ".png");
+                    if (!texture && character)
+                    {
+                        string actor = Path.GetFileNameWithoutExtension(path);
+                        if (original.name.EndsWith("_Lash", StringComparison.OrdinalIgnoreCase))
+                            texture = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/" + actor + "_T01.png");
+                        else if (original.name.EndsWith("_Skin", StringComparison.OrdinalIgnoreCase) ||
+                                 original.name.EndsWith("_Stockings", StringComparison.OrdinalIgnoreCase))
+                            texture = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/" + actor + "_T03.png");
+                    }
                     Color tint = Color.white;
                     if (!texture && !ColorUtility.TryParseHtmlString("#" + original.name.Split('_').Last(), out tint)) tint = Color.white;
                     m.SetColor("_BaseColor", tint);
@@ -305,6 +314,14 @@ namespace AnimeCS.Editor
                 importer.SaveAndReimport();
             }
             var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (material.shader.name.StartsWith("DanbaidongRP/PBRToon/", StringComparison.Ordinal))
+            {
+                if (!material.HasProperty("_NormalMap") || material.GetTexture("_NormalMap") == texture) return;
+                material.SetTexture("_NormalMap", texture);
+                material.SetFloat("_NormalScale", .35f);
+                EditorUtility.SetDirty(material);
+                return;
+            }
             bool toon = StylizedCharacters.Editor.CharacterToonMaterial.IsPrepared(material);
             if (material.GetTexture("_BumpMap") == texture &&
                 (toon ? material.GetFloat("_UseBumpMap")>.5f : material.IsKeywordEnabled("_NORMALMAP"))) return;

@@ -124,11 +124,11 @@ Material:
     - _Cutoff: 0.24
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
-    - _DirectOcclusion: 0.1
+    - _DirectOcclusion: 0.04
     - _DirectRimWidth: 0.78
     - _DstBlend: 0
     - _DstBlendAlpha: 0
-    - _EnvColorLerp: 0.25
+    - _EnvColorLerp: 0.15
     - _EnvironmentReflections: 1
     - _FaceSdfUV3: 0
     - _FoldoutDirectLight: 0
@@ -147,19 +147,19 @@ Material:
     - _FoldoutShadowRampEnd: 0
     - _FoldoutTex: 0
     - _FoldoutTexEnd: 0
-    - _FringeShadowWeight: 0.19
+    - _FringeShadowWeight: 0.18
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _INDIR_CUBEMAP: 0
-    - _IndirDiffIntensity: 0.59
-    - _IndirDiffUpDirSH: 0
+    - _IndirDiffIntensity: 0.52
+    - _IndirDiffUpDirSH: 0.1
     - _IndirSpecCubeWeight: 0.5
-    - _IndirSpecIntensity: 0.38
-    - _MainLightColorLerp: 0.24
+    - _IndirSpecIntensity: 0.42
+    - _MainLightColorLerp: 0.28
     - _Metallic: 0
     - _NormalScale: 1
-    - _Occlusion: 1
+    - _Occlusion: 0.2
     - _OcclusionStrength: 1
     - _OutLineNormalSource: 1
     - _OutlineClampScale: 1
@@ -167,20 +167,20 @@ Material:
     - _OutlinePunctualLightingOffset: -1
     - _OutlineWidth: 0.53
     - _Parallax: 0.005
-    - _ParallaxMaskEdge: 0.8
-    - _ParallaxMaskEdgeOffset: 0.2
-    - _ParallaxScale: 0.006
+    - _ParallaxMaskEdge: 0.78
+    - _ParallaxMaskEdgeOffset: 0.22
+    - _ParallaxScale: 0.032
     - _PunctualRimWidth: 0.72
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _ReceiveTracedReflections: 1
     - _SHADOW_RAMP: 1
-    - _SceneShadowWeight: 0.21
-    - _ShadowOffset: 0.54
-    - _ShadowSmoothNdotL: 0.13
-    - _ShadowSmoothScene: 0.038
-    - _ShadowStrength: 0.4
-    - _Smoothness: 0.52
+    - _SceneShadowWeight: 0
+    - _ShadowOffset: 0.48
+    - _ShadowSmoothNdotL: 0.42
+    - _ShadowSmoothScene: 0.16
+    - _ShadowStrength: 0.42
+    - _Smoothness: 0.62
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -203,9 +203,9 @@ Material:
     - _OutlineColor: {r: 0.1, g: 0.085, b: 0.11, a: 0.88}
     - _OutlineDirectLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
     - _OutlinePunctualLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
-    - _SelfEnvColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-    - _SelfLight: {r: 1, g: 1, b: 1, a: 1}
-    - _ShadowColor: {r: 0.78, g: 0.75, b: 0.84, a: 1}
+    - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
+    - _SelfLight: {r: 2.05, g: 2, b: 1.97, a: 1}
+    - _ShadowColor: {r: 0.78, g: 0.76, b: 0.86, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

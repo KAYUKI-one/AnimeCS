@@ -1,5 +1,7 @@
 using System;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 namespace UnityEngine.Rendering.Universal
 {
@@ -104,6 +106,8 @@ namespace UnityEngine.Rendering.Universal
             }
         }
 
+        private static Material s_RuntimeFallbackMaterial;
+
         void InitMaterial()
         {
             if (m_Material == null)
@@ -111,8 +115,23 @@ namespace UnityEngine.Rendering.Universal
 #if UNITY_EDITOR
                 m_Material = defaultMaterial;
 #endif
+                if (m_Material == null)
+                {
+                    if (s_RuntimeFallbackMaterial == null)
+                    {
+                        var shader = Shader.Find("PerObjectShadow/ShadowProjector");
+                        if (shader != null)
+                        {
+                            s_RuntimeFallbackMaterial = new Material(shader)
+                            {
+                                name = "PerObjectShadowRuntimeDefault",
+                                hideFlags = HideFlags.HideAndDontSave
+                            };
+                        }
+                    }
+                    m_Material = s_RuntimeFallbackMaterial;
+                }
             }
-
         }
 
         /// <summary>
@@ -120,19 +139,30 @@ namespace UnityEngine.Rendering.Universal
         /// </summary>
         public void CollectRenderers()
         {
-            m_Renderers = this.gameObject.GetComponentsInChildren<Renderer>();
+            var all = this.gameObject.GetComponentsInChildren<Renderer>();
+            var casters = new System.Collections.Generic.List<Renderer>(all.Length);
+            for (int i = 0; i < all.Length; i++)
+            {
+                if (all[i] != null && all[i].shadowCastingMode != ShadowCastingMode.Off)
+                    casters.Add(all[i]);
+            }
+            m_Renderers = casters.ToArray();
             ExcludeMeshRenderersRenderingLayers();
             m_IsCollected = true;
         }
 
         private void ExcludeMeshRenderersRenderingLayers()
         {
-            if (excludeLayer != 0 && m_Renderers.Length > 0)
+            uint mask = excludeLayer.value;
+            if (mask == 0 && UniversalRenderPipeline.asset != null)
+                mask = UniversalRenderPipeline.asset.perObjectShadowExcludeLayer.value;
+            if (mask != 0 && m_Renderers != null && m_Renderers.Length > 0)
             {
                 for (int i = 0; i < m_Renderers.Length; i++)
                 {
                     var renderer = m_Renderers[i];
-                    renderer.renderingLayerMask = renderer.renderingLayerMask & ~excludeLayer.value;
+                    if (renderer != null)
+                        renderer.renderingLayerMask = renderer.renderingLayerMask & ~mask;
                 }
             }
         }

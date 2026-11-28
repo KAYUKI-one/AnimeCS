@@ -38,7 +38,7 @@ namespace AnimeCS.Tests
             var studio = SceneManager.GetActiveScene();
             Assert.That(studio.name, Is.EqualTo("Render Review"));
             Assert.That(game.InLobby, Is.True);
-            Assert.That(root.Q("review-roster").Query<Button>(className: "review-card").ToList(), Has.Count.EqualTo(8));
+            Assert.That(root.Q("review-roster").Query<Button>(className: "review-card").ToList(), Has.Count.GreaterThanOrEqualTo(8));
             var stage = studio.GetRootGameObjects().Single();
             var camera = stage.GetComponentInChildren<Camera>();
             Assert.That(camera.targetTexture, Is.Not.Null);

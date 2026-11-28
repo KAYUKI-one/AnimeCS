@@ -13,25 +13,25 @@ MonoBehaviour:
   m_Name: SecondaryMotion
   m_EditorClassIdentifier: StylizedCharacters.Runtime::StylizedCharacters.SecondaryMotionProfile
   simulationRate: 120
-  iterations: 4
+  iterations: 6
   fadeInSeconds: 0.12
-  gravity: {x: 0, y: -0.75, z: 0}
+  gravity: {x: 0, y: -0.65, z: 0}
   hair:
-    stiffness: 260
-    dampingAt60Hz: 0.33
-    inertia: 0.62
-    swingDegrees: 34
-    angularSpeed: 420
-    travelSpeed: 3.4
-    radiusScale: 0.13
-  skirt:
-    stiffness: 370
-    dampingAt60Hz: 0.47
+    stiffness: 340
+    dampingAt60Hz: 0.42
     inertia: 0.48
-    swingDegrees: 30
-    angularSpeed: 350
-    travelSpeed: 2.5
-    radiusScale: 0.13
+    swingDegrees: 22
+    angularSpeed: 360
+    travelSpeed: 2.6
+    radiusScale: 0.18
+  skirt:
+    stiffness: 420
+    dampingAt60Hz: 0.52
+    inertia: 0.40
+    swingDegrees: 22
+    angularSpeed: 320
+    travelSpeed: 2.2
+    radiusScale: 0.18
   sleeve:
     stiffness: 410
     dampingAt60Hz: 0.5

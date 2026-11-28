@@ -2355,7 +2355,7 @@ Mesh:
     e31: 0
     e32: 0
     e33: 1
-  m_BoneNameHashes:
+  m_BoneNameHashes: 
   m_RootBoneNameHash: 0
   m_BonesAABB:
   - m_Min: {x: -0.12755731, y: -0.8469777, z: -0.28491974}

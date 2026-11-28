@@ -1,0 +1,12 @@
+{
+  "name": "com.unity.render-pipelines.danbaidong-config",
+  "description": "Configuration files for the Universal Render Pipeline.",
+  "version": "17.0.3",
+  "unity": "6000.0",
+  "displayName": "Danbaidong RP Config",
+  "author": {
+    "name": "Danbaidong",
+    "url": "https://github.com/danbaidong1111"
+  },
+  "_fingerprint": "71278bf6acd7c443b52db4d6bbfb45515ee19ebc"
+}

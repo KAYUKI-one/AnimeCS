@@ -12,7 +12,7 @@
     "com.unity.render-pipelines.universal": "file:com.unity.render-pipelines.universal",
     "com.unity.render-pipelines.core": "17.5.0",
     "com.unity.render-pipelines.danbaidong": "file:com.unity.render-pipelines.danbaidong",
-    "com.unity.render-pipelines.danbaidong-config": "https://github.com/danbaidong1111/DanbaidongRPConfig.git#71278bf6acd7c443b52db4d6bbfb45515ee19ebc",
+    "com.unity.render-pipelines.danbaidong-config": "file:com.unity.render-pipelines.danbaidong-config",
     "com.unity.springbone": "file:com.unity.springbone",
     "com.unity.test-framework": "1.7.0",
     "com.unity.timeline": "1.8.12",

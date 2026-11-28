@@ -45,19 +45,85 @@ MonoBehaviour:
     m_Value: 1
   contrast:
     m_OverrideState: 1
-    m_Value: 1.11
+    m_Value: 1.08
   linearSectionStart:
     m_OverrideState: 1
-    m_Value: 0.2
+    m_Value: 0.22
   linearSectionLength:
     m_OverrideState: 1
-    m_Value: 0.4
+    m_Value: 0.42
   blackPow:
     m_OverrideState: 1
-    m_Value: 1.29
+    m_Value: 1.22
   blackMin:
     m_OverrideState: 1
     m_Value: 0
+--- !u!114 &-3772422397772543882
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8122adf7f8d6c8f44b1420d64206613d, type: 3}
+  m_Name: Shadows
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.Shadows
+  active: 1
+  rayTracing:
+    m_OverrideState: 1
+    m_Value: 0
+  dirShadowsRayLength:
+    m_OverrideState: 1
+    m_Value: 1000
+  dirShadowPenumbra:
+    m_OverrideState: 1
+    m_Value: 0
+  characterLayerMask:
+    m_OverrideState: 1
+    m_Value:
+      serializedVersion: 2
+      m_Bits: 0
+  characterNormalOffset:
+    m_OverrideState: 1
+    m_Value: 0.001
+  characterHalfDirScale:
+    m_OverrideState: 1
+    m_Value: 0.8
+  intensity:
+    m_OverrideState: 1
+    m_Value: 1
+  penumbra:
+    m_OverrideState: 1
+    m_Value: 0.42
+  perObjectShadowPenumbra:
+    m_OverrideState: 1
+    m_Value: 0.24
+  shadowScatterMode:
+    m_OverrideState: 1
+    m_Value: 2
+  shadowRampTex:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: afea1fed01220fc4491569f42c01f3f4, type: 3}
+  scatterR:
+    m_OverrideState: 1
+    m_Value: 0.28
+  scatterG:
+    m_OverrideState: 1
+    m_Value: 0.1
+  scatterB:
+    m_OverrideState: 1
+    m_Value: 0.08
+  occlusionPenumbra:
+    m_OverrideState: 1
+    m_Value: 0.55
+  denoiser:
+    m_OverrideState: 1
+    m_Value: 1
+  edgeAvoidingWaveletBlur:
+    m_OverrideState: 1
+    m_Value: 1
 --- !u!114 &-3199591903875839311
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -73,10 +139,10 @@ MonoBehaviour:
   active: 1
   postExposure:
     m_OverrideState: 1
-    m_Value: -0.03
+    m_Value: 0
   contrast:
     m_OverrideState: 1
-    m_Value: -4
+    m_Value: 2
   colorFilter:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
@@ -107,22 +173,22 @@ MonoBehaviour:
     m_Value: 2
   threshold:
     m_OverrideState: 1
-    m_Value: 1.12
+    m_Value: 1.18
   intensity:
     m_OverrideState: 1
-    m_Value: 0.08
+    m_Value: 0.22
   lumRnageScale:
     m_OverrideState: 1
-    m_Value: 0.2
+    m_Value: 0.22
   preFilterScale:
     m_OverrideState: 1
-    m_Value: 1.2
+    m_Value: 2
   blurCompositeWeight:
     m_OverrideState: 1
     m_Value: {x: 0.3, y: 0.3, z: 0.26, w: 0.15}
   scatter:
     m_OverrideState: 1
-    m_Value: 0.47
+    m_Value: 0.58
   clamp:
     m_OverrideState: 1
     m_Value: 65472
@@ -161,3 +227,4 @@ MonoBehaviour:
   - {fileID: -894571636021437849}
   - {fileID: -3199591903875839311}
   - {fileID: -4958756502060872701}
+  - {fileID: -3772422397772543882}

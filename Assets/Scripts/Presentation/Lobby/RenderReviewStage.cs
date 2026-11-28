@@ -12,19 +12,21 @@ namespace AnimeCS.Play
 {
     internal sealed class RenderReviewStage : IDisposable
     {
-        internal enum Motion { Idle, Run, Crouch }
+        internal enum Motion { Idle, Run, Crouch, Walk, Pose }
         internal enum Lighting { Studio, Daylight, Rim }
 
         private readonly Scene _scene, _previousScene;
         private readonly GameObject _root;
         private readonly Camera _camera;
         private readonly Light _key, _fill, _rim;
-        private readonly Material _floor, _plinth;
+        private readonly Material _floor, _plinth, _accentWall, _trimMetal;
         private readonly Mesh _backdrop;
         private readonly VolumeProfile _environment;
         private readonly GradientSky _sky;
         private readonly int _layer;
         private readonly MatchPresentation _style;
+        private readonly RuntimeAnimatorController _showcaseController;
+        private Animator _avatarAnimator;
         private GameObject _avatar;
         private CharacterRig _rig;
         private RenderTexture _texture;
@@ -37,6 +39,7 @@ namespace AnimeCS.Play
         internal RenderReviewStage(MatchPresentation style)
         {
             _style = style;
+            _showcaseController = Resources.Load<RuntimeAnimatorController>("AnimeShowcase");
             _layer = LayerMask.NameToLayer("Render Review");
             if (_layer < 0) throw new InvalidOperationException("缺少 Render Review 图层。");
             _previousScene = SceneManager.GetActiveScene();
@@ -46,7 +49,7 @@ namespace AnimeCS.Play
             _camera = Add("Render Review Camera").AddComponent<Camera>();
             _camera.enabled = false;
             _camera.depth = -10f;
-            _camera.clearFlags = CameraClearFlags.SolidColor;
+            _camera.clearFlags = CameraClearFlags.Skybox;
             _camera.cullingMask = 1 << _layer;
             _camera.allowMSAA = false;
             _camera.nearClipPlane = .035f;
@@ -61,19 +64,47 @@ namespace AnimeCS.Play
             var lit = Shader.Find("Universal Render Pipeline/Lit");
             _floor = new Material(lit) { name = "Review floor" };
             _plinth = new Material(lit) { name = "Review platform" };
-            _floor.SetFloat("_Smoothness", .12f);
-            _plinth.SetFloat("_Smoothness", .24f);
+            _accentWall = new Material(lit) { name = "Review gallery wall" };
+            _trimMetal = new Material(lit) { name = "Review trim metal" };
+            _floor.SetFloat("_Smoothness", .16f);
+            _plinth.SetFloat("_Smoothness", .28f);
+            _accentWall.SetFloat("_Smoothness", .10f);
+            _trimMetal.SetFloat("_Metallic", .75f);
+            _trimMetal.SetFloat("_Smoothness", .62f);
+
             var backdrop = Add("Curved studio backdrop");
             _backdrop = CreateBackdrop();
             backdrop.AddComponent<MeshFilter>().sharedMesh = _backdrop;
             var backdropRenderer = backdrop.AddComponent<MeshRenderer>();
             backdropRenderer.sharedMaterial = _floor;
             backdropRenderer.shadowCastingMode = ShadowCastingMode.Off;
-            Surface(PrimitiveType.Cylinder, "Turntable platform", Vector3.down * .045f, new Vector3(1.88f, .045f, 1.88f), _plinth);
+            backdropRenderer.renderingLayerMask = 3u;
+
+            // Tiered architectural showcase pedestal + gallery colonnade (inspired by DanbaidongRP Suomi/Vepley showcase room)
+            Surface(PrimitiveType.Cylinder, "Turntable base", Vector3.down * .065f, new Vector3(2.26f, .035f, 2.26f), _accentWall, receiveShadows: true);
+            Surface(PrimitiveType.Cylinder, "Turntable trim", Vector3.down * .032f, new Vector3(1.98f, .008f, 1.98f), _trimMetal, receiveShadows: false);
+            Surface(PrimitiveType.Cylinder, "Turntable platform", Vector3.down * .018f, new Vector3(1.90f, .018f, 1.90f), _plinth, receiveShadows: true);
+            BuildGalleryStage();
+
             _key = Lamp("Key", LightType.Directional, Vector3.zero);
             _key.shadows = LightShadows.Soft;
-            _fill = Lamp("Fill", LightType.Point, new Vector3(2.0f, 1.6f, 2.3f));
-            _rim = Lamp("Rim", LightType.Point, new Vector3(-1.5f, 2.3f, -1.7f));
+            var keyData = _key.GetUniversalAdditionalLightData();
+            keyData.customShadowLayers = true;
+            keyData.shadowRenderingLayers = 1u << 1; // MainLightShadows
+            keyData.renderingLayers = 1u;
+            keyData.angularDiameter = 2.2f;
+            _fill = Lamp("Fill", LightType.Point, new Vector3(-2.4f, 1.35f, 0.9f));
+            var fillData = _fill.GetUniversalAdditionalLightData();
+            fillData.shapeRadius = 0.85f;
+            fillData.baseContribution = 0.22f;
+            fillData.rimContribution = 0.12f;
+            fillData.outlineContribution = 0f;
+            _rim = Lamp("Rim", LightType.Point, new Vector3(-1.6f, 2.25f, -1.9f));
+            var rimData = _rim.GetUniversalAdditionalLightData();
+            rimData.shapeRadius = 0.35f;
+            rimData.baseContribution = 0.0f;
+            rimData.rimContribution = 1.0f;
+            rimData.outlineContribution = 0.55f;
             RenderSettings.sun = _key;
             RenderSettings.skybox = null;
             RenderSettings.fog = false;
@@ -112,20 +143,58 @@ namespace AnimeCS.Play
             return lamp;
         }
 
-        private void Surface(PrimitiveType primitive, string name, Vector3 position, Vector3 size, Material material)
+        private void Surface(
+            PrimitiveType primitive, string name, Vector3 position, Vector3 size, Material material,
+            bool receiveShadows = true, bool castShadows = false, Vector3 eulerAngles = default)
         {
             var surface = GameObject.CreatePrimitive(primitive);
             surface.name = name;
             surface.layer = _layer;
             surface.transform.SetParent(_root.transform, false);
             surface.transform.localPosition = position;
+            surface.transform.localEulerAngles = eulerAngles;
             surface.transform.localScale = size;
             var collider = surface.GetComponent<Collider>();
             collider.enabled = false;
             Object.Destroy(collider);
             var renderer = surface.GetComponent<MeshRenderer>();
             renderer.sharedMaterial = material;
-            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.shadowCastingMode = castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
+            renderer.renderingLayerMask = receiveShadows ? 3u : 1u;
+        }
+
+        private void BuildGalleryStage()
+        {
+            // Clean architectural showcase backdrop behind the character (-Z) so silhouettes & colored anime outlines
+            // read with crisp depth and gallery atmosphere rather than floating in a black void.
+            const float radius = 4.6f;
+            const int pillarCount = 5;
+            for (int i = 0; i < pillarCount; i++)
+            {
+                float angleDeg = Mathf.Lerp(-54f, 54f, i / (pillarCount - 1f));
+                float rad = angleDeg * Mathf.Deg2Rad;
+                var pos = new Vector3(Mathf.Sin(rad) * radius, 2.05f, -Mathf.Cos(rad) * radius);
+                var rot = new Vector3(0f, -angleDeg, 0f);
+                Surface(PrimitiveType.Cube, $"Gallery Pillar {i}", pos, new Vector3(.34f, 4.3f, .34f), _plinth, true, true, rot);
+                Surface(PrimitiveType.Cube, $"Gallery Pillar Trim {i}", new Vector3(pos.x, .36f, pos.z), new Vector3(.42f, .05f, .42f), _trimMetal, false, false, rot);
+            }
+
+            // Soft curved gallery wall panels behind the pillars (spaced cleanly so the luminous GradientSky shines through!)
+            const int panelCount = 4;
+            for (int i = 0; i < panelCount; i++)
+            {
+                float angleDeg = Mathf.Lerp(-40.5f, 40.5f, i / (panelCount - 1f));
+                float rad = angleDeg * Mathf.Deg2Rad;
+                var pos = new Vector3(Mathf.Sin(rad) * (radius + .65f), 1.35f, -Mathf.Cos(rad) * (radius + .65f));
+                var rot = new Vector3(0f, -angleDeg, 0f);
+                Surface(PrimitiveType.Cube, $"Gallery Panel {i}", pos, new Vector3(1.85f, 2.7f, .18f), _accentWall, true, false, rot);
+                Surface(PrimitiveType.Cube, $"Gallery Wainscot {i}", new Vector3(pos.x, 2.72f, pos.z), new Vector3(1.90f, .05f, .24f), _trimMetal, false, false, rot);
+            }
+
+            // Overhead gallery lintel casting a natural soft architectural light-beam angle across the backdrop
+            Surface(PrimitiveType.Cube, "Gallery Lintel", new Vector3(0f, 4.28f, -radius + .15f), new Vector3(9.4f, .26f, .72f), _plinth, true, true);
+            Surface(PrimitiveType.Cube, "Gallery Side Wing L", new Vector3(-4.8f, 1.45f, -1.8f), new Vector3(.22f, 2.9f, 3.6f), _accentWall, true, false, new Vector3(0f, -24f, 0f));
+            Surface(PrimitiveType.Cube, "Gallery Side Wing R", new Vector3(4.8f, 1.45f, -1.8f), new Vector3(.22f, 2.9f, 3.6f), _accentWall, true, false, new Vector3(0f, 24f, 0f));
         }
 
         private static Mesh CreateBackdrop()
@@ -146,6 +215,7 @@ namespace AnimeCS.Play
                     if (ring == rings - 1) continue;
                     int next = ring * sides + (side + 1) % sides;
                     int triangle = index * 6;
+                    // Left-handed CW winding: Cross(next - index, up - index) points +Y on floor and inward on wall.
                     indices[triangle] = index;
                     indices[triangle + 1] = next;
                     indices[triangle + 2] = index + sides;
@@ -165,9 +235,13 @@ namespace AnimeCS.Play
             _avatar = AppearancePresenter.NewRoot(outfit.DisplayName, _root.transform);
             var definition = outfit.Character;
             var body = AppearancePresenter.AddVisual(definition.Model, _avatar.transform, Vector3.zero);
-            _rig = new CharacterRig(body, definition, outfit.PoseController, true, outfit.Regions(false), _style.secondaryMotion);
+            _rig = new CharacterRig(body, definition, _showcaseController ? _showcaseController : outfit.PoseController, true, outfit.Regions(false), _style.secondaryMotion);
             _rig.BindClothing(AppearancePresenter.AddVisual(outfit.Model, _avatar.transform, Vector3.zero));
+            _avatarAnimator = body.GetComponentInChildren<Animator>(true);
             foreach (var item in _avatar.GetComponentsInChildren<Transform>(true)) item.gameObject.layer = _layer;
+            var projector = _avatar.AddComponent<PerObjectShadowProjector>();
+            projector.farPlaneScale = 4f;
+            projector.CollectRenderers();
             _turn = _targetTurn = _elapsed = _crouch = 0f;
             _avatar.SetActive(true);
         }
@@ -176,20 +250,39 @@ namespace AnimeCS.Play
         {
             bool day = lighting == Lighting.Daylight;
             bool rim = lighting == Lighting.Rim;
-            _camera.backgroundColor = day ? new Color(.34f, .42f, .52f) : new Color(.075f, .10f, .15f);
-            _floor.color = day ? new Color(.38f, .45f, .51f) : new Color(.19f, .23f, .30f);
-            _plinth.color = day ? new Color(.45f, .51f, .57f) : new Color(.29f, .35f, .44f);
-            RenderSettings.ambientLight = day ? new Color(.64f, .69f, .76f) : new Color(.48f, .52f, .62f);
-            _sky.top.value = day ? new Color(.45f, .57f, .72f) : new Color(.30f, .35f, .43f);
-            _sky.middle.value = new Color(.38f, .39f, .42f);
-            _sky.bottom.value = new Color(.16f, .17f, .19f);
-            _key.color = day ? new Color(1f, .94f, .84f) : new Color(1f, .95f, .88f);
-            _key.intensity = day ? .96f : rim ? .63f : .88f;
-            _key.transform.rotation = Quaternion.Euler(day ? 37f : 24f, rim ? 28f : day ? 216f : 158f, 0f);
-            _fill.color = new Color(.85f, .91f, 1f);
-            _fill.intensity = rim ? 1.8f : 2.35f;
-            _rim.color = rim ? new Color(.58f, .77f, 1f) : new Color(.75f, .86f, 1f);
-            _rim.intensity = rim ? 6f : 3.3f;
+            // Official DanbaidongRP SkySystem + 3-point lighting:
+            // Control ambient SH irradiance via GradientSky.exposure (EV stops) with top-to-bottom color contrast,
+            // pair with a mid-bright neutral studio cyc (so colored anime outlines read cleanly instead of vanishing into black!),
+            // and place Key at 3/4 side-top + shadow-side Fill + subtle back Rim!
+            _camera.backgroundColor = day ? new Color(.56f, .64f, .74f) : rim ? new Color(.10f, .13f, .22f) : new Color(.36f, .40f, .48f);
+            _floor.color = day ? new Color(.72f, .75f, .80f) : rim ? new Color(.22f, .26f, .36f) : new Color(.58f, .61f, .68f);
+            _plinth.color = day ? new Color(.84f, .85f, .88f) : rim ? new Color(.30f, .34f, .45f) : new Color(.72f, .74f, .80f);
+            _accentWall.color = day ? new Color(.74f, .77f, .84f) : rim ? new Color(.20f, .24f, .36f) : new Color(.56f, .60f, .68f);
+            _trimMetal.color = day ? new Color(.88f, .82f, .68f) : rim ? new Color(.44f, .74f, .88f) : new Color(.84f, .80f, .72f);
+            // Gentle studio bounce emission on architectural backdrop so shadow-facing gallery panels stay airy slate-blue instead of pitch black!
+            SetArchitecturalFill(_floor, day ? new Color(.14f, .16f, .20f) : rim ? new Color(.03f, .04f, .08f) : new Color(.09f, .11f, .15f));
+            SetArchitecturalFill(_plinth, day ? new Color(.18f, .20f, .24f) : rim ? new Color(.04f, .05f, .10f) : new Color(.12f, .14f, .19f));
+            SetArchitecturalFill(_accentWall, day ? new Color(.18f, .21f, .28f) : rim ? new Color(.04f, .06f, .12f) : new Color(.12f, .14f, .20f));
+            RenderSettings.ambientLight = day ? new Color(.34f, .38f, .46f) : rim ? new Color(.14f, .16f, .24f) : new Color(.24f, .27f, .34f);
+            _sky.skyIntensityMode.Override(SkyIntensityMode.Exposure);
+            _sky.exposure.Override(day ? -0.85f : rim ? -1.95f : -1.35f);
+            _sky.top.Override(day ? new Color(.44f, .58f, .82f) : rim ? new Color(.16f, .26f, .46f) : new Color(.28f, .35f, .50f));
+            _sky.middle.Override(day ? new Color(.62f, .60f, .58f) : rim ? new Color(.22f, .18f, .30f) : new Color(.36f, .36f, .40f));
+            _sky.bottom.Override(day ? new Color(.22f, .20f, .22f) : new Color(.10f, .10f, .14f));
+            _key.color = day ? new Color(1f, .96f, .90f) : rim ? new Color(.98f, .95f, 1f) : new Color(1f, .97f, .94f);
+            _key.intensity = day ? 2.55f : rim ? 1.80f : 2.20f;
+            // 3/4 side-top angles (114° / 236° / 76°) sculpt 3D form softly without blasting straight-on white!
+            _key.transform.rotation = Quaternion.Euler(day ? 38f : 32f, rim ? 76f : day ? 236f : 114f, 0f);
+            _fill.color = rim ? new Color(.88f, .58f, 1f) : new Color(.78f, .85f, 1f);
+            _fill.intensity = rim ? 1.45f : 1.15f;
+            _rim.color = rim ? new Color(.32f, .88f, 1f) : new Color(.84f, .90f, 1f);
+            _rim.intensity = rim ? 5.8f : 3.0f;
+        }
+
+        private static void SetArchitecturalFill(Material mat, Color emission)
+        {
+            mat.EnableKeyword("_EMISSION");
+            mat.SetColor("_EmissionColor", emission);
         }
 
         internal void Frame(bool close)
@@ -228,14 +321,24 @@ namespace AnimeCS.Play
             var motion = new MotionContact
             {
                 Grounded = true, Crouch = _crouch,
-                Velocity = Action == Motion.Run ? Vector2.up * run : Vector2.zero
+                Velocity = Action == Motion.Run ? Vector2.up * run : Action == Motion.Walk ? Vector2.up * 2.4f : Vector2.zero
             };
             var view = new SeatView
             {
                 Match = new PublicMatchView { Round = 1, Tick = Mathf.FloorToInt(_elapsed * MatchRules.TickRate), Paused = Paused },
                 Motion = motion
             };
-            _rig.Animate(view, run, _elapsed * MatchRules.TickRate % 1f);
+            if (_showcaseController && _avatarAnimator && _avatarAnimator.isActiveAndEnabled)
+            {
+                _avatarAnimator.speed = Paused ? 0f : 1f;
+                _avatarAnimator.SetInteger("Mode", (int)Action);
+                _avatarAnimator.SetFloat("Crouch", _crouch);
+                _avatarAnimator.SetFloat("Forward", Action == Motion.Run ? 1f : Action == Motion.Walk ? 0.5f : 0f);
+            }
+            else
+            {
+                _rig.Animate(view, run, _elapsed * MatchRules.TickRate % 1f);
+            }
         }
 
         internal void Present()
@@ -245,7 +348,7 @@ namespace AnimeCS.Play
             Vector3 position = focus + Quaternion.Euler(-_pitch, _yaw, 0f) * Vector3.forward * _distance;
             position.y = Mathf.Max(.14f, position.y);
             _camera.transform.SetPositionAndRotation(position, Quaternion.LookRotation(focus - position, Vector3.up));
-            if (_rig != null && Action == Motion.Idle) _rig.Grip?.RestAtSides(_avatar.transform);
+            if (!_showcaseController && _rig != null && Action == Motion.Idle) _rig.Grip?.RestAtSides(_avatar.transform);
         }
 
         internal RenderTexture Resize(Vector2Int pixels, int supersampling)
@@ -267,14 +370,20 @@ namespace AnimeCS.Play
 
         public void Dispose()
         {
-            _root.SetActive(false);
-            _camera.targetTexture = null;
+            if (_root) _root.SetActive(false);
+            if (_camera) _camera.targetTexture = null;
             if (_texture) Object.Destroy(_texture);
-            Object.Destroy(_floor);
-            Object.Destroy(_plinth);
-            Object.Destroy(_backdrop);
-            foreach (var effect in _environment.components) Object.Destroy(effect);
-            Object.Destroy(_environment);
+            if (_floor) Object.Destroy(_floor);
+            if (_plinth) Object.Destroy(_plinth);
+            if (_accentWall) Object.Destroy(_accentWall);
+            if (_trimMetal) Object.Destroy(_trimMetal);
+            if (_backdrop) Object.Destroy(_backdrop);
+            if (_environment)
+            {
+                foreach (var effect in _environment.components)
+                    if (effect) Object.Destroy(effect);
+                Object.Destroy(_environment);
+            }
             if (_previousScene.IsValid() && _previousScene.isLoaded)
                 SceneManager.SetActiveScene(_previousScene);
             if (_scene.IsValid() && _scene.isLoaded && SceneManager.sceneCount > 1)

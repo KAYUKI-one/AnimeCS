@@ -25,7 +25,7 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _CamViewDirWorldOffsetScale: 0.46
+    - _CamViewDirWorldOffsetScale: 0.45
     - _FoldoutFringeShadow: 0
     - _FoldoutFringeShadowEnd: 0
     - _FriColorMask: 0
@@ -34,8 +34,8 @@ Material:
     - _FriStencilOp: 3
     - _FriStencilReadMask: 97
     - _FriStencilWriteMask: 97
-    - _ScreenOffsetScaleX: 0.77
-    - _ScreenOffsetScaleY: 0.81
+    - _ScreenOffsetScaleX: 0.6
+    - _ScreenOffsetScaleY: 0.65
     m_Colors:
     - _HeadCenterWS: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []

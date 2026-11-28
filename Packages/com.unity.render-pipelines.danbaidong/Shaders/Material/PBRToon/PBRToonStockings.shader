@@ -438,7 +438,7 @@ Shader "DanbaidongRP/PBRToon/Stockings"
                         float3 directRim = GetRimColor(directRimArea, diffuseColor, normalVS, lightDirVS, shadowArea, frontRimCol, backRimCol);
 
                         // Accumulate
-                        directLighting.diffuse += diffuseColor * shadowRamp * dirLight.lightColor * directOcclusion;
+                        directLighting.diffuse += diffuseColor * diffTerm * shadowRamp * dirLight.lightColor * directOcclusion;
                         directLighting.specular += shadowRamp * specTerm * dirLight.lightColor * directOcclusion; // Stockings specular also use base shadowRamp as scattering color.
                         rimColor += directRim;
                     }

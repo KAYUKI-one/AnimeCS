@@ -50,7 +50,7 @@ MonoBehaviour:
     mesh: {fileID: 4300000, guid: 7107f56252ea94942b631b6968339ee6, type: 2}
   hideInFirstPerson: []
   sourceGuid: 92197bc7fcea41c46bca4af1be3ed203
-  sourceRevision: fb5961751830c965c8c47e021934a9b9
+  sourceRevision: b99b094706860d5c26aa4cba89bcd707
 --- !u!1001 &6014882172598876388
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -284,6 +284,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57c8a2f6a69e6344e9db4a10a6a43237, type: 3}
   m_Name: 
   m_EditorClassIdentifier: StylizedCharacters.Runtime::StylizedCharacters.HumanoidSecondaryMotion
+  showSpringDebug: 0
   hairRoots: []
   clothRoots: []
   hairJoints:
@@ -334,6 +335,7 @@ MonoBehaviour:
   hairSwingDegrees: 17
   clothSwingDegrees: 10
   gravity: {x: 0, y: -0.75, z: 0}
+  profile: {fileID: 0}
 --- !u!4 &6981708393358439050 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -5504201677090338194, guid: 92197bc7fcea41c46bca4af1be3ed203, type: 3}

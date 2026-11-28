@@ -1331,11 +1331,15 @@ namespace UnityEngine.Rendering.Universal
         static bool CheckPostProcessForDepth()
         {
             var stack = VolumeManager.instance.stack;
+            if (stack == null)
+                return false;
 
-            if (stack.GetComponent<DepthOfField>().IsActive())
+            var dof = stack.GetComponent<DepthOfField>();
+            if (dof != null && dof.IsActive())
                 return true;
 
-            if (stack.GetComponent<MotionBlur>().IsActive())
+            var mb = stack.GetComponent<MotionBlur>();
+            if (mb != null && mb.IsActive())
                 return true;
 
             return false;

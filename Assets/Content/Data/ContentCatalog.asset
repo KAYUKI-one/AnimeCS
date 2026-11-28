@@ -73,12 +73,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7d169f414e3469e49aa867ad43ac2d88, type: 2}
   - {fileID: 11400000, guid: 5e0618a5b943b584592b4928167186a7, type: 2}
   - {fileID: 11400000, guid: 4e0508f654fad6c49af21b53984bb0e4, type: 2}
+  - {fileID: 11400000, guid: 364e72817a038bc4399effbc07851011, type: 2}
+  - {fileID: 11400000, guid: d02f5c002ff0ccb4c8ebe6c6c840a716, type: 2}
   _map: {fileID: 11400000, guid: ca26f863b78fdf149a86c4000df065ca, type: 2}
   _character: {fileID: 11400000, guid: dd19b401d68736749b2a2131983df047, type: 2}
   _outfit: {fileID: 11400000, guid: 3b2ab2c2cded36a4d984b7a14ba0d07a, type: 2}
   _seatOutfits:
   - {fileID: 11400000, guid: 3b2ab2c2cded36a4d984b7a14ba0d07a, type: 2}
   - {fileID: 11400000, guid: d26709bb8d2317b43b95992f361cddbb, type: 2}
+  - {fileID: 11400000, guid: d02f5c002ff0ccb4c8ebe6c6c840a716, type: 2}
   - {fileID: 11400000, guid: 7f7493e28310ab64e81636ead83637fc, type: 2}
   - {fileID: 11400000, guid: a837939bd456ab44f820016d35f822d1, type: 2}
   - {fileID: 11400000, guid: 7d169f414e3469e49aa867ad43ac2d88, type: 2}

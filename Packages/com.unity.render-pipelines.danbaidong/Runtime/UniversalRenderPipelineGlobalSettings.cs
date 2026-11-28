@@ -26,7 +26,7 @@ namespace UnityEngine.Rendering.Universal
 
         #region Version system
 
-        internal bool IsAtLastVersion() => k_LastVersion == m_AssetVersion;
+        internal bool IsAtLastVersion() => m_AssetVersion >= k_LastVersion;
 
         internal const int k_LastVersion = 8;
 

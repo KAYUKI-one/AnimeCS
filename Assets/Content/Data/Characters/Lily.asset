@@ -24,6 +24,8 @@ MonoBehaviour:
   _defendInsignia: {fileID: 7896036870659375440, guid: d5613d97183cf3b4cb9a51a0f4aa09ca, type: 3}
   _controller: {fileID: 9100000, guid: dda641f82b1570747be311378167f262, type: 2}
   _weaponSocket: 
+  _fringeMesh: {fileID: 4300000, guid: 65549d8b0b8c6e94996274c405a3df56, type: 2}
+  _fringeMaterial: {fileID: 2100000, guid: ee163d16faa21624999c03b2805d5466, type: 2}
   _faction: 1
   _battlePortrait: {fileID: 2800000, guid: cc8fd7390aa89d94ab45382798bff4e1, type: 3}
   _headwearOffset: {x: 0, y: 0.082, z: 0}

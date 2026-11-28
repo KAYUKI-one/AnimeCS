@@ -1,0 +1,127 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Mishty_Eye_03
+  m_Shader: {fileID: 4800000, guid: 3d6c575ee75ce8c4b9376cfe040f1c1a, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - FLAG_EYELASH
+  - _SHADOW_RAMP
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses:
+  - CharacterOutline
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: 2a3cc49324f1bf442a5bf7f276f4cf7f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BaseMapOutter:
+        m_Texture: {fileID: 2800000, guid: 2a3cc49324f1bf442a5bf7f276f4cf7f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FaceLightMap:
+        m_Texture: {fileID: 2800000, guid: b5adfad5717c33949a1785836380494e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _IndirSpecCubemap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _PBRMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ShadowRampTex:
+        m_Texture: {fileID: 2800000, guid: ee4c171e98fa8eb47be62bee7f1fe167, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaClip: 0
+    - _AlphaOutter: 0.26
+    - _Cull: 0
+    - _Cutoff: 0.28
+    - _DirectOcclusion: 0.04
+    - _DirectRimWidth: 2.5
+    - _EnvColorLerp: 0.15
+    - _FaceSdfUV3: 0
+    - _FoldoutDirectLight: 0
+    - _FoldoutDirectLightEnd: 0
+    - _FoldoutEmissRim: 0
+    - _FoldoutEmissRimEnd: 0
+    - _FoldoutEyelash: 2
+    - _FoldoutEyelashEnd: 0
+    - _FoldoutIndirectLight: 0
+    - _FoldoutIndirectLightEnd: 0
+    - _FoldoutOutline: 0
+    - _FoldoutOutlineEnd: 0
+    - _FoldoutPBRProp: 0
+    - _FoldoutPBRPropEnd: 0
+    - _FoldoutShadowRamp: 2
+    - _FoldoutShadowRampEnd: 0
+    - _FoldoutTex: 0
+    - _FoldoutTexEnd: 0
+    - _FringeShadowWeight: 0.18
+    - _INDIR_CUBEMAP: 0
+    - _IndirDiffIntensity: 0.52
+    - _IndirDiffUpDirSH: 0.08
+    - _IndirSpecCubeWeight: 0.5
+    - _IndirSpecIntensity: 0.42
+    - _MainLightColorLerp: 0.24
+    - _Metallic: 0
+    - _NormalScale: 1
+    - _Occlusion: 0.2
+    - _OutLineNormalSource: 0
+    - _OutlineClampScale: 1
+    - _OutlineDirectLightingOffset: -1
+    - _OutlinePunctualLightingOffset: -1
+    - _OutlineStencilComp: 8
+    - _OutlineWidth: 1
+    - _ParallaxMaskEdge: 0.78
+    - _ParallaxMaskEdgeOffset: 0.22
+    - _ParallaxScale: 0
+    - _PunctualRimWidth: 2.75
+    - _SHADOW_RAMP: 1
+    - _SceneShadowWeight: 0
+    - _ShadowOffset: 0.46
+    - _ShadowSmoothNdotL: 0.36
+    - _ShadowSmoothScene: 0.16
+    - _ShadowStrength: 0.38
+    - _Smoothness: 0.62
+    - _ToonFlagsKeywords: 1
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _BaseColorOutter: {r: 1, g: 1, b: 1, a: 1}
+    - _DirectRimBackCol: {r: 0.2, g: 0.2, b: 0.2, a: 0.5}
+    - _DirectRimFrontCol: {r: 1, g: 1, b: 1, a: 0.5}
+    - _EmissionCol: {r: 0, g: 0, b: 0, a: 1}
+    - _FaceFrontDirWS: {r: 0, g: 0, b: 1, a: 0}
+    - _FaceRightDirWS: {r: 1, g: 0, b: 0, a: 0}
+    - _HeadCenterWS: {r: 0, g: 0, b: 0, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 0.8}
+    - _OutlineDirectLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
+    - _OutlinePunctualLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
+    - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
+    - _SelfLight: {r: 1.9, g: 1.87, b: 1.85, a: 1}
+    - _ShadowColor: {r: 0.78, g: 0.76, b: 0.86, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

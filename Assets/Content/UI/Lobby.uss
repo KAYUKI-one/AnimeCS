@@ -357,7 +357,6 @@
     background-color:#c5e9f2; border-color:#d7f3fc; color:#163744; -unity-font-style:bold;
 }
 .render-review .review-row .review-button { flex-grow:1; flex-basis:0; min-width:0; padding-left:4px; padding-right:4px; }
-.render-review .review-row .review-button:last-child { margin-right:0; }
 .render-review .review-roster { margin-top:11px; padding-bottom:1px; flex-shrink:0; height:94px; }
 .render-review .review-roster .unity-scroll-view__content-container { flex-direction:row; }
 .render-review .review-card {

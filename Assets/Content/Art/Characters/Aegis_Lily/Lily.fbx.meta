@@ -7,6 +7,21 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: Lily_Lash
+    second: {fileID: 2100000, guid: a42eb0124fe80434080d603b858e28cf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Lily_Skin
+    second: {fileID: 2100000, guid: 26697ee67ecbbc940bc3f424ad7f4abe, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Lily_Stockings
+    second: {fileID: 2100000, guid: c180330864887ba428b63e5d79b9cd78, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: Lily_T00
     second: {fileID: 2100000, guid: 5689d17c6fc84c9488cf1848132b8598, type: 2}
   - first:

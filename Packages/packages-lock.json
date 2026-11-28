@@ -202,11 +202,10 @@
       }
     },
     "com.unity.render-pipelines.danbaidong-config": {
-      "version": "https://github.com/danbaidong1111/DanbaidongRPConfig.git#71278bf6acd7c443b52db4d6bbfb45515ee19ebc",
+      "version": "file:com.unity.render-pipelines.danbaidong-config",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "71278bf6acd7c443b52db4d6bbfb45515ee19ebc"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.unity.render-pipelines.universal": {
       "version": "file:com.unity.render-pipelines.universal",

@@ -9,7 +9,7 @@ namespace StylizedCharacters
     [RequireComponent(typeof(Animator)), DisallowMultipleComponent, DefaultExecutionOrder(1000)]
     public sealed partial class HumanoidSecondaryMotion : MonoBehaviour
     {
-        public const float BodyClearance = .015f;
+        public const float BodyClearance = .024f;
         [Tooltip("Optional roots of skinned chains with arbitrary bone names. Each terminal child is the segment tip.")]
         [SerializeField] private Transform[] hairRoots = Array.Empty<Transform>();
         [SerializeField] private Transform[] clothRoots = Array.Empty<Transform>();
@@ -89,6 +89,9 @@ namespace StylizedCharacters
             AddCapsule(HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand, .14f, upper);
             AddCapsule(HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand, .14f, upper);
             AddCapsule(chest, HumanBodyBones.Neck, .28f, upper, name: "Back", forwardOffset: -.23f);
+            // Front upper chest / clavicle guard so long front hair & braids never clip into the chest/collar while running!
+            AddCapsule(chest, HumanBodyBones.Neck, .34f, upper, BodyClearance * 1.15f, name: "FrontChest", forwardOffset: .20f);
+            AddCapsule(HumanBodyBones.Neck, HumanBodyBones.Head, .42f, upper, BodyClearance, name: "NeckGuard");
             var hips = _animator.GetBoneTransform(HumanBodyBones.Hips);
             var leftHip = _animator.GetBoneTransform(HumanBodyBones.LeftUpperLeg);
             var rightHip = _animator.GetBoneTransform(HumanBodyBones.RightUpperLeg);
@@ -98,7 +101,7 @@ namespace StylizedCharacters
                 var right = hips.InverseTransformPoint(rightHip.position);
                 var offset = hips.InverseTransformVector(-transform.forward *
                     (Vector3.Distance(leftHip.position, rightHip.position) * .15f));
-                AddCapsule("Pelvis", hips, left + offset, right + offset, .42f, lower, BodyClearance);
+                AddCapsule("Pelvis", hips, left + offset, right + offset, .45f, lower, BodyClearance * 1.1f);
             }
             var upperColliders = upper.ToArray();
             var lowerColliders = lower.ToArray();
@@ -111,12 +114,31 @@ namespace StylizedCharacters
             var neck = _animator.GetBoneTransform(HumanBodyBones.Neck);
             if (head && neck)
             {
-                var sphere = new GameObject("Head spring collider").AddComponent<SpringSphereCollider>();
-                sphere.transform.SetParent(head, false);
                 var up = head.position - neck.position;
-                sphere.transform.position = head.position + up * .46f;
-                sphere.radius = Mathf.Max(.001f, sphere.transform.InverseTransformVector(up).magnitude * .68f);
-                heads.Add(sphere);
+                float headScale = Mathf.Max(.06f, up.magnitude);
+                var skull = new GameObject("Head spring collider").AddComponent<SpringSphereCollider>();
+                skull.transform.SetParent(head, false);
+                skull.transform.position = head.position + up * .52f;
+                skull.radius = Mathf.Max(.001f, skull.transform.InverseTransformVector(up).magnitude * .82f);
+                heads.Add(skull);
+
+                // Dedicated face/cheek guard sphere so front bangs & side locks stay outside the face mesh during fast motion!
+                var faceGuard = new GameObject("Face spring collider").AddComponent<SpringSphereCollider>();
+                faceGuard.transform.SetParent(head, false);
+                faceGuard.transform.position = head.position + up * .26f + transform.forward * (headScale * .24f);
+                faceGuard.radius = Mathf.Max(.001f, faceGuard.transform.InverseTransformVector(up).magnitude * .66f);
+                heads.Add(faceGuard);
+            }
+            // Shoulder spheres prevent side braids and back hair from clipping through deltoids/collar
+            foreach (var shoulderBone in new[] { HumanBodyBones.LeftUpperArm, HumanBodyBones.RightUpperArm })
+            {
+                var shoulder = _animator.GetBoneTransform(shoulderBone);
+                if (!shoulder) continue;
+                var guard = new GameObject(shoulderBone + " spring collider").AddComponent<SpringSphereCollider>();
+                guard.transform.SetParent(shoulder, false);
+                guard.transform.localPosition = Vector3.zero;
+                guard.radius = Mathf.Max(.001f, guard.transform.InverseTransformVector(Vector3.one * .078f).magnitude / 1.732f);
+                heads.Add(guard);
             }
             var headColliders = heads.ToArray();
             var automaticHair = new HashSet<Transform>(hairJoints);
@@ -130,8 +152,12 @@ namespace StylizedCharacters
                 capsuleContacts.Add(collider, contact);
                 contacts.Add(contact);
             }
-            var headContact = heads.Count > 0 ? new SecondaryMotionSolver.Contact(heads[0]) : null;
-            if (headContact != null) contacts.Add(headContact);
+            var sphereContacts = new SecondaryMotionSolver.Contact[heads.Count];
+            for (int i = 0; i < heads.Count; i++)
+            {
+                sphereContacts[i] = new SecondaryMotionSolver.Contact(heads[i]);
+                contacts.Add(sphereContacts[i]);
+            }
             foreach (var node in palette)
             {
                 if (node.childCount == 0 || node.name.EndsWith("_End", StringComparison.Ordinal)) continue;
@@ -141,7 +167,7 @@ namespace StylizedCharacters
                 var settings = SettingsFor(node, hair);
                 var spring = node.GetComponent<SpringBone>();
                 if (!spring) spring = node.gameObject.AddComponent<SpringBone>();
-                spring.radius = Mathf.Clamp(Vector3.Distance(node.position, node.GetChild(0).position) * settings.radiusScale, .003f, .014f);
+                spring.radius = Mathf.Clamp(Vector3.Distance(node.position, node.GetChild(0).position) * settings.radiusScale, .008f, .022f);
                 spring.stiffnessForce = settings.stiffness;
                 spring.dragForce = settings.dampingAt60Hz;
                 spring.springForce = Vector3.zero;
@@ -166,7 +192,11 @@ namespace StylizedCharacters
                 }
                 for (int i = 0; i < spring.capsuleColliders.Length; i++)
                     joint.Contacts[i] = capsuleContacts[spring.capsuleColliders[i]];
-                if (hair && headContact != null) joint.Contacts[^1] = headContact;
+                if (hair)
+                {
+                    for (int i = 0; i < sphereContacts.Length; i++)
+                        joint.Contacts[spring.capsuleColliders.Length + i] = sphereContacts[i];
+                }
                 indices.Add(node, _joints.Count);
                 _joints.Add(joint);
             }

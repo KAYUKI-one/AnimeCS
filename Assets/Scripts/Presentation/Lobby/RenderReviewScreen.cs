@@ -38,7 +38,7 @@ namespace AnimeCS.Play
 
             var controls = Add(work, "review-controls");
             var motion = Group(controls, "动作");
-            Choices(motion, "review-motion", new[] { "站立", "跑动", "下蹲" }, i => _stage.Action = (RenderReviewStage.Motion)i);
+            Choices(motion, "review-motion", new[] { "站立", "跑动", "下蹲", "漫步", "展示" }, i => _stage.Action = (RenderReviewStage.Motion)i);
             var actions = Add(motion, "review-row");
             Button(actions, "转身", "review-turn", _stage.Turn);
             var pause = Button(actions, "暂停动画", "review-pause");

@@ -63,7 +63,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: a529e6531355a6f43b348ea1faed53a9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -112,11 +112,11 @@ Material:
     - _Cutoff: 0.24
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
-    - _DirectOcclusion: 0.1
-    - _DirectRimWidth: 0.53
+    - _DirectOcclusion: 0.34
+    - _DirectRimWidth: 1.8
     - _DstBlend: 0
     - _DstBlendAlpha: 0
-    - _EnvColorLerp: 0.25
+    - _EnvColorLerp: 0.15
     - _EnvironmentReflections: 1
     - _FoldoutDirectLight: 0
     - _FoldoutDirectLightEnd: 0
@@ -136,32 +136,32 @@ Material:
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _INDIR_CUBEMAP: 0
-    - _IndirDiffIntensity: 0.78
-    - _IndirDiffUpDirSH: 0
+    - _IndirDiffIntensity: 0.4
+    - _IndirDiffUpDirSH: 0.1
     - _IndirSpecCubeWeight: 0.5
     - _IndirSpecIntensity: 0.38
-    - _MainLightColorLerp: 0.15
-    - _Metallic: 0
-    - _NormalScale: 1
-    - _Occlusion: 1
+    - _MainLightColorLerp: 0.2
+    - _Metallic: 0.9
+    - _NormalScale: 0.24
+    - _Occlusion: 0.75
     - _OcclusionStrength: 1
     - _OutLineNormalSource: 2
-    - _OutlineClampScale: 1
-    - _OutlineDirectLightingOffset: -1
+    - _OutlineClampScale: 0.65
+    - _OutlineDirectLightingOffset: -0.25
     - _OutlinePunctualLightingOffset: -1
     - _OutlineStencilComp: 6
-    - _OutlineWidth: 0.36
+    - _OutlineWidth: 1.05
     - _Parallax: 0.005
-    - _PunctualRimWidth: 0.5
+    - _PunctualRimWidth: 2.07
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _ReceiveTracedReflections: 1
     - _SHADOW_RAMP: 1
     - _ShadowOffset: 0.44
-    - _ShadowSmoothNdotL: 0.105
-    - _ShadowSmoothScene: 0.1
-    - _ShadowStrength: 1
-    - _Smoothness: 0.29
+    - _ShadowSmoothNdotL: 0.42
+    - _ShadowSmoothScene: 0.16
+    - _ShadowStrength: 0.96
+    - _Smoothness: 0.8
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -173,16 +173,16 @@ Material:
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DirectRimBackCol: {r: 0.2, g: 0.2, b: 0.2, a: 0.5}
-    - _DirectRimFrontCol: {r: 0.4, g: 0.43, b: 0.49, a: 0.65}
+    - _DirectRimBackCol: {r: 0.38, g: 0.46, b: 0.65, a: 0.55}
+    - _DirectRimFrontCol: {r: 0.85, g: 0.9, b: 1, a: 0.6}
     - _EmissionCol: {r: 0, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0.13, g: 0.13, b: 0.13, a: 0.13}
-    - _OutlineColor: {r: 0.19, g: 0.16, b: 0.18, a: 0.78}
-    - _OutlineDirectLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
+    - _OutlineColor: {r: 0.13, g: 0.12, b: 0.18, a: 0.92}
+    - _OutlineDirectLightingColor: {r: 0.95, g: 0.92, b: 1, a: 0.3}
     - _OutlinePunctualLightingColor: {r: 1, g: 1, b: 1, a: 0.5}
-    - _SelfEnvColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-    - _SelfLight: {r: 1, g: 1, b: 1, a: 1}
-    - _ShadowColor: {r: 0.73, g: 0.75, b: 0.82, a: 1}
+    - _SelfEnvColor: {r: 0.16, g: 0.18, b: 0.25, a: 1}
+    - _SelfLight: {r: 2.05, g: 2, b: 1.97, a: 1}
+    - _ShadowColor: {r: 0.68, g: 0.71, b: 0.8, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
